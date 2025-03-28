@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "555571648620",
+    "project_id": "boutiquena-vendor-v2",
+    "storage_bucket": "boutiquena-vendor-v2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555571648620:android:abb115b2c5dab6e3f3e049",
+        "android_client_info": {
+          "package_name": "com.example.boutiquena_vendor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDx39AZUveYfNEr7YOy_KZdmm0kveAtgas"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
