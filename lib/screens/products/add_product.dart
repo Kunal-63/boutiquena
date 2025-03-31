@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
+import 'package:vendor_app/models/product.dart';
+import 'package:vendor_app/providers/product_provider.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/buttons/submit_button.dart';
 import 'package:vendor_app/widgets/headers/common_appbar.dart';
@@ -20,8 +23,25 @@ class AddProductScreen extends StatefulWidget {
 
 class _AddProductScreenState extends State<AddProductScreen> {
   List<File> _images = [];
-  String? _selectedOption;
   final TextEditingController _productNameController = TextEditingController();
+  final TextEditingController _productCodeController = TextEditingController();
+  final TextEditingController _availableStockController =
+      TextEditingController();
+  final TextEditingController _maxOrderQuantityController =
+      TextEditingController();
+  final TextEditingController _sizesController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _discountController = TextEditingController();
+  final TextEditingController _expireDateController = TextEditingController();
+  final TextEditingController _specialDiscountController =
+      TextEditingController();
+  final TextEditingController _specialDiscountExpireController =
+      TextEditingController();
+  final TextEditingController _returnPolicyController = TextEditingController();
+
+  /// Separate state variables for radio buttons
+  String? _selectedReturnOption; // Yes or No for Return Policy
+  String? _selectedExchangeOption; // Yes or No for Exchange Policy
 
   Future<void> _pickImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
@@ -29,6 +49,47 @@ class _AddProductScreenState extends State<AddProductScreen> {
     setState(() {
       _images = pickedFiles.map((file) => File(file.path)).toList();
     });
+  }
+
+  void _addProduct() async {
+    if (_productCodeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Product Code cannot be empty!")));
+      return;
+    }
+
+    final productProvider = Provider.of<ProductProvider>(
+      context,
+      listen: false,
+    );
+    Product newProduct = Product(
+      // productName: _productNameController.text,
+      productCode: _productCodeController.text,
+      // stock: _availableStockController.text,
+      // : _maxOrderQuantityController.text,
+      // screenSize: _sizesController.text,
+      // productPrice: _priceController.text,
+      // productDiscount: _discountController.text,
+      // : _expireDateController.text,
+      // : _specialDiscountController.text,
+      // specialDiscountExpire: _specialDiscountExpireController.text,
+      // returnPolicy:
+      //     _selectedReturnOption == "yes" ? _returnPolicyController.text : null,
+      // exchangePolicy: _selectedExchangeOption,
+      // images: _images,
+    );
+    bool isSuccess = await productProvider.addProduct(newProduct);
+    if (isSuccess) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Product Added!!")));
+      Navigator.pushNamed(context, '/product_list');
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to Add the Product!")));
+    }
   }
 
   @override
@@ -117,6 +178,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 controller: _productNameController,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
+              InputWidget(
+                label: 'Product Code',
+                hint: 'Enter product code...',
+                controller: _productCodeController,
+              ),
+              SizedBox(height: 20 * SizeConfig.heightScale),
               CustomDropdown(
                 label: 'Product Type',
                 items: const [
@@ -130,13 +197,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
               InputWidget(
                 label: 'Available Stock Quantity',
                 hint: '1000 Peace',
-                controller: _productNameController,
+                controller: _availableStockController,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
               InputWidget(
                 label: 'Maximum Order Quantity ',
                 hint: '1000 Peace',
-                controller: _productNameController,
+                controller: _maxOrderQuantityController,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
               Row(
@@ -145,7 +212,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     child: InputWidget(
                       label: 'Sizes',
                       hint: 'L,M,XL',
-                      controller: _productNameController,
+                      controller: _sizesController,
                     ),
                   ),
                   SizedBox(width: 20 * SizeConfig.widthScale),
@@ -153,7 +220,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     child: InputWidget(
                       label: 'Price',
                       hint: '12',
-                      controller: _productNameController,
+                      controller: _priceController,
                     ),
                   ),
                 ],
@@ -171,7 +238,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     child: InputWidget(
                       label: 'Discount',
                       hint: '10 %',
-                      controller: _productNameController,
+                      controller: _discountController,
                     ),
                   ),
                   SizedBox(width: 20 * SizeConfig.widthScale),
@@ -179,7 +246,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     child: InputWidget(
                       label: 'Expire Date',
                       hint: '12-02-2025',
-                      controller: _productNameController,
+                      controller: _expireDateController,
                     ),
                   ),
                 ],
@@ -209,7 +276,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     InputWidget(
                       label: 'Buy / Get',
                       hint: 'Buy 2 Get 1 Free',
-                      controller: _productNameController,
+                      controller: _specialDiscountController,
                     ),
                     SizedBox(height: 20 * SizeConfig.heightScale),
                     Row(
@@ -218,17 +285,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           child: InputWidget(
                             label: 'Discount',
                             hint: '10 %',
-                            controller: _productNameController,
+                            controller: _specialDiscountExpireController,
                           ),
                         ),
-                        SizedBox(width: 20 * SizeConfig.widthScale),
-                        Expanded(
-                          child: InputWidget(
-                            label: 'Expire Date',
-                            hint: '12-02-2025',
-                            controller: _productNameController,
-                          ),
-                        ),
+                        // SizedBox(width: 20 * SizeConfig.widthScale),
+                        // Expanded(
+                        //   child: InputWidget(
+                        //     label: 'Expire Date',
+                        //     hint: '12-02-2025',
+                        //     controller: _productNameController,
+                        //   ),
+                        // ),
                       ],
                     ),
                   ],
@@ -248,18 +315,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 children: [
                   Row(
                     children: [
-                      _buildRadioButton("Yes", "yes"),
+                      _buildRadioButton("Yes", "yes", _selectedReturnOption, (
+                        value,
+                      ) {
+                        _selectedReturnOption = value;
+                      }),
                       const SizedBox(width: 20),
-                      _buildRadioButton("No", "no"),
+                      _buildRadioButton("No", "no", _selectedReturnOption, (
+                        value,
+                      ) {
+                        _selectedReturnOption = value;
+                      }),
                     ],
                   ),
                 ],
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
-              if (_selectedOption == "yes")
+              if (_selectedReturnOption == "yes")
                 InputWidget(
                   hint: 'Write your return policy here....',
-                  controller: _productNameController,
+                  controller: _returnPolicyController,
                   maxLines: 1,
                 ),
               SizedBox(height: 10 * SizeConfig.heightScale),
@@ -281,15 +356,23 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 children: [
                   Row(
                     children: [
-                      _buildRadioButton("Yes", "yes"),
+                      _buildRadioButton("Yes", "yes", _selectedExchangeOption, (
+                        value,
+                      ) {
+                        _selectedExchangeOption = value;
+                      }),
                       const SizedBox(width: 20),
-                      _buildRadioButton("No", "no"),
+                      _buildRadioButton("No", "no", _selectedExchangeOption, (
+                        value,
+                      ) {
+                        _selectedExchangeOption = value;
+                      }),
                     ],
                   ),
                 ],
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
-              if (_selectedOption == "yes")
+              if (_selectedExchangeOption == "yes")
                 CustomDropdown(
                   items: const ['7 Days'],
                   onChanged: (dynamic value) {},
@@ -332,9 +415,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   Expanded(
                     child: SubmitButton(
                       text: 'Publish',
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/product_list');
-                      },
+                      onPressed: _addProduct,
                     ),
                   ),
                 ],
@@ -368,11 +449,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  Widget _buildRadioButton(String label, String value) {
+  Widget _buildRadioButton(
+    String label,
+    String value,
+    String? _selectedOption,
+    Function(String) onChanged,
+  ) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedOption = value;
+          onChanged(value);
         });
       },
       child: Row(

@@ -1,4 +1,7 @@
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
+import 'package:vendor_app/models/orders.dart';
+import 'package:vendor_app/providers/orders_provider.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/buttons/submit_button.dart';
@@ -17,45 +20,29 @@ class OrderListScreen extends StatefulWidget {
 
 class _OrderListScreenState extends State<OrderListScreen> {
   final TextEditingController _controller = TextEditingController();
+  List<Order> _filteredOrders = [];
 
-  final List<Map<String, dynamic>> orders = [
-    {
-      'image':
-          'https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg',
-      'title': 'Evening Dress',
-      'brand': 'Dorothy Perkins',
-      'size': 'L',
-      'color': 'Brown',
-      'rating': 5,
-      'reviews': 10,
-      'price': '10 ₪',
-      'deliveryDate': '24 January, 2025',
-    },
-    {
-      'image':
-          'https://images.pexels.com/photos/1055691/pexels-photo-1055691.jpeg',
-      'title': 'Casual Dress',
-      'brand': 'H&M',
-      'size': 'M',
-      'color': 'Black',
-      'rating': 4,
-      'reviews': 8,
-      'price': '15 ₪',
-      'deliveryDate': '25 January, 2025',
-    },
-    {
-      'image':
-          'https://images.pexels.com/photos/291762/pexels-photo-291762.jpeg',
-      'title': 'Summer Dress',
-      'brand': 'Zara',
-      'size': 'S',
-      'color': 'Blue',
-      'rating': 3,
-      'reviews': 6,
-      'price': '12 ₪',
-      'deliveryDate': '26 January, 2025',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+      _filteredOrders = orderProvider.orders ?? [];
+    });
+  }
+
+  void _filterOrders(String query) {
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    setState(() {
+      _filteredOrders =
+          orderProvider.orders?.where((order) {
+            return order.name?.toLowerCase().contains(query.toLowerCase()) ??
+                false;
+          }).toList() ??
+          [];
+    });
+  }
+
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -84,6 +71,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   hint: 'Search your order..',
                   controller: _controller,
                   svgPath: 'assets/icons/search-icon.svg',
+                  onChanged: _filterOrders,
                 ),
                 SizedBox(height: 20 * SizeConfig.heightScale),
                 SubmitButton(
@@ -100,6 +88,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // final orderProvider = Provider.of<OrderProvider>(context);
+    // final orders = orderProvider.orders ?? [];
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
       appBar: PreferredSize(
@@ -179,219 +169,248 @@ class _OrderListScreenState extends State<OrderListScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                horizontal: 20 * SizeConfig.widthScale,
-                vertical: 5 * SizeConfig.heightScale,
-              ),
-              itemCount: orders.length,
-              itemBuilder: (context, index) {
-                var order = orders[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/order_details');
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(255, 255, 255, 1),
-                      borderRadius: BorderRadius.circular(10.37),
+          _filteredOrders.isEmpty
+              ? Expanded(
+                child: Center(
+                  child: Text(
+                    'No Orders Found!',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16 * SizeConfig.widthScale,
                     ),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
+                  ),
+                ),
+              )
+              : Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20 * SizeConfig.widthScale,
+                    vertical: 5 * SizeConfig.heightScale,
+                  ),
+                  itemCount: _filteredOrders.length,
+                  itemBuilder: (context, index) {
+                    var order = _filteredOrders[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/order_details');
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(255, 255, 255, 1),
+                          borderRadius: BorderRadius.circular(10.37),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
                             children: [
-                              CustomNetworkImage(
-                                imageUrl: order['image'],
-                                errorImage: 'assets/icons/no-image.png',
-                                width: 110 * SizeConfig.widthScale,
-                                height: 125 * SizeConfig.heightScale,
-                                radius: 5,
-                              ),
-                              SizedBox(width: 10 * SizeConfig.widthScale),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      order['title'],
-                                      style: AppTextStyles.greySubHeadingStyle()
-                                          .copyWith(
-                                            fontSize:
-                                                12 * SizeConfig.widthScale,
-                                            fontWeight: FontWeight.w400,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  CustomNetworkImage(
+                                    imageUrl:
+                                        'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
+                                    errorImage: 'assets/icons/no-image.png',
+                                    width: 110 * SizeConfig.widthScale,
+                                    height: 125 * SizeConfig.heightScale,
+                                    radius: 5,
+                                  ),
+                                  SizedBox(width: 10 * SizeConfig.widthScale),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          order.name ?? '',
+                                          style:
+                                              AppTextStyles.greySubHeadingStyle()
+                                                  .copyWith(
+                                                    fontSize:
+                                                        12 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                        ),
+                                        SizedBox(
+                                          height: 2 * SizeConfig.heightScale,
+                                        ),
+                                        Text(
+                                          'H&M',
+                                          style:
+                                              AppTextStyles.blackSubHeadingStyle()
+                                                  .copyWith(
+                                                    fontSize:
+                                                        14 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                        ),
+                                        SizedBox(
+                                          height: 2 * SizeConfig.heightScale,
+                                        ),
+                                        Text(
+                                          order.orderStatus ?? '',
+                                          style:
+                                              AppTextStyles.greySubHeadingStyle()
+                                                  .copyWith(
+                                                    fontSize:
+                                                        12 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                        ),
+                                        SizedBox(
+                                          height: 2 * SizeConfig.heightScale,
+                                        ),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color.fromRGBO(
+                                                219,
+                                                233,
+                                                233,
+                                                1,
+                                              ),
+                                              width: 0.5,
+                                            ),
                                           ),
-                                    ),
-                                    SizedBox(
-                                      height: 2 * SizeConfig.heightScale,
-                                    ),
-                                    Text(
-                                      order['brand'],
-                                      style:
-                                          AppTextStyles.blackSubHeadingStyle()
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Size: L',
+                                                style:
+                                                    AppTextStyles.greySubHeadingStyle()
+                                                        .copyWith(
+                                                          fontSize:
+                                                              12 *
+                                                              SizeConfig
+                                                                  .widthScale,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                        ),
+                                              ),
+                                              Text(
+                                                'Color: Black',
+                                                style:
+                                                    AppTextStyles.greySubHeadingStyle()
+                                                        .copyWith(
+                                                          fontSize:
+                                                              12 *
+                                                              SizeConfig
+                                                                  .widthScale,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                        ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 2 * SizeConfig.heightScale,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Row(
+                                              children: List.generate(
+                                                5,
+                                                (i) => const Icon(
+                                                  Icons.star_rounded,
+                                                  color: Color.fromRGBO(
+                                                    255,
+                                                    186,
+                                                    73,
+                                                    1,
+                                                  ),
+                                                  size: 14,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              '(5)',
+                                              style:
+                                                  AppTextStyles.greySubHeadingStyle(
+                                                    color: const Color.fromRGBO(
+                                                      0,
+                                                      0,
+                                                      0,
+                                                      0.6,
+                                                    ),
+                                                  ).copyWith(
+                                                    fontSize:
+                                                        10 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: 5 * SizeConfig.heightScale,
+                                        ),
+                                        Text(
+                                          order.couponAmount ?? '',
+                                          style: AppTextStyles.redw400Outfit()
                                               .copyWith(
                                                 fontSize:
                                                     14 * SizeConfig.widthScale,
                                                 fontWeight: FontWeight.w400,
                                               ),
-                                    ),
-                                    SizedBox(
-                                      height: 2 * SizeConfig.heightScale,
-                                    ),
-                                    Text(
-                                      order['title'],
-                                      style: AppTextStyles.greySubHeadingStyle()
-                                          .copyWith(
-                                            fontSize:
-                                                12 * SizeConfig.widthScale,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                    ),
-                                    SizedBox(
-                                      height: 2 * SizeConfig.heightScale,
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: const Color.fromRGBO(
-                                            219,
-                                            233,
-                                            233,
-                                            1,
-                                          ),
-                                          width: 0.5,
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Size: ${order['size']}',
-                                            style:
-                                                AppTextStyles.greySubHeadingStyle()
-                                                    .copyWith(
-                                                      fontSize:
-                                                          12 *
-                                                          SizeConfig.widthScale,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                    ),
-                                          ),
-                                          Text(
-                                            'Color: ${order['color']}',
-                                            style:
-                                                AppTextStyles.greySubHeadingStyle()
-                                                    .copyWith(
-                                                      fontSize:
-                                                          12 *
-                                                          SizeConfig.widthScale,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                    ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: 2 * SizeConfig.heightScale,
-                                    ),
-                                    Row(
-                                      children: [
-                                        Row(
-                                          children: List.generate(
-                                            order['rating'],
-                                            (i) => const Icon(
-                                              Icons.star_rounded,
-                                              color: Color.fromRGBO(
-                                                255,
-                                                186,
-                                                73,
-                                                1,
-                                              ),
-                                              size: 14,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          '(${order['reviews']})',
-                                          style:
-                                              AppTextStyles.greySubHeadingStyle(
-                                                color: const Color.fromRGBO(
-                                                  0,
-                                                  0,
-                                                  0,
-                                                  0.6,
-                                                ),
-                                              ).copyWith(
-                                                fontSize:
-                                                    10 * SizeConfig.widthScale,
-                                                fontWeight: FontWeight.w400,
-                                              ),
                                         ),
                                       ],
                                     ),
-                                    SizedBox(
-                                      height: 5 * SizeConfig.heightScale,
-                                    ),
-                                    Text(
-                                      order['price'],
-                                      style: AppTextStyles.redw400Outfit()
-                                          .copyWith(
-                                            fontSize:
-                                                14 * SizeConfig.widthScale,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5 * SizeConfig.heightScale),
+                              const Divider(
+                                color: Color.fromRGBO(0, 0, 0, 0.3),
+                              ),
+                              SizedBox(height: 5 * SizeConfig.heightScale),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Estimated Delivery Date',
+                                    style: AppTextStyles.blackSubHeadingStyle()
+                                        .copyWith(
+                                          fontSize: 12 * SizeConfig.widthScale,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                  ),
+                                  Text(
+                                    '25 January, 2025',
+                                    style: AppTextStyles.greySubHeadingStyle()
+                                        .copyWith(
+                                          fontSize: 12 * SizeConfig.widthScale,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                          SizedBox(height: 5 * SizeConfig.heightScale),
-                          const Divider(color: Color.fromRGBO(0, 0, 0, 0.3)),
-                          SizedBox(height: 5 * SizeConfig.heightScale),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Estimated Delivery Date',
-                                style: AppTextStyles.blackSubHeadingStyle()
-                                    .copyWith(
-                                      fontSize: 12 * SizeConfig.widthScale,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                              ),
-                              Text(
-                                order['deliveryDate'],
-                                style: AppTextStyles.greySubHeadingStyle()
-                                    .copyWith(
-                                      fontSize: 12 * SizeConfig.widthScale,
-                                      fontWeight: FontWeight.w300,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+                    );
+                  },
+                ),
+              ),
         ],
       ),
     );

@@ -1,5 +1,7 @@
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
+import 'package:vendor_app/providers/vendor_profile_provider.dart';
+import 'package:vendor_app/screens/subscription_plan.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/headers/common_appbar.dart';
@@ -7,10 +9,7 @@ import 'package:vendor_app/widgets/inputs/input_widgets.dart';
 import 'package:vendor_app/widgets/popup_menu_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
-import 'dart:convert';
-import 'package:vendor_app/services/api_service.dart';
-import 'package:vendor_app/services/log_service.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _subscriptionController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _workingHoursController = TextEditingController();
+  int? subscripitonID;
 
   String profileImageUrl = '';
   String userName = "Loading...";
@@ -33,47 +33,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchProfileData();
-  }
-
-  Future<void> _fetchProfileData() async {
-    try {
-      final response = await ApiService.getWithAuth('get-vendor-profile');
-
-      if (response != null) {
-        final Map<String, dynamic> responseData = jsonDecode(
-          response.body,
-        ); // ✅ Decode the response
-
-        LogService.info("Profile API Response: ${json.encode(responseData)}");
-
-        if (responseData["status"] == true) {
-          final data = responseData["data"];
-
-          setState(() {
-            userName = data["name"] ?? "No Name";
-            profileImageUrl = data["image"] ?? "";
-
-            _storeNameController.text = data["store_name"] ?? "";
-            _phoneController.text = data["phone"] ?? "";
-            _emailController.text = data["email"] ?? "";
-            _passwordController.text = data["password"] ?? "";
-            _subscriptionController.text =
-                data["subscription_id"] ?? "Basic Plan";
-            _workingHoursController.text =
-                data["working_hours"] ?? "9:00AM - 9:00PM";
-          });
-        } else {
-          throw Exception("Failed to load profile data");
-        }
-      }
-    } catch (e) {
-      LogService.error("Error fetching profile: $e");
-    }
+    Future.microtask(
+      () =>
+          Provider.of<VendorProfileProvider>(
+            context,
+            listen: false,
+          ).fetchVendorProfile(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = Provider.of<VendorProfileProvider>(context);
+    if (profileProvider.isLoading) {
+      _storeNameController.text = "Loading...";
+      _phoneController.text = "Loading...";
+      _emailController.text = "Loading...";
+      _subscriptionController.text = "Loading...";
+      _passwordController.text = "Loading...";
+      _workingHoursController.text = "Loading...";
+      userName = "Loading...";
+    } else if (profileProvider.vendorProfile != null) {
+      final profile = profileProvider.vendorProfile!;
+      _storeNameController.text = profile.storeDetails?.name ?? "";
+      _phoneController.text = profile.mobile ?? "";
+      _emailController.text = profile.email ?? "";
+      _subscriptionController.text = profile.subscriptionsName ?? "";
+      _passwordController.text = ""; // Keeping password field empty
+      _workingHoursController.text = profile.storeDetails?.businessHours ?? "";
+      userName = profile.name ?? "No Name";
+      profileImageUrl = profile.imagePath ?? "";
+      subscripitonID = profile.subscriptionId;
+    }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
       appBar: PreferredSize(
@@ -102,7 +93,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CustomNetworkImage(
                     imageUrl:
-                        'https://i.pinimg.com/736x/07/33/ba/0733ba760b29378474dea0fdbcb97107.jpg',
+                        profileImageUrl.isNotEmpty
+                            ? profileImageUrl
+                            : 'assets/icons/no-image.png',
                     errorImage: 'assets/icons/no-image.png',
                     height: 100 * SizeConfig.widthScale,
                     width: 100 * SizeConfig.widthScale,
@@ -113,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     right: 5 * SizeConfig.widthScale,
                     child: GestureDetector(
                       onTap: () {
-                        // Navigator.pushNamed(context, '/edit_profile');
+                        Navigator.pushNamed(context, '/edit_profile');
                       },
                       child: Container(
                         padding: const EdgeInsets.all(5),
@@ -180,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     clipBehavior: Clip.none,
                     children: [
                       InputWidget(
-                        hint: 'Advance Plan',
+                        hint: '',
                         controller: _subscriptionController,
                         label: 'Change Subscription Plan',
                         isDisabled: true,
@@ -189,7 +182,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         right: 10 * SizeConfig.widthScale,
                         top: 35 * SizeConfig.heightScale,
                         child: GestureDetector(
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => SubscriptionScreen(
+                                      initialPlanId: subscripitonID,
+                                      isEdit: true,
+                                    ),
+                              ),
+                            );
+                          },
+
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -210,15 +215,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   SizedBox(height: 10 * SizeConfig.heightScale),
-                  InputWidget(
-                    hint: 'Password',
-                    controller: _passwordController,
-                    label: 'Password',
-                    isPassword: true,
-                    isDisabled: true,
-                  ),
-                  SizedBox(height: 10 * SizeConfig.heightScale),
-
                   InputWidget(
                     hint: '9:00AM - 9:00PM',
                     controller: _workingHoursController,

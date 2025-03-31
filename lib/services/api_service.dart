@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:vendor_app/services/mavigation_service.dart';
 import 'package:vendor_app/utils/secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../config/env.dart';
@@ -7,12 +8,23 @@ import 'log_service.dart';
 // import '../utils/auth_token_util.dart';
 
 class ApiService {
+  static Future<void> _handleUnauthorized() async {
+    LogService.warning("Unauthorized access detected. Logging out...");
+
+    await LoginStatusUtil.clearLoginStatus();
+    NavigationService.navigateToLogin();
+  }
+
   static Future<http.Response?> get(String endpoint) async {
     final url = "${Env.apiBaseUrl}$endpoint";
     LogService.info("GET Request: $url");
 
     try {
       final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 401 || response.statusCode == 404) {
+        await _handleUnauthorized();
+        return null;
+      }
       LogService.info("Response Status: \${response.statusCode}");
       LogService.info("Response Body: \${response.body}");
 
@@ -43,6 +55,11 @@ class ApiService {
           "Content-Type": "application/json",
         },
       );
+
+      if (response.statusCode == 401 || response.statusCode == 404) {
+        await _handleUnauthorized();
+        return null;
+      }
 
       LogService.info("Response Status: ${response.statusCode}");
       LogService.info("Response Body: ${response.body}");
@@ -95,6 +112,11 @@ class ApiService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 401 || response.statusCode == 404) {
+        await _handleUnauthorized();
+        return null;
+      }
 
       LogService.info("Response Status: ${response.statusCode}");
       LogService.info("Response Body: ${response.body}");
@@ -155,6 +177,11 @@ class ApiService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 401 || response.statusCode == 404) {
+        await _handleUnauthorized();
+        return null;
+      }
 
       LogService.info("Response Status: ${response.statusCode}");
       LogService.info("Response Body: ${response.body}");

@@ -241,7 +241,7 @@ class _StoreSetupScreenState extends State<StoreSetupScreen> {
 
   Future<void> _submit() async {
     if (!_validateInputs()) return;
-    Navigator.pushNamed(context, '/main_screen');
+    // Navigator.pushNamed(context, '/main_screen');
 
     // // Ensure storeData is not null before modifying it
     Map<String, dynamic> payload = {...storeData};
@@ -264,15 +264,15 @@ class _StoreSetupScreenState extends State<StoreSetupScreen> {
     payload.remove("logo");
     payload.remove("cover_image");
 
-    LogService.info("Payload for update Store : " + json.encode(payload));
+    LogService.info("Payload for update Store : ${json.encode(payload)}");
 
     final response = await ApiService.postWithAuth(
-      'register-vendor',
+      'update-store',
       payload,
       files: {'logo': storeLogo, 'cover': storeCover},
     );
 
-    LogService.info("Response for update Store : " + json.encode(response));
+    LogService.info("Response for update Store : ${json.encode(response)}");
 
     if (response == null) {
       throw Exception("No response from server");

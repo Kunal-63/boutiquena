@@ -1,77 +1,51 @@
-import 'dart:convert';
 
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
-import 'package:vendor_app/services/api_service.dart';
+import 'package:vendor_app/providers/subscription_provider.dart';
+import 'package:vendor_app/providers/vendor_profile_provider.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/buttons/submit_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  final String? initialPlan;
+  final int? initialPlanId;
+  final bool isEdit;
 
-  const SubscriptionScreen({super.key, this.initialPlan});
+  const SubscriptionScreen({
+    super.key,
+    this.initialPlanId,
+    this.isEdit = false,
+  });
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  String? selectedPlan;
-  List<dynamic> subscriptionPlans = [];
+  int? selectedPlanId;
 
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await fetchSubscriptionPlans();
-      setState(() {
-        selectedPlan =
-            widget.initialPlan ??
-            ModalRoute.of(context)?.settings.arguments as String?;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<SubscriptionProvider>(
+        context,
+        listen: false,
+      );
+      provider.fetchSubscriptionPlans().then((_) {
+        setState(() {
+          selectedPlanId =
+              widget.initialPlanId ??
+              provider.subscriptionPlans.firstOrNull?.id;
+        });
       });
     });
   }
 
-  Future<void> fetchSubscriptionPlans() async {
-    print("📡 Fetching Subscription Plans...");
-
-    try {
-      final response = await ApiService.getWithAuth('subscription-plans');
-
-      if (response == null) {
-        throw Exception("No response from server");
-      }
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data["status"] == true && data["product_categories"] != null) {
-          setState(() {
-            subscriptionPlans = List.from(data["product_categories"]);
-          });
-
-          print("✅ Subscription Plans Loaded: $subscriptionPlans");
-        } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Failed to load plans')));
-        }
-      } else {
-        throw Exception("API Error: ${response.statusCode} - ${response.body}");
-      }
-    } catch (e) {
-      print("❌ Error fetching subscription plans: $e");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred while loading plans')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<SubscriptionProvider>(context);
     return Scaffold(
       backgroundColor: const Color(0xFF0D2233),
       body: SafeArea(
@@ -124,43 +98,42 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             SizedBox(height: 15 * SizeConfig.heightScale),
             Expanded(
               child:
-                  subscriptionPlans.isNotEmpty
+                  provider.subscriptionPlans.isNotEmpty
                       ? ListView.builder(
                         padding: EdgeInsets.symmetric(
                           horizontal: 20 * SizeConfig.widthScale,
                         ),
-                        itemCount: subscriptionPlans.length,
+                        itemCount: provider.subscriptionPlans.length,
                         itemBuilder: (context, index) {
-                          final plan = subscriptionPlans[index];
+                          final plan = provider.subscriptionPlans[index];
                           return _buildPlanCard(
-                            plan["name"],
-                            plan["offer_price"].toString(),
+                            plan.id,
+                            plan.name,
+                            plan.offerPrice.toString(),
                             "NIS/Month",
-                            plan["price"] > plan["offer_price"]
-                                ? "Discounted from ${plan["price"]} NIS"
+                            plan.price > plan.offerPrice
+                                ? "Discounted from ${plan.price} NIS"
                                 : "",
                             [
-                              'Limit: ${plan["limit"]} products',
-                              'Commission: ${plan["commission"]}% per sale',
-                              plan["customer_support"] == 1
+                              'Limit: ${plan.limit} products',
+                              'Commission: ${plan.commission}% per sale',
+                              plan.customerSupport
                                   ? 'Customer support access'
                                   : '',
-                              plan["order_tracking"] == 1
-                                  ? 'Able to Track Orders'
-                                  : '',
-                              plan["notifications"] == 1
+                              plan.orderTracking ? 'Able to Track Orders' : '',
+                              plan.notifications
                                   ? 'Receive notifications for orders and updates'
                                   : '',
-                              plan["featured_products"] == 1
+                              plan.featuredProducts
                                   ? 'Ability to add products to the "Featured Products" section'
                                   : '',
-                              plan["promotions"] == 1
+                              plan.promotions
                                   ? 'Ability to send promotional notifications to customers'
                                   : '',
-                              plan["home_promotions"] == 1
+                              plan.homePromotions
                                   ? 'Create store or product advertisements on the homepage'
                                   : '',
-                              plan["social_promotions"] == 1
+                              plan.socialPromotions
                                   ? 'Create store or product advertisements on social media'
                                   : '',
                             ],
@@ -169,7 +142,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       )
                       : Center(
                         child:
-                            subscriptionPlans.isEmpty
+                            provider.subscriptionPlans.isEmpty
                                 ? const Text(
                                   "No subscription plans available.",
                                   style: TextStyle(color: Colors.white),
@@ -185,9 +158,40 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   padding: const EdgeInsets.all(20),
                   child: SubmitButton(
                     text: 'Subscribe Now',
-                    onPressed: () {
-                      if (selectedPlan != null) {
-                        Navigator.pushNamed(context, '/store_setup');
+                    onPressed: () async {
+                      if (selectedPlanId != null) {
+                        final provider = Provider.of<SubscriptionProvider>(
+                          context,
+                          listen: false,
+                        );
+                        bool success = await provider.updateSubscription(
+                          selectedPlanId ?? 3,
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              success
+                                  ? "Subscription updated!"
+                                  : provider.errorMessage ?? "Failed to update",
+                            ),
+                          ),
+                        );
+                        if (!widget.isEdit) {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/store_setup',
+                          );
+                        } else {
+                          Navigator.pop(context);
+                          Future.microtask(
+                            () =>
+                                Provider.of<VendorProfileProvider>(
+                                  context,
+                                  listen: false,
+                                ).fetchVendorProfile(),
+                          );
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -229,18 +233,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildPlanCard(
+    int id,
     String title,
     String price,
     String priceTag,
     String discount,
     List<String> features,
   ) {
-    bool isSelected = selectedPlan == title;
+    bool isSelected = selectedPlanId == id;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedPlan = title;
+          selectedPlanId = id;
         });
       },
       child: Container(

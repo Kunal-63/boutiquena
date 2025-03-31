@@ -62,7 +62,6 @@ class _CustomDropdownState extends State<CustomDropdown> {
     );
 
     if (result != null) {
-      // Ensure setState is only called after the bottom sheet is closed
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           setState(() {

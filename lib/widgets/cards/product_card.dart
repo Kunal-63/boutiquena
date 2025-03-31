@@ -39,7 +39,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
             clipBehavior: Clip.none,
             children: [
               CustomNetworkImage(
-                imageUrl: widget.product.imageUrl,
+                imageUrl: widget.product.productImage ?? '',
                 errorImage: 'assets/icons/no-image.png',
                 height: 120 * SizeConfig.heightScale,
                 width: double.infinity,
@@ -58,7 +58,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
-                    widget.product.discount,
+                    widget.product.productDiscount ?? '',
                     style: AppTextStyles.whitew400Outfit().copyWith(
                       fontSize: 10 * SizeConfig.widthScale,
                       fontWeight: FontWeight.w600,
@@ -128,7 +128,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            widget.product.productType,
+            widget.product.occasion ?? '',
             style: AppTextStyles.greySubHeadingStyle().copyWith(
               fontSize: 8 * SizeConfig.widthScale,
               fontWeight: FontWeight.w400,
@@ -136,7 +136,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            widget.product.name,
+            widget.product.productName ?? '',
             style: AppTextStyles.blackSubHeadingStyle().copyWith(
               fontSize: 10 * SizeConfig.widthScale,
               fontWeight: FontWeight.w400,
@@ -144,7 +144,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            "${widget.product.price} ₪",
+            "${widget.product.productPrice} ₪",
             style: AppTextStyles.redw400Outfit().copyWith(
               fontSize: 12 * SizeConfig.widthScale,
               fontWeight: FontWeight.w600,

@@ -1,5 +1,11 @@
+import 'dart:io';
+
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
+import 'package:vendor_app/providers/vendor_profile_provider.dart';
+import 'package:vendor_app/screens/subscription_plan.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/buttons/submit_button.dart';
@@ -9,12 +15,126 @@ import 'package:vendor_app/widgets/popup_menu_item.dart';
 import 'package:vendor_app/widgets/popups/custom_popup.dart';
 import 'package:flutter/material.dart';
 
-class EditProfileScreen extends StatelessWidget {
-  EditProfileScreen({super.key});
-  final TextEditingController _controller = TextEditingController();
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
+
+  @override
+  _EditProfileScreenState createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+  int? subscripitonID;
+  String profileImageUrl = '';
+  // Controllers for input fields
+  TextEditingController nameController = TextEditingController();
+  TextEditingController storeNameController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController subscriptionController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+  TextEditingController workingHoursController = TextEditingController();
+
+  /// Function to pick an image from the gallery
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // Dispose controllers to free memory
+    nameController.dispose();
+    storeNameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    subscriptionController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    workingHoursController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () =>
+          Provider.of<VendorProfileProvider>(
+            context,
+            listen: false,
+          ).fetchVendorProfile(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = Provider.of<VendorProfileProvider>(context);
+    Future<void> submit() async {
+      try {
+        bool isSuccess = await profileProvider.updateVendorProfile(
+          name: nameController.text,
+          address: 'a',
+          city: 'a',
+          state: 'a',
+          country: 'a',
+          pincode: '123456',
+          mobile: phoneController.text,
+          password: passwordController.text,
+        );
+
+        // Ensure the dialog is shown inside `Future.delayed`
+        Future.delayed(Duration.zero, () {
+          showDialog(
+            context: context,
+            builder:
+                (context) => CustomPopUp(
+                  title:
+                      isSuccess
+                          ? 'Successfully Updated Profile'
+                          : 'Update Failed',
+                  message:
+                      isSuccess
+                          ? 'All changes have been made to the profile'
+                          : 'Something went wrong. Please try again.',
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+          );
+        });
+      } catch (e, stacktrace) {
+        print("Error updating profile: $e\n$stacktrace");
+      }
+    }
+
+    if (profileProvider.isLoading) {
+      storeNameController.text = "Loading...";
+      phoneController.text = "Loading...";
+      emailController.text = "Loading...";
+      subscriptionController.text = "Loading...";
+      passwordController.text = "Loading...";
+      workingHoursController.text = "Loading...";
+      nameController.text = "Loading...";
+    } else if (profileProvider.vendorProfile != null) {
+      final profile = profileProvider.vendorProfile!;
+      storeNameController.text = profile.storeDetails?.name ?? "";
+      phoneController.text = profile.mobile ?? "";
+      emailController.text = profile.email ?? "";
+      subscriptionController.text = profile.subscriptionsName ?? "";
+      passwordController.text = ""; // Keeping password field empty
+      workingHoursController.text = profile.storeDetails?.businessHours ?? "";
+      nameController.text = profile.name ?? "No Name";
+      profileImageUrl = profile.imagePath ?? "";
+      subscripitonID = profile.subscriptionId;
+    }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
       appBar: PreferredSize(
@@ -55,27 +175,42 @@ class EditProfileScreen extends StatelessWidget {
               Center(
                 child: Stack(
                   children: [
-                    CustomNetworkImage(
-                      imageUrl:
-                          'https://i.pinimg.com/736x/07/33/ba/0733ba760b29378474dea0fdbcb97107.jpg',
-                      errorImage: 'assets/icons/no-image.png',
-                      height: 100 * SizeConfig.widthScale,
-                      width: 100 * SizeConfig.widthScale,
-                      radius: 100 * SizeConfig.widthScale,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        100 * SizeConfig.widthScale,
+                      ),
+                      child:
+                          _selectedImage != null
+                              ? Image.file(
+                                _selectedImage!,
+                                height: 100 * SizeConfig.widthScale,
+                                width: 100 * SizeConfig.widthScale,
+                                fit: BoxFit.cover,
+                              )
+                              : CustomNetworkImage(
+                                imageUrl: profileImageUrl,
+                                errorImage: 'assets/icons/no-image.png',
+                                height: 100 * SizeConfig.widthScale,
+                                width: 100 * SizeConfig.widthScale,
+                                radius: 100 * SizeConfig.widthScale,
+                              ),
                     ),
                     Positioned(
                       bottom: 5 * SizeConfig.widthScale,
                       right: 5 * SizeConfig.widthScale,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(27, 46, 64, 1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.add_rounded,
-                          color: Colors.white,
-                          size: 14,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: Color.fromRGBO(27, 46, 64, 1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ),
@@ -85,28 +220,28 @@ class EditProfileScreen extends StatelessWidget {
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Kunal Adwani',
-                controller: _controller,
+                controller: nameController,
                 label: 'Name',
                 isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Trendy Fashions',
-                controller: _controller,
+                controller: storeNameController,
                 label: 'Store Name',
                 isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: '+91 79901 87279',
-                controller: _controller,
+                controller: phoneController,
                 label: 'Phone Number',
                 isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'kunaladwani@gmail.com',
-                controller: _controller,
+                controller: emailController,
                 label: 'Email',
                 isDisabled: true,
               ),
@@ -116,7 +251,7 @@ class EditProfileScreen extends StatelessWidget {
                 children: [
                   InputWidget(
                     hint: 'Advance Plan',
-                    controller: _controller,
+                    controller: subscriptionController,
                     label: 'Change Subscription Plan',
                     isDisabled: true,
                   ),
@@ -124,7 +259,18 @@ class EditProfileScreen extends StatelessWidget {
                     right: 10 * SizeConfig.widthScale,
                     top: 35 * SizeConfig.heightScale,
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => SubscriptionScreen(
+                                  initialPlanId: subscripitonID,
+                                  isEdit: true,
+                                ),
+                          ),
+                        );
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
@@ -147,41 +293,26 @@ class EditProfileScreen extends StatelessWidget {
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Password',
-                controller: _controller,
+                controller: passwordController,
                 label: 'Password',
                 isPassword: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Password',
-                controller: _controller,
+                controller: confirmPasswordController,
                 label: 'Confirm Password',
                 isPassword: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: '9:00AM - 9:00PM',
-                controller: _controller,
+                controller: workingHoursController,
                 label: 'Working Hour',
                 svgPath: 'assets/icons/clock-icon.svg',
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              SubmitButton(
-                text: 'Update Profile',
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (context) => CustomPopUp(
-                          title: 'Successfully Updated Profile',
-                          message: 'All changes have been made to the profile',
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                  );
-                },
-              ),
+              SubmitButton(text: 'Update Profile', onPressed: submit),
             ],
           ),
         ),

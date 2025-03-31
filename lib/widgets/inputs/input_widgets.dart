@@ -6,7 +6,7 @@ import 'package:vendor_app/utils/size_config.dart';
 
 class InputWidget extends StatefulWidget {
   final String? label;
-  final String hint;
+  final String? hint;
   final TextEditingController controller;
   final Function(String?)? onSaved;
   final Function(String)? onChanged;
@@ -22,7 +22,7 @@ class InputWidget extends StatefulWidget {
   const InputWidget({
     super.key,
     this.label,
-    required this.hint,
+    this.hint = '',
     required this.controller,
     this.onSaved,
     this.onChanged,

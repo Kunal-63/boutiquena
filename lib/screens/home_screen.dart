@@ -1,10 +1,11 @@
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
-import 'package:vendor_app/models/product.dart';
+import 'package:vendor_app/providers/login_provider.dart';
+import 'package:vendor_app/screens/main_screen.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/cards/discount.dart';
-import 'package:vendor_app/widgets/cards/product_card.dart';
 import 'package:vendor_app/widgets/headers/main_screen_appbar.dart';
 import 'package:vendor_app/widgets/inputs/dropdown.dart';
 import 'package:flutter/material.dart';
@@ -16,10 +17,109 @@ class HomeScreen extends StatelessWidget {
   final PageController _pageController = PageController();
 
   HomeScreen({super.key});
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: Container(
+        width: 280 * SizeConfig.widthScale,
+        child: Drawer(
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: ListView(
+            padding: EdgeInsets.all(15 * SizeConfig.widthScale),
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.account_circle,
+                  size: 25 * SizeConfig.widthScale,
+                  color: Color.fromRGBO(243, 120, 102, 1),
+                ),
+                title: Text(
+                  "Profile",
+                  style: AppTextStyles.redw400Outfit(
+                    color: Colors.black,
+                  ).copyWith(
+                    fontSize: 16 * SizeConfig.widthScale,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context); // Close the drawer
+                  MainScreen.selectedIndexNotifier.value =
+                      3; // Navigate to Profile tab
+                },
+              ),
+              Divider(),
+              ListTile(
+                leading: Icon(
+                  Icons.delivery_dining,
+                  size: 25 * SizeConfig.widthScale,
+                  color: Color.fromRGBO(243, 120, 102, 1),
+                ),
+                title: Text(
+                  "Vendor Delivery Price",
+                  style: AppTextStyles.redw400Outfit(
+                    color: Colors.black,
+                  ).copyWith(
+                    fontSize: 16 * SizeConfig.widthScale,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pushNamed(context, '/vendor_delivery_price');
+                },
+              ),
+              Divider(),
+              ListTile(
+                leading: Icon(
+                  Icons.logout,
+                  size: 25 * SizeConfig.widthScale,
+                  color: Color.fromRGBO(243, 120, 102, 1),
+                ),
+                title: Text(
+                  "Logout",
+                  style: AppTextStyles.redw400Outfit(
+                    color: Colors.black,
+                  ).copyWith(
+                    fontSize: 16 * SizeConfig.widthScale,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () async {
+                  // Navigator.pushNamedAndRemoveUntil(
+                  //   context,
+                  //   '/login',
+                  //   (route) => false,
+                  // );
+                  final loginProvider = Provider.of<LoginProvider>(
+                    context,
+                    listen: false,
+                  );
+
+                  bool isLoggedOut = await loginProvider.logOutProfile();
+
+                  if (isLoggedOut) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (route) => false,
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Logout failed. Please try again."),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
         child: CustomAppBar(
@@ -28,7 +128,9 @@ class HomeScreen extends StatelessWidget {
               "https://st3.depositphotos.com/1007566/13310/v/450/depositphotos_133109560-stock-illustration-male-profile-avatar-with-brown.jpg",
           errorImage: "assets/icons/avatar.jpg",
           onBellPressed: () {},
-          onSettingsPressed: () {},
+          onSettingsPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+          },
         ),
       ),
       body: SingleChildScrollView(
@@ -42,7 +144,7 @@ class HomeScreen extends StatelessWidget {
             SizedBox(height: 10 * SizeConfig.heightScale),
             _buildSalesDiscountSection(),
             SizedBox(height: 10 * SizeConfig.heightScale),
-            _buildProductsSection(),
+            // _buildProductsSection(),
             SizedBox(height: 10 * SizeConfig.heightScale),
             _buildReviewSection(),
           ],
@@ -543,99 +645,100 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductsSection() {
-    List<Product> sampleProducts = [
-      Product(
-        name: "Laptop",
-        price: 999,
-        imageUrl:
-            "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
-        discount: "-20%",
-        productType: "Electronics",
-      ),
-      Product(
-        name: "Smartphone",
-        price: 499,
-        imageUrl:
-            "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
-        discount: "-15%",
-        productType: "Electronics",
-      ),
-      Product(
-        name: "Headphones",
-        price: 199,
-        imageUrl:
-            "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
-        discount: "-10%",
-        productType: "Accessories",
-      ),
-      Product(
-        name: "Smartwatch",
-        price: 299,
-        imageUrl:
-            "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
-        discount: "-25%",
-        productType: "Wearables",
-      ),
-      Product(
-        name: "Camera",
-        price: 799,
-        imageUrl:
-            "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
-        discount: "-18%",
-        productType: "Photography",
-      ),
-    ];
+  //   Widget _buildProductsSection() {
+  //     List<Product> sampleProducts = [
+  //       Product(
+  //         id: 0,
+  //         productName: "Laptop",
+  //         productPrice: 999,
+  //         productImage:
+  //             "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
+  //         productDiscount: "-20%",
+  //         productType: "Electronics",
+  //       ),
+  //       Product(
+  //         name: "Smartphone",
+  //         price: 499,
+  //         imageUrl:
+  //             "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
+  //         discount: "-15%",
+  //         productType: "Electronics",
+  //       ),
+  //       Product(
+  //         name: "Headphones",
+  //         price: 199,
+  //         imageUrl:
+  //             "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
+  //         discount: "-10%",
+  //         productType: "Accessories",
+  //       ),
+  //       Product(
+  //         name: "Smartwatch",
+  //         price: 299,
+  //         imageUrl:
+  //             "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
+  //         discount: "-25%",
+  //         productType: "Wearables",
+  //       ),
+  //       Product(
+  //         name: "Camera",
+  //         price: 799,
+  //         imageUrl:
+  //             "https://th.bing.com/th/id/OIP.s9gtURohWjYwnMgYl3v4fwHaGy?rs=1&pid=ImgDetMain",
+  //         discount: "-18%",
+  //         productType: "Photography",
+  //       ),
+  //     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Your Products",
-              style: AppTextStyles.blackHeadingStyle().copyWith(
-                fontSize: 16 * SizeConfig.widthScale,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              "View all",
-              style: AppTextStyles.redw400Outfit().copyWith(
-                fontSize: 16 * SizeConfig.widthScale,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        Container(
-          margin: const EdgeInsets.only(top: 10),
-          padding: const EdgeInsets.all(1),
-          height: 220 * SizeConfig.heightScale,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.37),
-            color: Colors.white,
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.06),
-                blurRadius: 3,
-                spreadRadius: 0,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children:
-                  sampleProducts
-                      .map((product) => ProductCardWidget(product: product))
-                      .toList(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  //     return Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             Text(
+  //               "Your Products",
+  //               style: AppTextStyles.blackHeadingStyle().copyWith(
+  //                 fontSize: 16 * SizeConfig.widthScale,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //             Text(
+  //               "View all",
+  //               style: AppTextStyles.redw400Outfit().copyWith(
+  //                 fontSize: 16 * SizeConfig.widthScale,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         Container(
+  //           margin: const EdgeInsets.only(top: 10),
+  //           padding: const EdgeInsets.all(1),
+  //           height: 220 * SizeConfig.heightScale,
+  //           decoration: BoxDecoration(
+  //             borderRadius: BorderRadius.circular(10.37),
+  //             color: Colors.white,
+  //             boxShadow: const [
+  //               BoxShadow(
+  //                 color: Color.fromRGBO(0, 0, 0, 0.06),
+  //                 blurRadius: 3,
+  //                 spreadRadius: 0,
+  //                 offset: Offset(0, 1),
+  //               ),
+  //             ],
+  //           ),
+  //           child: SingleChildScrollView(
+  //             scrollDirection: Axis.horizontal,
+  //             child: Row(
+  //               children:
+  //                   sampleProducts
+  //                       .map((product) => ProductCardWidget(product: product))
+  //                       .toList(),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     );
+  //   }
 }
