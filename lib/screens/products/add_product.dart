@@ -261,9 +261,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                       : ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
                                         child: PageView.builder(
-                                          controller: PageController(
-                                            viewportFraction: 0.8,
-                                          ),
                                           itemCount: _images.length,
                                           itemBuilder:
                                               (context, index) => Image.file(

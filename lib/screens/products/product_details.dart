@@ -1,6 +1,9 @@
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/models/product.dart';
+import 'package:vendor_app/models/product_details.dart';
+import 'package:vendor_app/providers/product_provider.dart';
 import 'package:vendor_app/screens/products/edit_product.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
@@ -9,9 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
-  final Product? product;
+  final int? productID;
 
-  const ProductDetailsScreen({super.key, this.product});
+  const ProductDetailsScreen({super.key, this.productID});
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -20,13 +23,33 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int selectedSizeIndex = -1;
   final PageController _pageController = PageController(viewportFraction: 0.75);
+  ProductDetail? _productDetail;
+
+  Future<void> _loadProductDetail(int id) async {
+    final productProvider = Provider.of<ProductProvider>(
+      context,
+      listen: false,
+    );
+    await productProvider.fetchProductDetailById(id);
+
+    setState(() {
+      _productDetail = productProvider.selectedProductDetail;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    super.initState();
+
+    if (widget.productID != null) {
+      _loadProductDetail(widget.productID!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<String> productImages = [
-      'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
-      'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
-      'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
-    ];
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
@@ -44,9 +67,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     MaterialPageRoute(
                       builder:
                           (context) => EditProductScreen(
-                            product:
+                            productID:
                                 widget
-                                    .product, // pass the current product instance here
+                                    .productID, // pass the current product instance here
                           ),
                     ),
                   );
@@ -87,7 +110,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     height: 220,
                     child: PageView.builder(
                       controller: _pageController,
-                      itemCount: productImages.length,
+                      itemCount: _productDetail?.images?.length,
                       physics: const BouncingScrollPhysics(),
                       onPageChanged: (index) {
                         setState(() {});
@@ -116,7 +139,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: CustomNetworkImage(
-                                      imageUrl: productImages[index],
+                                      imageUrl:
+                                          '${_productDetail?.imagesLargeUrl}/${_productDetail?.images?[index].image}' ??
+                                          'assets/icons/no-image.png',
+                                      fit: BoxFit.cover,
                                       errorImage: 'assets/icons/no-image.png',
                                       radius: 10,
                                     ),
@@ -138,9 +164,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                       padding: const EdgeInsets.all(5),
                       child: Text(
-                        (widget.product?.vendorPrice ?? 0) > 0
-                            ? "${widget.product?.vendorPrice} ₪"
-                            : "Free",
+                        _productDetail?.vendorPrice ?? '0',
                         style: AppTextStyles.whitew400Outfit().copyWith(
                           fontSize: 10 * SizeConfig.widthScale,
                           fontWeight: FontWeight.w600,
@@ -172,7 +196,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.product?.metaTitle ?? "Product Name",
+                        _productDetail?.metaTitle ?? "Product Name",
                         style: AppTextStyles.greySubHeadingStyle(
                           color: const Color.fromRGBO(0, 0, 0, 0.8),
                         ).copyWith(
@@ -182,7 +206,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                       SizedBox(height: 5 * SizeConfig.heightScale),
                       Text(
-                        '${widget.product?.productName ?? '..'} | ${widget.product?.productNameArabic ?? '..'} | ${widget.product?.productNameHebrew ?? '..'}' ??
+                        '${_productDetail?.productName ?? '..'} | ${_productDetail?.productNameArabic ?? '..'} | ${_productDetail?.productNameHebrew ?? '..'}' ??
                             "Product Name",
                         style: AppTextStyles.blackSubHeadingStyle().copyWith(
                           fontSize: 16 * SizeConfig.widthScale,
@@ -193,7 +217,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ],
                   ),
                   Text(
-                    "${widget.product?.totalPrice} ₪",
+                    "${_productDetail?.totalPrice} ₪",
                     style: AppTextStyles.redw400Outfit().copyWith(
                       fontSize: 24 * SizeConfig.heightScale,
                       fontWeight: FontWeight.w600,
@@ -216,7 +240,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
               Text(
-                widget.product?.description ?? "Product Description",
+                _productDetail?.description ?? "Product Description",
                 style: AppTextStyles.greySubHeadingStyle(
                   color: const Color.fromRGBO(0, 0, 0, 0.5),
                 ).copyWith(
@@ -234,7 +258,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
               Text(
-                widget.product?.metaTitle ?? "Product Meta Keywords",
+                _productDetail?.metaTitle ?? "Product Meta Keywords",
                 style: AppTextStyles.greySubHeadingStyle(
                   color: const Color.fromRGBO(0, 0, 0, 0.5),
                 ).copyWith(
@@ -252,7 +276,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
               Text(
-                widget.product?.metaKeywords ?? "Product Meta Keywords",
+                _productDetail?.metaKeywords ?? "Product Meta Keywords",
                 style: AppTextStyles.greySubHeadingStyle(
                   color: const Color.fromRGBO(0, 0, 0, 0.5),
                 ).copyWith(
@@ -270,7 +294,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
               Text(
-                widget.product?.metaDescription ?? "Product Meta Description",
+                _productDetail?.metaDescription ?? "Product Meta Description",
                 style: AppTextStyles.greySubHeadingStyle(
                   color: const Color.fromRGBO(0, 0, 0, 0.5),
                 ).copyWith(

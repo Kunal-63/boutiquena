@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:vendor_app/models/product.dart';
+import 'package:vendor_app/models/product_details.dart';
 import 'package:vendor_app/services/api_service.dart';
 import 'package:vendor_app/services/log_service.dart';
 
@@ -12,6 +13,9 @@ class ProductProvider with ChangeNotifier {
 
   List<Product> get products => _products;
   bool get isLoading => _isLoading;
+
+  ProductDetail? _selectedProductDetail;
+  ProductDetail? get selectedProductDetail => _selectedProductDetail;
 
   Future<void> fetchProducts() async {
     _isLoading = true;
@@ -32,7 +36,7 @@ class ProductProvider with ChangeNotifier {
                   .map((entry) => Product.fromJson(entry.value))
                   .toList();
 
-          productImageURL = data['data']['image_url'] ?? null;
+          productImageURL = data['data']['image_url'];
           print("PRODUCT IMAGE URL: $productImageURL");
         } else {
           LogService.error("Invalid response format in product data");
@@ -48,6 +52,33 @@ class ProductProvider with ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> fetchProductDetailById(int id) async {
+    try {
+      final response = await ApiService.getWithAuth(
+        'get-vendor-products-details/$id',
+      );
+
+      if (response != null && response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['status'] == true && data['data'] != null) {
+          _selectedProductDetail = ProductDetail.fromJson(data['data']);
+          notifyListeners();
+        } else {
+          LogService.error(
+            "Failed to fetch product detail: ${data['message']}",
+          );
+        }
+      } else {
+        throw Exception(
+          "API Error: ${response?.statusCode} - ${response?.body}",
+        );
+      }
+    } catch (e) {
+      LogService.error("fetchProductDetailById() Error: $e");
+    }
   }
 
   Future<bool> addProduct(
@@ -90,35 +121,6 @@ class ProductProvider with ChangeNotifier {
       );
 
       if (response['status'] == true) {
-        final newProduct = Product(
-          id: response['data']['id'],
-          categoryId: product.categoryId,
-          productName: product.productName,
-          vendorPrice: product.vendorPrice,
-          shortDescription: product.shortDescription,
-          description: product.description,
-          productNameArabic: product.productNameArabic,
-          productNameHebrew: product.productNameHebrew,
-          shortDescriptionHebrew: product.shortDescriptionHebrew,
-          shortDescriptionArabic: product.shortDescriptionArabic,
-          descriptionHebrew: product.descriptionHebrew,
-          descriptionArabic: product.descriptionArabic,
-          metaTitle: product.metaTitle,
-          metaTitleHebrew: product.metaTitleHebrew,
-          metaTitleArabic: product.metaTitleArabic,
-          metaDescription: product.metaDescription,
-          metaDescriptionHebrew: product.metaDescriptionHebrew,
-          metaDescriptionArabic: product.metaDescriptionArabic,
-          metaKeywords: product.metaKeywords,
-          metaKeywordsHebrew: product.metaKeywordsHebrew,
-          metaKeywordsArabic: product.metaKeywordsArabic,
-          isPinned: product.isPinned,
-          isSuggested: product.isSuggested,
-          isFeatured: product.isFeatured,
-          isBestseller: product.isBestseller,
-          status: product.status,
-        );
-
         fetchProducts();
         notifyListeners();
 
@@ -134,8 +136,10 @@ class ProductProvider with ChangeNotifier {
   }
 
   Future<bool> updateProduct(
-    Product product,
-    List<File>? selectedIamges,
+    ProductDetail product,
+    List<File>? selectedImages,
+    File? selectedImage,
+    List<int>? keepImageIds,
   ) async {
     try {
       final response = await ApiService.postWithAuth(
@@ -161,53 +165,28 @@ class ProductProvider with ChangeNotifier {
           "meta_keywords": product.metaKeywords ?? "",
           "meta_keywords_hebrew": product.metaKeywordsHebrew ?? "",
           "meta_keywords_arabic": product.metaKeywordsArabic ?? "",
-          "is_pinned": product.isPinned ?? "0",
-          "is_suggested": product.isSuggested ?? "0",
-          "is_featured": product.isFeatured ?? "0",
-          "is_bestseller": product.isBestseller ?? "0",
+          "is_pinned": product.isPinned ?? "No",
+          "is_suggested": product.isSuggested ?? "No",
+          "is_featured": product.isFeatured ?? "No",
+          "is_bestseller": product.isBestseller ?? "No",
           "status": product.status ?? "1",
+          if (keepImageIds != null && keepImageIds.isNotEmpty)
+            "keep_image_ids": keepImageIds.map((id) => id.toString()).join(','),
         },
+        files: {"product_image": selectedImage},
+        multipleFiles: {"product_images": selectedImages ?? []},
       );
 
       if (response['status'] == true) {
-        final newProduct = Product(
-          id: response['data']['id'],
-          categoryId: product.categoryId,
-          productName: product.productName,
-          vendorPrice: product.vendorPrice,
-          shortDescription: product.shortDescription,
-          description: product.description,
-          productNameArabic: product.productNameArabic,
-          productNameHebrew: product.productNameHebrew,
-          shortDescriptionHebrew: product.shortDescriptionHebrew,
-          shortDescriptionArabic: product.shortDescriptionArabic,
-          descriptionHebrew: product.descriptionHebrew,
-          descriptionArabic: product.descriptionArabic,
-          metaTitle: product.metaTitle,
-          metaTitleHebrew: product.metaTitleHebrew,
-          metaTitleArabic: product.metaTitleArabic,
-          metaDescription: product.metaDescription,
-          metaDescriptionHebrew: product.metaDescriptionHebrew,
-          metaDescriptionArabic: product.metaDescriptionArabic,
-          metaKeywords: product.metaKeywords,
-          metaKeywordsHebrew: product.metaKeywordsHebrew,
-          metaKeywordsArabic: product.metaKeywordsArabic,
-          isPinned: product.isPinned,
-          isSuggested: product.isSuggested,
-          isFeatured: product.isFeatured,
-          isBestseller: product.isBestseller,
-          status: product.status,
-        );
         fetchProducts();
         notifyListeners();
-
         return true;
       } else {
-        LogService.error("Failed to add product: ${response['message']}");
+        LogService.error("Failed to update product: ${response['message']}");
         return false;
       }
     } catch (e) {
-      LogService.error("addProduct() Error: $e");
+      LogService.error("updateProduct() Error: $e");
       return false;
     }
   }

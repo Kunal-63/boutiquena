@@ -22,6 +22,7 @@ import 'package:vendor_app/screens/subscription_plan.dart';
 import 'package:vendor_app/screens/splash_screen.dart';
 import 'package:vendor_app/screens/login_screen.dart';
 import 'package:vendor_app/screens/vendor%20delivery/vendor_delivery_screen.dart';
+import 'package:vendor_app/services/mavigation_service.dart';
 import 'utils/size_config.dart';
 
 void main() {
@@ -70,6 +71,7 @@ class MyApp extends StatelessWidget {
         dialogTheme: DialogTheme(backgroundColor: Colors.white),
       ),
       initialRoute: '/',
+      navigatorKey: NavigationService.navigatorKey,
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),

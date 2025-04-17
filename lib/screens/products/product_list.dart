@@ -196,8 +196,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) =>
-                                        ProductDetailsScreen(product: product),
+                                    (context) => ProductDetailsScreen(
+                                      productID: product.id,
+                                    ),
                               ),
                             );
                           },
@@ -274,7 +275,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                                     builder:
                                                         (context) =>
                                                             EditProductScreen(
-                                                              product: product,
+                                                              productID:
+                                                                  product?.id,
                                                             ),
                                                   ),
                                                 );
