@@ -1,22 +1,13 @@
 import 'package:customer_app/models/category_item.dart';
-import 'package:customer_app/models/product.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
-import 'package:customer_app/widgets/inputs/input_widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
-import 'package:customer_app/providers/login_provider.dart';
-import 'package:customer_app/screens/main_screen.dart';
-import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
-import 'package:customer_app/widgets/cards/discount.dart';
 import 'package:customer_app/widgets/headers/main_screen_appbar.dart';
-import 'package:customer_app/widgets/inputs/dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,14 +45,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               children: [
                 SizedBox(
-                  height: (80.0),
+                  height: (90.0),
                   child: CustomAppBar(
                     title: "Dashboard",
                     imageUrl:
                         "https://st3.depositphotos.com/1007566/13310/v/450/depositphotos_133109560-stock-illustration-male-profile-avatar-with-brown.jpg",
                     errorImage: "assets/icons/avatar.jpg",
                     onBellPressed: () {},
-                    onSettingsPressed: () {},
+                    onHeartPressed: () {},
                     onMenuPressed: () {
                       setState(() {
                         _isDrawerOpen = !_isDrawerOpen;

@@ -9,6 +9,7 @@ class SubmitButton extends StatelessWidget {
   final Color? backgroundColor;
   final Color? textColor;
   final bool isTransparent;
+  final double radius;
 
   const SubmitButton({
     super.key,
@@ -17,6 +18,7 @@ class SubmitButton extends StatelessWidget {
     this.backgroundColor = AppTheme.buttonColor,
     this.textColor,
     this.isTransparent = false,
+    this.radius = 12,
   });
 
   @override
@@ -24,21 +26,26 @@ class SubmitButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isTransparent
-            ? const Color.fromRGBO(255, 255, 255, 1)
-            : (backgroundColor ?? AppTheme.buttonColor),
-        side: isTransparent
-            ? const BorderSide(color: AppTheme.primaryColor, width: 1)
-            : BorderSide.none,
+        backgroundColor:
+            isTransparent
+                ? const Color.fromRGBO(255, 255, 255, 1)
+                : (backgroundColor ?? AppTheme.buttonColor),
+        side:
+            isTransparent
+                ? const BorderSide(color: AppTheme.primaryColor, width: 1)
+                : BorderSide.none,
         minimumSize: Size(double.infinity, 50 * SizeConfig.heightScale),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
       ),
       child: Text(
         text,
         style: AppTextStyles.whiteButtonStyle().copyWith(
-          color: isTransparent
-              ? AppTheme.primaryColor
-              : (textColor ?? Colors.white),
+          color:
+              isTransparent
+                  ? AppTheme.primaryColor
+                  : (textColor ?? Colors.white),
         ),
       ),
     );

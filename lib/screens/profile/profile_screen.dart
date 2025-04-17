@@ -1,6 +1,7 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/providers/vendor_profile_provider.dart';
+import 'package:customer_app/screens/profile/profile_header.dart';
 import 'package:customer_app/screens/subscription_plan.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
@@ -34,10 +35,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     Future.microtask(
-      () => Provider.of<VendorProfileProvider>(
-        context,
-        listen: false,
-      ).fetchVendorProfile(),
+      () =>
+          Provider.of<VendorProfileProvider>(
+            context,
+            listen: false,
+          ).fetchVendorProfile(),
     );
   }
 
@@ -87,54 +89,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Column(
           children: [
-            Center(
-              child: Stack(
-                children: [
-                  CustomNetworkImage(
-                    imageUrl: profileImageUrl.isNotEmpty
-                        ? profileImageUrl
-                        : 'assets/icons/no-image.png',
-                    errorImage: 'assets/icons/no-image.png',
-                    height: 100 * SizeConfig.widthScale,
-                    width: 100 * SizeConfig.widthScale,
-                    radius: 100 * SizeConfig.widthScale,
-                  ),
-                  Positioned(
-                    bottom: 5 * SizeConfig.widthScale,
-                    right: 5 * SizeConfig.widthScale,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/edit_profile');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(27, 46, 64, 1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: SvgPicture.asset(
-                          'assets/icons/edit-image-icon.svg',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ProfileHeader(userName: 'Kunal Adwani', profileImageUrl: ''),
             SizedBox(height: 10 * SizeConfig.heightScale),
-            Text(
-              userName,
-              style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                fontSize: 20 * SizeConfig.widthScale,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            buildWishlistSection([]),
+            SizedBox(height: 10 * SizeConfig.heightScale),
+            buildWishlistSection([]),
             SizedBox(height: 10 * SizeConfig.heightScale),
             Container(
-              padding: const EdgeInsets.all(15),
+              padding: EdgeInsets.all(10 * SizeConfig.widthScale),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.37),
-                color: const Color.fromRGBO(255, 255, 255, 1),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
                 boxShadow: const [
                   BoxShadow(
                     color: Color.fromRGBO(0, 0, 0, 0.06),
@@ -146,84 +111,274 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  InputWidget(
-                    hint: 'Trendy Fashions',
-                    controller: _storeNameController,
-                    label: 'Store Name',
-                    isDisabled: true,
-                  ),
-                  SizedBox(height: 10 * SizeConfig.heightScale),
-                  InputWidget(
-                    hint: '+91 79901 87279',
-                    controller: _phoneController,
-                    label: 'Phone Number',
-                    isDisabled: true,
-                  ),
-                  SizedBox(height: 10 * SizeConfig.heightScale),
-                  InputWidget(
-                    hint: 'kunaladwani@gmail.com',
-                    controller: _emailController,
-                    label: 'Email',
-                    isDisabled: true,
-                  ),
-                  SizedBox(height: 10 * SizeConfig.heightScale),
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      InputWidget(
-                        hint: '',
-                        controller: _subscriptionController,
-                        label: 'Change Subscription Plan',
-                        isDisabled: true,
-                      ),
-                      Positioned(
-                        right: 10 * SizeConfig.widthScale,
-                        top: 35 * SizeConfig.heightScale,
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubscriptionScreen(
-                                  initialPlanId: subscripitonID,
-                                  isEdit: true,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5.68),
-                              color: AppTheme.buttonColor,
-                            ),
-                            child: Text(
-                              'Upgrade',
-                              style: AppTextStyles.whiteButtonStyle().copyWith(
-                                color: Colors.white,
-                                fontSize: 8 * SizeConfig.widthScale,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Your Rewards",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        Text(
+                          "See all",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.redAccent.shade200,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Container(
+                    width: double.infinity,
+
+                    padding: EdgeInsets.all(5 * SizeConfig.widthScale),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 0.5,
                       ),
-                    ],
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/icons/home-coins.png',
+                              height: 25,
+                              width: 25,
+                            ),
+                            SizedBox(width: 10 * SizeConfig.widthScale),
+                            Text(
+                              "Collected Coins",
+                              style: AppTextStyles.blackSubHeadingStyle()
+                                  .copyWith(
+                                    fontSize: 14 * SizeConfig.widthScale,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          "100 ₪",
+                          style: AppTextStyles.greySubHeadingStyle().copyWith(
+                            fontSize: 14 * SizeConfig.widthScale,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 10 * SizeConfig.heightScale),
-                  InputWidget(
-                    hint: '9:00AM - 9:00PM',
-                    controller: _workingHoursController,
-                    label: 'Working Hour',
-                    svgPath: 'assets/icons/clock-icon.svg',
-                  ),
-                  SizedBox(height: 10 * SizeConfig.heightScale),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+Widget buildWishlistSection(List<Map<String, dynamic>> products) {
+  List<Map<String, dynamic>> sampleProducts = [
+    {
+      "name": "Evening Dress",
+      "price": 10,
+      "imageUrl":
+          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+      "discount": "",
+      "productType": "Evening Dress",
+    },
+    {
+      "name": "Evening Dress",
+      "price": 10,
+      "imageUrl":
+          "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
+      "discount": "",
+      "productType": "Evening Dress",
+    },
+    {
+      "name": "Evening Dress",
+      "price": 10,
+      "imageUrl":
+          "https://images.unsplash.com/photo-1618354691214-0a4a2f03a3b5",
+      "discount": "-10%",
+      "productType": "Evening Dress",
+    },
+  ];
+  return WishlistSection(products: sampleProducts);
+}
+
+class WishlistSection extends StatelessWidget {
+  final List<Map<String, dynamic>> products;
+
+  const WishlistSection({super.key, required this.products});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 250 * SizeConfig.heightScale,
+          padding: EdgeInsets.all(10 * SizeConfig.widthScale),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.06),
+                blurRadius: 3,
+                spreadRadius: 0,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Wishlist",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "See all",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.redAccent.shade200,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 5),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: products.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    return WishlistCard(data: products[index]);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class WishlistCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+
+  const WishlistCard({super.key, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = data['imageUrl'] ?? '';
+    final title = data['title'] ?? 'Evening Dress';
+    final brand = data['brand'] ?? 'Dorothy Perkins';
+    final price = data['price']?.toString() ?? '10';
+
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.grey.shade300, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              imageUrl,
+              height: 90,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder:
+                  (_, __, ___) => Container(
+                    height: 90,
+                    width: double.infinity,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image_not_supported),
+                  ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+
+                  Text(
+                    brand,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                "$price ₪",
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 5 * SizeConfig.heightScale),
+          _iconButton(Icons.favorite_rounded),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconButton(IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Icon(icon, size: 18, color: Colors.redAccent),
     );
   }
 }

@@ -28,6 +28,16 @@ class BottomNavigationItem extends StatelessWidget {
             isSelected ? selectedPath : iconPath,
             height: 20,
             width: 20,
+            colorFilter:
+                isSelected
+                    ? const ColorFilter.mode(
+                      Color.fromRGBO(243, 120, 102, 1),
+                      BlendMode.srcIn,
+                    )
+                    : const ColorFilter.mode(
+                      Color.fromRGBO(208, 208, 208, 1),
+                      BlendMode.srcIn,
+                    ),
           ),
           if (isSelected)
             Container(

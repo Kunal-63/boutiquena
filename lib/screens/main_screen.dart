@@ -1,7 +1,6 @@
+import 'package:customer_app/screens/orders/checkout_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/screens/home_screen.dart';
-import 'package:customer_app/screens/orders/order_list.dart';
 
 import 'package:customer_app/screens/profile/profile_screen.dart';
 import 'package:customer_app/utils/size_config.dart';
@@ -20,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     HomeScreen(),
     HomeScreen(),
-    const OrderListScreen(),
+    CheckOutScreen(),
     ProfileScreen(),
   ];
 
@@ -41,13 +40,19 @@ class _MainScreenState extends State<MainScreen> {
         valueListenable: MainScreen.selectedIndexNotifier,
         builder: (context, selectedIndex, _) {
           return Container(
-            height: 50,
+            height: 70,
             width: double.infinity,
             padding: EdgeInsets.symmetric(
               horizontal: 0.0 * SizeConfig.widthScale,
               vertical: 10,
             ),
-            decoration: const BoxDecoration(color: AppTheme.primaryColor),
+            decoration: BoxDecoration(
+              color: Color.fromRGBO(31, 88, 84, 1),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(35.0 * SizeConfig.widthScale),
+                topRight: Radius.circular(35.0 * SizeConfig.widthScale),
+              ),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -61,16 +66,16 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 Expanded(
                   child: BottomNavigationItem(
-                    iconPath: 'assets/icons/white-bag-icon.svg',
-                    selectedPath: 'assets/icons/bag-icon.svg',
+                    iconPath: 'assets/icons/search-icon.svg',
+                    selectedPath: 'assets/icons/search-icon.svg',
                     isSelected: selectedIndex == 1,
                     onTap: () => onItemTapped(1),
                   ),
                 ),
                 Expanded(
                   child: BottomNavigationItem(
-                    iconPath: 'assets/icons/white-product-list-icon.svg',
-                    selectedPath: 'assets/icons/product-list-icon.svg',
+                    iconPath: 'assets/icons/cart-icon.svg',
+                    selectedPath: 'assets/icons/cart-icon.svg',
                     isSelected: selectedIndex == 2,
                     onTap: () => onItemTapped(2),
                   ),

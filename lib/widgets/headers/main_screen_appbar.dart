@@ -1,6 +1,4 @@
 import 'package:customer_app/config/text_styles.dart';
-import 'package:customer_app/config/theme.dart';
-import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,7 +8,7 @@ class CustomAppBar extends StatelessWidget {
   final String imageUrl;
   final String errorImage;
   final VoidCallback onBellPressed;
-  final VoidCallback onSettingsPressed;
+  final VoidCallback onHeartPressed;
   final VoidCallback onMenuPressed;
 
   const CustomAppBar({
@@ -18,7 +16,7 @@ class CustomAppBar extends StatelessWidget {
     required this.imageUrl,
     required this.errorImage,
     required this.onBellPressed,
-    required this.onSettingsPressed,
+    required this.onHeartPressed,
     required this.onMenuPressed,
     super.key,
   });
@@ -29,7 +27,18 @@ class CustomAppBar extends StatelessWidget {
       height: double.infinity,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-      color: AppTheme.primaryColor,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color.fromRGBO(154, 174, 170, 1),
+            Color.fromRGBO(104, 160, 155, 1),
+            Color.fromRGBO(59, 141, 134, 1),
+            Color.fromRGBO(31, 88, 84, 1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Row(
@@ -49,45 +58,80 @@ class CustomAppBar extends StatelessWidget {
             //     width: 33,
             //   ),
             // ),
-            Row(
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "BOUTIQUE",
-                  style: AppTextStyles.whitew400Outfit().copyWith(
-                    fontSize: 18 * SizeConfig.widthScale,
-                    letterSpacing: 1.5,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      "BOUTIQUE",
+                      style: AppTextStyles.whitew400Outfit().copyWith(
+                        fontSize: 18 * SizeConfig.widthScale,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Text(
+                      'NA',
+                      style: AppTextStyles.whitew400Outfit().copyWith(
+                        fontSize: 18 * SizeConfig.widthScale,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'NA',
-                  style: AppTextStyles.whitew400Outfit().copyWith(
-                    fontSize: 18 * SizeConfig.widthScale,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
+                GestureDetector(
+                  onTap: () {
+                    // Handle tap on the title
+                  },
+                  child: Row(
+                    children: [
+                      Text(
+                        'Change Language',
+                        style: AppTextStyles.whitew400Outfit().copyWith(
+                          fontSize: 12 * SizeConfig.widthScale,
+
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      SvgPicture.asset('assets/icons/arrow-down-icon.svg'),
+                    ],
                   ),
                 ),
               ],
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: SvgPicture.asset('assets/icons/notification-icon.svg'),
-                  onPressed: onBellPressed,
-                  padding: const EdgeInsets.all(0),
-                  constraints: const BoxConstraints(),
-                ),
-                IconButton(
-                  icon: SvgPicture.asset('assets/icons/settings-icon.svg'),
-                  onPressed: onSettingsPressed,
-                  padding: const EdgeInsets.all(0),
-                  constraints: const BoxConstraints(),
-                ),
-                IconButton(
-                  icon: SvgPicture.asset('assets/icons/menu-icon.svg'),
-                  onPressed: onMenuPressed,
-                  padding: const EdgeInsets.all(0),
-                  constraints: const BoxConstraints(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: SvgPicture.asset(
+                        'assets/icons/notification-icon.svg',
+                      ),
+                      onPressed: onBellPressed,
+                      padding: const EdgeInsets.all(0),
+                      constraints: const BoxConstraints(),
+                    ),
+                    IconButton(
+                      icon: SvgPicture.asset('assets/icons/heart-icon.svg'),
+                      onPressed: onHeartPressed,
+                      padding: const EdgeInsets.all(0),
+                      constraints: const BoxConstraints(),
+                    ),
+                    IconButton(
+                      icon: SvgPicture.asset('assets/icons/menu-icon.svg'),
+                      onPressed: onMenuPressed,
+                      padding: const EdgeInsets.all(0),
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
               ],
             ),

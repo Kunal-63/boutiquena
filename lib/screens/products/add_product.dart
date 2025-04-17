@@ -452,7 +452,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   Widget _buildRadioButton(
     String label,
     String value,
-    String? _selectedOption,
+    String? selectedOption,
     Function(String) onChanged,
   ) {
     return GestureDetector(
@@ -474,7 +474,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
             ),
             child:
-                _selectedOption == value
+                selectedOption == value
                     ? const Center(
                       child: Icon(
                         Icons.circle,
