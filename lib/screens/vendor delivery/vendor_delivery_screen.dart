@@ -34,7 +34,7 @@ class _VendorDeliveryScreenState extends State<VendorDeliveryScreen> {
     });
   }
 
-  void _onRegionSelected(dynamic? regionId) {
+  void _onRegionSelected(dynamic regionId) {
     final regionProvider = Provider.of<RegionProvider>(context, listen: false);
     final vendorDeliveryProvider = Provider.of<VendorDeliveryProvider>(
       context,

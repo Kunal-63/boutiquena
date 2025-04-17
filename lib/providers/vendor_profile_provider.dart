@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:vendor_app/models/vendor_profile.dart';
 import 'package:vendor_app/services/api_service.dart';
 import 'package:vendor_app/services/log_service.dart';
+import 'package:vendor_app/utils/utils.dart';
 
 class VendorProfileProvider with ChangeNotifier {
   VendorProfile? _vendorProfile;
@@ -46,12 +48,14 @@ class VendorProfileProvider with ChangeNotifier {
     required String pincode,
     required String mobile,
     String password = "123456",
+    File? image,
   }) async {
     _isLoading = true;
     notifyListeners();
 
     final body = {
-      "password": password,
+      if (password.isNotEmpty) "password": password,
+
       "name": name,
       "address": address,
       "city": city,
@@ -60,6 +64,11 @@ class VendorProfileProvider with ChangeNotifier {
       "pincode": pincode,
       "mobile": mobile,
     };
+    File? convertedImage;
+    if (image != null) {
+      convertedImage = await Utils.convertToJpgIfWebp(image);
+    }
+    final fileBody = {if (convertedImage != null) "image": convertedImage};
 
     try {
       LogService.info("Updating Vendor Profile...");
@@ -68,7 +77,10 @@ class VendorProfileProvider with ChangeNotifier {
       final response = await ApiService.postWithAuth(
         'update-vendor-profile',
         body,
+        files: fileBody,
       );
+      LogService.info('body$body');
+      LogService.info('fileBody$fileBody');
 
       if (response == null) {
         LogService.error("No response from server");

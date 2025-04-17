@@ -8,11 +8,13 @@ class CommonAppBar extends StatelessWidget {
   final String title;
   final VoidCallback menuPressed;
   final List<PopupMenuEntry<int>> menuItems;
+  final VoidCallback? backPressed;
 
   const CommonAppBar({
     required this.title,
     required this.menuPressed,
     required this.menuItems,
+    this.backPressed,
     super.key,
   });
 
@@ -50,9 +52,11 @@ class CommonAppBar extends StatelessWidget {
           children: [
             IconButton(
               icon: SvgPicture.asset('assets/icons/left-icon.svg'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed:
+                  backPressed ??
+                  () {
+                    Navigator.pop(context);
+                  },
             ),
             Text(
               title,

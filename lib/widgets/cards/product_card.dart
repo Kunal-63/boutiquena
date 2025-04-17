@@ -58,7 +58,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
-                    widget.product.productDiscount ?? '',
+                    widget.product.totalPrice ?? '',
                     style: AppTextStyles.whitew400Outfit().copyWith(
                       fontSize: 10 * SizeConfig.widthScale,
                       fontWeight: FontWeight.w600,
@@ -128,7 +128,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            widget.product.occasion ?? '',
+            widget.product.productName ?? '',
             style: AppTextStyles.greySubHeadingStyle().copyWith(
               fontSize: 8 * SizeConfig.widthScale,
               fontWeight: FontWeight.w400,
@@ -144,7 +144,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            "${widget.product.productPrice} ₪",
+            "${widget.product.totalPrice} ₪",
             style: AppTextStyles.redw400Outfit().copyWith(
               fontSize: 12 * SizeConfig.widthScale,
               fontWeight: FontWeight.w600,

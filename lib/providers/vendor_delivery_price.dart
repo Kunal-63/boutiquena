@@ -94,8 +94,8 @@ class VendorDeliveryProvider with ChangeNotifier {
               ? json.decode(response)
               : response as Map<String, dynamic>;
 
-      if (data?["status"] == true && data?["data"] != null) {
-        _deliveryPrices.add(VendorDeliveryPrice.fromJson(data!["data"]));
+      if (data["status"] == true && data["data"] != null) {
+        _deliveryPrices.add(VendorDeliveryPrice.fromJson(data["data"]));
         notifyListeners();
         return true;
       } else {
@@ -132,10 +132,10 @@ class VendorDeliveryProvider with ChangeNotifier {
               ? json.decode(response)
               : response as Map<String, dynamic>;
 
-      if (data?["status"] == true && data?["data"] != null) {
+      if (data["status"] == true && data["data"] != null) {
         int index = _deliveryPrices.indexWhere((p) => p.id == priceId);
         if (index != -1) {
-          _deliveryPrices[index] = VendorDeliveryPrice.fromJson(data!["data"]);
+          _deliveryPrices[index] = VendorDeliveryPrice.fromJson(data["data"]);
           notifyListeners();
         }
         return true;

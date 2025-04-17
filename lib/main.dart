@@ -4,6 +4,7 @@ import 'package:vendor_app/providers/login_provider.dart';
 import 'package:vendor_app/providers/orders_provider.dart';
 import 'package:vendor_app/providers/product_provider.dart';
 import 'package:vendor_app/providers/region_provider.dart';
+import 'package:vendor_app/providers/store_category.dart';
 import 'package:vendor_app/providers/subscription_provider.dart';
 import 'package:vendor_app/providers/vendor_delivery_price.dart';
 import 'package:vendor_app/providers/vendor_profile_provider.dart';
@@ -36,6 +37,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => RegionProvider()),
         ChangeNotifierProvider(create: (_) => VendorDeliveryProvider()),
+        ChangeNotifierProvider(create: (_) => StoreCategoryProvider()),
       ],
       child: const MyApp(),
     ),
@@ -65,7 +67,7 @@ class MyApp extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
         ),
-        dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+        dialogTheme: DialogTheme(backgroundColor: Colors.white),
       ),
       initialRoute: '/',
       routes: {

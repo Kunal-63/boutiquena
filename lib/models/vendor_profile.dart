@@ -68,9 +68,7 @@ class VendorProfile {
       imagePath: json['image_path'],
       subscriptionsName: json['subscriptions_name'],
       storeDetails:
-          json['store_details'] != null
-              ? StoreDetails.fromJson(json['store_details'])
-              : null,
+          json['store'] != null ? StoreDetails.fromJson(json['store']) : null,
     );
   }
 }

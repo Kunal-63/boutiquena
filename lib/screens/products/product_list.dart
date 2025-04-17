@@ -1,6 +1,8 @@
 import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
+import 'package:vendor_app/screens/products/edit_product.dart';
+import 'package:vendor_app/screens/products/product_details.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/headers/common_appbar.dart';
@@ -39,6 +41,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
         child: CommonAppBar(
           title: "Product List",
           menuPressed: () {},
+          backPressed: () {},
           menuItems: [
             PopupMenuHelper.buildPopupMenuItem(
               0,
@@ -152,6 +155,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             GestureDetector(
                               onTap: () {
                                 // Navigate to Add Product Screen
+                                Navigator.pushNamed(context, '/add_product');
                               },
                               child: Container(
                                 decoration: const BoxDecoration(
@@ -186,249 +190,209 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       itemBuilder: (context, index) {
                         var product = productProvider.products[index];
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            color: Color.fromRGBO(255, 255, 255, 1),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(10.37),
-                            ),
-                          ),
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        ProductDetailsScreen(product: product),
+                              ),
+                            );
+                          },
                           child: Container(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Product Image
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    CustomNetworkImage(
-                                      imageUrl:
-                                          product.productImage ??
-                                          'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
-                                      errorImage: 'assets/icons/no-image.png',
-                                      width: 110 * SizeConfig.widthScale,
-                                      height: 130 * SizeConfig.heightScale,
-                                      radius: 5,
-                                    ),
-                                    if (product.productDiscount != null)
-                                      Positioned(
-                                        top: 8,
-                                        left: 8,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            "${product.productDiscount}%",
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    Positioned(
-                                      bottom: -10,
-                                      right: -5,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          productProvider.toggleFavorite(
-                                            product.id ?? '',
-                                          );
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(7),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Color.fromRGBO(
-                                                  0,
-                                                  0,
-                                                  0,
-                                                  0.1,
-                                                ),
-                                                blurRadius: 3,
-                                              ),
-                                            ],
-                                          ),
-                                          child: Center(
-                                            child: Icon(
-                                              product.isFavorite
-                                                  ? Icons.favorite_rounded
-                                                  : Icons
-                                                      .favorite_border_rounded,
-                                              color:
-                                                  product.isFavorite
-                                                      ? Colors.red
-                                                      : Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(width: 10 * SizeConfig.widthScale),
-
-                                // Product Details
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        product.productName ?? "Unknown",
-                                        style:
-                                            AppTextStyles.blackSubHeadingStyle()
-                                                .copyWith(
-                                                  fontSize:
-                                                      14 *
-                                                      SizeConfig.widthScale,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                      ),
-                                      SizedBox(
-                                        height: 5 * SizeConfig.heightScale,
-                                      ),
-                                      Text(
-                                        product.productPrice ?? "N/A",
-                                        style: AppTextStyles.redw400Outfit()
-                                            .copyWith(
-                                              fontSize:
-                                                  14 * SizeConfig.widthScale,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                      ),
-                                      SizedBox(
-                                        height: 5 * SizeConfig.heightScale,
-                                      ),
-
-                                      // Edit and Delete Buttons
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () {
-                                              // Navigate to Edit Product Screen
-                                            },
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal:
-                                                    10 * SizeConfig.widthScale,
-                                                vertical:
-                                                    5 * SizeConfig.heightScale,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: const Color.fromRGBO(
-                                                    219,
-                                                    233,
-                                                    233,
-                                                    1,
-                                                  ),
-                                                  width: 0.94,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      22 *
-                                                          SizeConfig
-                                                              .heightScale,
-                                                    ),
-                                              ),
-                                              child: Text(
-                                                'Edit',
-                                                style:
-                                                    AppTextStyles.blackSubHeadingStyle()
-                                                        .copyWith(
-                                                          fontSize:
-                                                              14 *
-                                                              SizeConfig
-                                                                  .widthScale,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                        ),
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: 5 * SizeConfig.widthScale,
-                                          ),
-                                          GestureDetector(
-                                            onTap: () {
-                                              showDialog(
-                                                context: context,
-                                                builder:
-                                                    (context) => DeletePopUp(
-                                                      message:
-                                                          'Are you sure you want to delete this product?',
-                                                      onPressed: () {
-                                                        productProvider
-                                                            .deleteProduct(
-                                                              product.id ?? '',
-                                                            );
-                                                        Navigator.pop(context);
-                                                      },
-                                                    ),
-                                              );
-                                            },
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal:
-                                                    10 * SizeConfig.widthScale,
-                                                vertical:
-                                                    5 * SizeConfig.heightScale,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: const Color.fromRGBO(
-                                                    219,
-                                                    233,
-                                                    233,
-                                                    1,
-                                                  ),
-                                                  width: 0.94,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      22 *
-                                                          SizeConfig
-                                                              .heightScale,
-                                                    ),
-                                              ),
-                                              child: Text(
-                                                'Delete',
-                                                style:
-                                                    AppTextStyles.blackSubHeadingStyle()
-                                                        .copyWith(
-                                                          fontSize:
-                                                              14 *
-                                                              SizeConfig
-                                                                  .widthScale,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                        ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(255, 255, 255, 1),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.37),
+                              ),
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Product Image
+                                  CustomNetworkImage(
+                                    imageUrl:
+                                        '${productProvider.productImageURL}/${product.productImage}',
+                                    // imageUrl:
+                                    //     product.productImage ??
+                                    //     'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
+                                    errorImage: 'assets/icons/no-image.png',
+                                    width: 110 * SizeConfig.widthScale,
+                                    height: 130 * SizeConfig.heightScale,
+                                    radius: 5,
                                   ),
-                                ),
-                              ],
+                                  SizedBox(width: 10 * SizeConfig.widthScale),
+
+                                  // Product Details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          product.productName ?? "Unknown",
+                                          style:
+                                              AppTextStyles.blackSubHeadingStyle()
+                                                  .copyWith(
+                                                    fontSize:
+                                                        14 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                        ),
+                                        SizedBox(
+                                          height: 5 * SizeConfig.heightScale,
+                                        ),
+                                        Text(
+                                          product.totalPrice ?? "N/A",
+                                          style: AppTextStyles.redw400Outfit()
+                                              .copyWith(
+                                                fontSize:
+                                                    14 * SizeConfig.widthScale,
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                        ),
+                                        SizedBox(
+                                          height: 5 * SizeConfig.heightScale,
+                                        ),
+
+                                        // Edit and Delete Buttons
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (context) =>
+                                                            EditProductScreen(
+                                                              product: product,
+                                                            ),
+                                                  ),
+                                                );
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      10 *
+                                                      SizeConfig.widthScale,
+                                                  vertical:
+                                                      5 *
+                                                      SizeConfig.heightScale,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: const Color.fromRGBO(
+                                                      219,
+                                                      233,
+                                                      233,
+                                                      1,
+                                                    ),
+                                                    width: 0.94,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        22 *
+                                                            SizeConfig
+                                                                .heightScale,
+                                                      ),
+                                                ),
+                                                child: Text(
+                                                  'Edit',
+                                                  style:
+                                                      AppTextStyles.blackSubHeadingStyle()
+                                                          .copyWith(
+                                                            fontSize:
+                                                                14 *
+                                                                SizeConfig
+                                                                    .widthScale,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                          ),
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 5 * SizeConfig.widthScale,
+                                            ),
+                                            GestureDetector(
+                                              onTap: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (context) => DeletePopUp(
+                                                        message:
+                                                            'Are you sure you want to delete this product?',
+                                                        onPressed: () {
+                                                          productProvider
+                                                              .deleteProduct(
+                                                                product.id ?? 0,
+                                                              );
+                                                          productProvider
+                                                              .fetchProducts();
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                      ),
+                                                );
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal:
+                                                      10 *
+                                                      SizeConfig.widthScale,
+                                                  vertical:
+                                                      5 *
+                                                      SizeConfig.heightScale,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: const Color.fromRGBO(
+                                                      219,
+                                                      233,
+                                                      233,
+                                                      1,
+                                                    ),
+                                                    width: 0.94,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        22 *
+                                                            SizeConfig
+                                                                .heightScale,
+                                                      ),
+                                                ),
+                                                child: Text(
+                                                  'Delete',
+                                                  style:
+                                                      AppTextStyles.blackSubHeadingStyle()
+                                                          .copyWith(
+                                                            fontSize:
+                                                                14 *
+                                                                SizeConfig
+                                                                    .widthScale,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                          ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

@@ -8,6 +8,7 @@ import 'package:vendor_app/providers/vendor_profile_provider.dart';
 import 'package:vendor_app/screens/subscription_plan.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
+import 'package:vendor_app/utils/validator.dart';
 import 'package:vendor_app/widgets/buttons/submit_button.dart';
 import 'package:vendor_app/widgets/headers/common_appbar.dart';
 import 'package:vendor_app/widgets/inputs/input_widgets.dart';
@@ -29,13 +30,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String profileImageUrl = '';
   // Controllers for input fields
   TextEditingController nameController = TextEditingController();
-  TextEditingController storeNameController = TextEditingController();
+  TextEditingController addressController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
+  TextEditingController cityController = TextEditingController();
+  TextEditingController stateController = TextEditingController();
+  TextEditingController countryController = TextEditingController();
+  TextEditingController pincodeController = TextEditingController();
   TextEditingController subscriptionController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
-  TextEditingController workingHoursController = TextEditingController();
 
   /// Function to pick an image from the gallery
   Future<void> _pickImage() async {
@@ -52,13 +55,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     // Dispose controllers to free memory
     nameController.dispose();
-    storeNameController.dispose();
+    addressController.dispose();
     phoneController.dispose();
-    emailController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    countryController.dispose();
+    pincodeController.dispose();
     subscriptionController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-    workingHoursController.dispose();
     super.dispose();
   }
 
@@ -77,17 +82,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<VendorProfileProvider>(context);
+
+    // Function to handle form submission
     Future<void> submit() async {
       try {
+        bool isPasswordSame = Validators.isPasswordMatching(
+          passwordController.text,
+          confirmPasswordController.text,
+        );
+        if (!isPasswordSame) {
+          showDialog(
+            context: context,
+            builder:
+                (context) => CustomPopUp(
+                  title: 'Password Mismatch',
+                  message: 'Please ensure both passwords match.',
+                  imagePath: 'assets/icons/error.jpg',
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+          );
+          return;
+        }
         bool isSuccess = await profileProvider.updateVendorProfile(
           name: nameController.text,
-          address: 'a',
-          city: 'a',
-          state: 'a',
-          country: 'a',
-          pincode: '123456',
+          address: addressController.text,
+          city: cityController.text,
+          state: stateController.text,
+          country: countryController.text,
+          pincode: pincodeController.text,
           mobile: phoneController.text,
           password: passwordController.text,
+          image: _selectedImage,
         );
 
         // Ensure the dialog is shown inside `Future.delayed`
@@ -106,6 +133,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           : 'Something went wrong. Please try again.',
                   onPressed: () {
                     Navigator.pop(context);
+                    Future.microtask(
+                      () =>
+                          Provider.of<VendorProfileProvider>(
+                            context,
+                            listen: false,
+                          ).fetchVendorProfile(),
+                    );
                   },
                 ),
           );
@@ -116,23 +150,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     if (profileProvider.isLoading) {
-      storeNameController.text = "Loading...";
+      addressController.text = "Loading...";
       phoneController.text = "Loading...";
-      emailController.text = "Loading...";
+      cityController.text = "Loading...";
+      stateController.text = "Loading...";
+      countryController.text = "Loading...";
       subscriptionController.text = "Loading...";
+      pincodeController.text = "Loading...";
       passwordController.text = "Loading...";
-      workingHoursController.text = "Loading...";
       nameController.text = "Loading...";
     } else if (profileProvider.vendorProfile != null) {
       final profile = profileProvider.vendorProfile!;
-      storeNameController.text = profile.storeDetails?.name ?? "";
+      addressController.text = profile.address ?? "";
       phoneController.text = profile.mobile ?? "";
-      emailController.text = profile.email ?? "";
+      cityController.text = profile.city ?? "";
+      stateController.text = profile.state ?? "";
+      countryController.text = profile.country ?? "";
       subscriptionController.text = profile.subscriptionsName ?? "";
+      pincodeController.text = profile.pincode ?? "";
       passwordController.text = ""; // Keeping password field empty
-      workingHoursController.text = profile.storeDetails?.businessHours ?? "";
       nameController.text = profile.name ?? "No Name";
-      profileImageUrl = profile.imagePath ?? "";
+      profileImageUrl =
+          '${profile.imagePath?.trim().replaceAll(RegExp(r'\/$'), '')}/${profile.image ?? ""}';
+      print("Final Image URL: $profileImageUrl");
       subscripitonID = profile.subscriptionId;
     }
     return Scaffold(
@@ -222,14 +262,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 hint: 'Kunal Adwani',
                 controller: nameController,
                 label: 'Name',
-                isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Trendy Fashions',
-                controller: storeNameController,
-                label: 'Store Name',
-                isDisabled: true,
+                controller: addressController,
+                label: 'Address',
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
@@ -241,9 +279,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'kunaladwani@gmail.com',
-                controller: emailController,
-                label: 'Email',
-                isDisabled: true,
+                controller: cityController,
+                label: 'City',
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+              InputWidget(
+                hint: 'Maharashtra',
+                controller: stateController,
+                label: 'State',
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+              InputWidget(
+                hint: 'India',
+                controller: countryController,
+                label: 'Country',
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               Stack(
@@ -253,7 +302,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     hint: 'Advance Plan',
                     controller: subscriptionController,
                     label: 'Change Subscription Plan',
-                    isDisabled: true,
                   ),
                   Positioned(
                     right: 10 * SizeConfig.widthScale,
@@ -292,6 +340,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
+                hint: '400001',
+                controller: pincodeController,
+                label: 'Pincode',
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+              InputWidget(
                 hint: 'Password',
                 controller: passwordController,
                 label: 'Password',
@@ -305,13 +359,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 isPassword: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              InputWidget(
-                hint: '9:00AM - 9:00PM',
-                controller: workingHoursController,
-                label: 'Working Hour',
-                svgPath: 'assets/icons/clock-icon.svg',
-              ),
-              SizedBox(height: 10 * SizeConfig.heightScale),
+
               SubmitButton(text: 'Update Profile', onPressed: submit),
             ],
           ),

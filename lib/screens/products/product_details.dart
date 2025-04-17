@@ -1,13 +1,17 @@
+import 'package:flutter_svg/svg.dart';
 import 'package:vendor_app/config/text_styles.dart';
+import 'package:vendor_app/models/product.dart';
+import 'package:vendor_app/screens/products/edit_product.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/headers/common_appbar.dart';
-import 'package:vendor_app/widgets/popup_menu_item.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
-  const ProductDetailsScreen({super.key});
+  final Product? product;
+
+  const ProductDetailsScreen({super.key, this.product});
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -19,9 +23,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     List<String> productImages = [
-      'https://indianhotdeal.com/wp-content/uploads/2022/11/bd0b03bb-5cdb-44b1-a101-df7cb563f454-1536x864.jpeg',
-      'https://indianhotdeal.com/wp-content/uploads/2022/11/bd0b03bb-5cdb-44b1-a101-df7cb563f454-1536x864.jpeg',
-      'https://indianhotdeal.com/wp-content/uploads/2022/11/bd0b03bb-5cdb-44b1-a101-df7cb563f454-1536x864.jpeg',
+      'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
+      'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
+      'http://69.62.72.21/dev/public/front/images/product_images/small/64835.jpg',
     ];
     return Scaffold(
       appBar: PreferredSize(
@@ -30,10 +34,31 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           title: "Dorothy Perkins",
           menuPressed: () {},
           menuItems: [
-            PopupMenuHelper.buildPopupMenuItem(
-              0,
-              'assets/icons/edit-popup-icon.svg',
-              'Edit',
+            PopupMenuItem<int>(
+              value: 0,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context); // Close popup first
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => EditProductScreen(
+                            product:
+                                widget
+                                    .product, // pass the current product instance here
+                          ),
+                    ),
+                  );
+                },
+                child: Row(
+                  children: [
+                    SvgPicture.asset('assets/icons/edit-popup-icon.svg'),
+                    const SizedBox(width: 10),
+                    const Text('Edit'),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -113,7 +138,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                       padding: const EdgeInsets.all(5),
                       child: Text(
-                        '-20%',
+                        (widget.product?.vendorPrice ?? 0) > 0
+                            ? "${widget.product?.vendorPrice} ₪"
+                            : "Free",
                         style: AppTextStyles.whitew400Outfit().copyWith(
                           fontSize: 10 * SizeConfig.widthScale,
                           fontWeight: FontWeight.w600,
@@ -145,7 +172,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Clothing",
+                        widget.product?.metaTitle ?? "Product Name",
                         style: AppTextStyles.greySubHeadingStyle(
                           color: const Color.fromRGBO(0, 0, 0, 0.8),
                         ).copyWith(
@@ -155,16 +182,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                       SizedBox(height: 5 * SizeConfig.heightScale),
                       Text(
-                        "Dorothy Perkins",
+                        '${widget.product?.productName ?? '..'} | ${widget.product?.productNameArabic ?? '..'} | ${widget.product?.productNameHebrew ?? '..'}' ??
+                            "Product Name",
                         style: AppTextStyles.blackSubHeadingStyle().copyWith(
                           fontSize: 16 * SizeConfig.widthScale,
                           fontWeight: FontWeight.w400,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                   Text(
-                    "10 ₪",
+                    "${widget.product?.totalPrice} ₪",
                     style: AppTextStyles.redw400Outfit().copyWith(
                       fontSize: 24 * SizeConfig.heightScale,
                       fontWeight: FontWeight.w600,
@@ -178,130 +207,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 thickness: 0.5,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 80 * SizeConfig.widthScale,
-                    child: Text(
-                      "Sizes:",
-                      style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                        fontSize: 16 * SizeConfig.heightScale,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  ...['L', 'M', 'XL'].asMap().entries.map((entry) {
-                    int index = entry.key;
-                    String size = entry.value;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedSizeIndex = index;
-                        });
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(
-                          right: 5 * SizeConfig.widthScale,
-                        ),
-                        height: 24,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color:
-                              selectedSizeIndex == index
-                                  ? const Color.fromRGBO(243, 120, 102, 1)
-                                  : Colors.transparent,
-                          border: Border.all(
-                            color:
-                                selectedSizeIndex == index
-                                    ? const Color.fromRGBO(243, 120, 102, 1)
-                                    : const Color.fromRGBO(219, 233, 233, 1),
-                            width: 0.94,
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Center(
-                          child: Text(
-                            size,
-                            style: AppTextStyles.blackSubHeadingStyle(
-                              color:
-                                  selectedSizeIndex == index
-                                      ? Colors.white
-                                      : const Color.fromRGBO(0, 0, 0, 0.5),
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.heightScale,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-              SizedBox(height: 20 * SizeConfig.heightScale),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 80 * SizeConfig.widthScale,
-                    child: Text(
-                      "Colours:",
-                      style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                        fontSize: 16 * SizeConfig.heightScale,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        backgroundColor: Colors.black,
-                        radius: 10,
-                      ),
-                      SizedBox(width: 5 * SizeConfig.widthScale),
-                      Text(
-                        'Black',
-                        style: AppTextStyles.blackSubHeadingStyle(
-                          color: const Color.fromRGBO(0, 0, 0, 0.5),
-                        ).copyWith(
-                          fontSize: 14 * SizeConfig.widthScale,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 20 * SizeConfig.heightScale),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 80 * SizeConfig.widthScale,
-                    child: Text(
-                      "Discount:",
-                      style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                        fontSize: 16 * SizeConfig.heightScale,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Flat 20% Off',
-                        style: AppTextStyles.blackSubHeadingStyle(
-                          color: const Color.fromRGBO(0, 0, 0, 0.5),
-                        ).copyWith(
-                          fontSize: 14 * SizeConfig.widthScale,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 20 * SizeConfig.heightScale),
               Text(
-                "Return Policy:",
+                "Description:",
                 style: AppTextStyles.blackSubHeadingStyle().copyWith(
                   fontSize: 16 * SizeConfig.heightScale,
                   fontWeight: FontWeight.w400,
@@ -309,7 +216,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               SizedBox(height: 5 * SizeConfig.heightScale),
               Text(
-                "If you want to return product do not remove product tag. If you want to return your product then you have to return it within 7 days.",
+                widget.product?.description ?? "Product Description",
                 style: AppTextStyles.greySubHeadingStyle(
                   color: const Color.fromRGBO(0, 0, 0, 0.5),
                 ).copyWith(
@@ -318,12 +225,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
-              const Text(
-                "Exchange Policy:",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
               Text(
-                "If you want to Exchange product then you have to exchange it within 7 days.",
+                "Meta Title:",
+                style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                  fontSize: 16 * SizeConfig.heightScale,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 5 * SizeConfig.heightScale),
+              Text(
+                widget.product?.metaTitle ?? "Product Meta Keywords",
                 style: AppTextStyles.greySubHeadingStyle(
                   color: const Color.fromRGBO(0, 0, 0, 0.5),
                 ).copyWith(
@@ -331,6 +242,43 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   fontWeight: FontWeight.w300,
                 ),
               ),
+              SizedBox(height: 20 * SizeConfig.heightScale),
+              Text(
+                "Meta Keywords:",
+                style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                  fontSize: 16 * SizeConfig.heightScale,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 5 * SizeConfig.heightScale),
+              Text(
+                widget.product?.metaKeywords ?? "Product Meta Keywords",
+                style: AppTextStyles.greySubHeadingStyle(
+                  color: const Color.fromRGBO(0, 0, 0, 0.5),
+                ).copyWith(
+                  fontSize: 12 * SizeConfig.widthScale,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+              SizedBox(height: 20 * SizeConfig.heightScale),
+              Text(
+                "Meta Description:",
+                style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                  fontSize: 16 * SizeConfig.heightScale,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              SizedBox(height: 5 * SizeConfig.heightScale),
+              Text(
+                widget.product?.metaDescription ?? "Product Meta Description",
+                style: AppTextStyles.greySubHeadingStyle(
+                  color: const Color.fromRGBO(0, 0, 0, 0.5),
+                ).copyWith(
+                  fontSize: 12 * SizeConfig.widthScale,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+              SizedBox(height: 20 * SizeConfig.heightScale),
             ],
           ),
         ),

@@ -14,17 +14,17 @@ import 'package:vendor_app/widgets/popup_menu_item.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+class EditProductScreen extends StatefulWidget {
+  final Product? product;
+
+  const EditProductScreen({this.product, super.key});
 
   @override
-  State<AddProductScreen> createState() => _AddProductScreenState();
+  State<EditProductScreen> createState() => _EditProductScreenState();
 }
 
-class _AddProductScreenState extends State<AddProductScreen> {
+class _EditProductScreenState extends State<EditProductScreen> {
   List<File> _images = [];
-  File? _image;
-
   final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _shortDescriptionController =
       TextEditingController();
@@ -71,17 +71,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
     });
   }
 
-  Future<void> _pickImage() async {
-    final pickedFiles = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFiles == null) return;
-
-    setState(() {
-      _image = File(pickedFiles.path);
-    });
-  }
-
   void _addProduct() async {
     final productProvider = Provider.of<ProductProvider>(
       context,
@@ -89,11 +78,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
     Product newProduct = Product(
       categoryId: _selectedCategoryId,
-
+      id: widget.product?.id,
       productName: _productNameController.text,
       productNameArabic: _productNameArabicController.text,
       productNameHebrew: _productNameHebrewController.text,
-      vendorPrice: double.tryParse(_priceController.text),
       shortDescription: _shortDescriptionController.text,
       shortDescriptionArabic: _shortDescriptionArabicController.text,
       shortDescriptionHebrew: _shortDescriptionHebrewController.text,
@@ -112,16 +100,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
       isPinned: isPinned,
       isFeatured: isFeatured,
     );
-    bool isSuccess = await productProvider.addProduct(
-      newProduct,
-      _images,
-      _image,
-    );
+    bool isSuccess = await productProvider.updateProduct(newProduct, _images);
     if (isSuccess) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Product Added!!")));
-      Navigator.pop(context);
+      ).showSnackBar(SnackBar(content: Text("Product Edited!!")));
+      Navigator.pushReplacementNamed(context, '/product_list');
     } else {
       ScaffoldMessenger.of(
         context,
@@ -132,6 +116,39 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   void initState() {
     super.initState();
+
+    if (widget.product != null) {
+      final p = widget.product!;
+      _productNameController.text = p.productName ?? '';
+      _productNameArabicController.text = p.productNameArabic ?? '';
+      _productNameHebrewController.text = p.productNameHebrew ?? '';
+      _priceController.text = p.vendorPrice?.toString() ?? '';
+
+      _shortDescriptionController.text = p.shortDescription ?? '';
+      _shortDescriptionArabicController.text = p.shortDescriptionArabic ?? '';
+      _shortDescriptionHebrewController.text = p.shortDescriptionHebrew ?? '';
+
+      _descriptionController.text = p.description ?? '';
+      _descriptionArabicController.text = p.descriptionArabic ?? '';
+      _descriptionHebrewController.text = p.descriptionHebrew ?? '';
+
+      _metaTitleController.text = p.metaTitle ?? '';
+      _metaTitleArabicController.text = p.metaTitleArabic ?? '';
+      _metaTitleHebrewController.text = p.metaTitleHebrew ?? '';
+
+      _metaDescriptionController.text = p.metaDescription ?? '';
+      _metaDescriptionArabicController.text = p.metaDescriptionArabic ?? '';
+      _metaDescriptionHebrewController.text = p.metaDescriptionHebrew ?? '';
+
+      _metaKeywordsController.text = p.metaKeywords ?? '';
+      _metaKeywordsArabicController.text = p.metaKeywordsArabic ?? '';
+      _metaKeywordsHebrewController.text = p.metaKeywordsHebrew ?? '';
+
+      _selectedCategoryId = p.categoryId;
+      isPinned = p.isPinned ?? "Yes";
+      isFeatured = p.isFeatured ?? "Yes";
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<StoreCategoryProvider>(
         context,
@@ -162,125 +179,63 @@ class _AddProductScreenState extends State<AddProductScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        "Product Image",
-                        style: AppTextStyles.blackHeadingStyle().copyWith(
-                          fontSize: 16 * SizeConfig.widthScale,
-                          fontWeight: FontWeight.w400,
+              Text(
+                "Product Images",
+                style: AppTextStyles.blackHeadingStyle().copyWith(
+                  fontSize: 16 * SizeConfig.widthScale,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: _pickImages,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.rotate(
+                      angle: -6.84 * 3.141592653589793 / 180,
+                      child: Container(
+                        width: 119 * SizeConfig.widthScale,
+                        height: 98 * SizeConfig.heightScale,
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(128, 128, 128, 1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Transform.rotate(
-                              angle: -6.84 * 3.141592653589793 / 180,
-                              child: Container(
-                                width: 119 * SizeConfig.widthScale,
-                                height: 98 * SizeConfig.heightScale,
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(128, 128, 128, 1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 119 * SizeConfig.widthScale,
-                              height: 98 * SizeConfig.heightScale,
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(218, 218, 218, 1),
-                                borderRadius: BorderRadius.circular(10),
-                                image: DecorationImage(
-                                  image:
-                                      _image != null
-                                          ? FileImage(_image!)
-                                          : const AssetImage(
-                                            'assets/images/placeholder.png',
-                                          ),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              child: const Icon(
+                    ),
+                    Container(
+                      width: 119 * SizeConfig.widthScale,
+                      height: 98 * SizeConfig.heightScale,
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(218, 218, 218, 1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child:
+                          _images.isEmpty
+                              ? const Icon(
                                 Icons.add_rounded,
                                 color: Color.fromRGBO(112, 112, 112, 1),
                                 size: 20,
+                              )
+                              : GridView.builder(
+                                padding: const EdgeInsets.all(8),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 5,
+                                      mainAxisSpacing: 5,
+                                    ),
+                                itemCount: _images.length,
+                                itemBuilder:
+                                    (context, index) => Image.file(
+                                      _images[index],
+                                      fit: BoxFit.cover,
+                                    ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        "Product Images",
-                        style: AppTextStyles.blackHeadingStyle().copyWith(
-                          fontSize: 16 * SizeConfig.widthScale,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: _pickImages,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Transform.rotate(
-                              angle: -6.84 * 3.141592653589793 / 180,
-                              child: Container(
-                                width: 119 * SizeConfig.widthScale,
-                                height: 98 * SizeConfig.heightScale,
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(128, 128, 128, 1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 119 * SizeConfig.widthScale,
-                              height: 98 * SizeConfig.heightScale,
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(218, 218, 218, 1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child:
-                                  _images.isEmpty
-                                      ? const Icon(
-                                        Icons.add_rounded,
-                                        color: Color.fromRGBO(112, 112, 112, 1),
-                                        size: 20,
-                                      )
-                                      : ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: PageView.builder(
-                                          controller: PageController(
-                                            viewportFraction: 0.8,
-                                          ),
-                                          itemCount: _images.length,
-                                          itemBuilder:
-                                              (context, index) => Image.file(
-                                                _images[index],
-                                                fit: BoxFit.cover,
-                                              ),
-                                        ),
-                                      ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-
               SizedBox(height: 20 * SizeConfig.heightScale),
               InputWidget(
                 label: 'Product Name',
@@ -461,10 +416,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   ),
                   SizedBox(width: 10 * SizeConfig.widthScale),
                   Expanded(
-                    child: SubmitButton(
-                      text: 'Publish',
-                      onPressed: _addProduct,
-                    ),
+                    child: SubmitButton(text: 'Update', onPressed: _addProduct),
                   ),
                 ],
               ),

@@ -23,7 +23,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      drawer: Container(
+      drawer: SizedBox(
         width: 280 * SizeConfig.widthScale,
         child: Drawer(
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),

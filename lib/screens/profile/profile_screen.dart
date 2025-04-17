@@ -55,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       userName = "Loading...";
     } else if (profileProvider.vendorProfile != null) {
       final profile = profileProvider.vendorProfile!;
+
       _storeNameController.text = profile.storeDetails?.name ?? "";
       _phoneController.text = profile.mobile ?? "";
       _emailController.text = profile.email ?? "";
@@ -62,7 +63,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _passwordController.text = ""; // Keeping password field empty
       _workingHoursController.text = profile.storeDetails?.businessHours ?? "";
       userName = profile.name ?? "No Name";
-      profileImageUrl = profile.imagePath ?? "";
+      profileImageUrl =
+          '${profile.imagePath?.trim().replaceAll(RegExp(r'\/$'), '')}/${profile.image ?? ""}';
+      print("Final Image URL: $profileImageUrl");
+
       subscripitonID = profile.subscriptionId;
     }
     return Scaffold(
@@ -72,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: CommonAppBar(
           title: "Profile",
           menuPressed: () {},
+          backPressed: () {},
           menuItems: [
             PopupMenuHelper.buildPopupMenuItem(
               0,

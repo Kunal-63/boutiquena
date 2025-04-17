@@ -96,6 +96,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
         preferredSize: const Size.fromHeight(70.0),
         child: CommonAppBar(
           title: "Orders",
+          backPressed: () {},
           menuPressed: () {
             print("Menu Pressed");
           },

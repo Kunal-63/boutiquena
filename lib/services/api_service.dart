@@ -132,6 +132,7 @@ class ApiService {
     String endpoint,
     Map<String, dynamic> body, {
     Map<String, File?>? files, // Accept a single file per key
+    Map<String, List<File>>? multipleFiles, // Accept multiple files per key
   }) async {
     final url = Uri.parse("${Env.apiBaseUrl}$endpoint");
     LogService.info("POST Request: $url");
@@ -146,7 +147,7 @@ class ApiService {
       var request = http.MultipartRequest('POST', url);
 
       request.headers.addAll({
-        "Authorization": "Bearer $token", // Ensure correct format
+        "Authorization": "Bearer $token",
         "Content-Type": "application/json",
       });
 
@@ -155,7 +156,7 @@ class ApiService {
         request.fields[key] = value.toString();
       });
 
-      // Add files (one per key)
+      // Add single files
       if (files != null && files.isNotEmpty) {
         for (var entry in files.entries) {
           String keyName = entry.key;
@@ -174,13 +175,34 @@ class ApiService {
         }
       }
 
+      // Add multiple files
+      if (multipleFiles != null && multipleFiles.isNotEmpty) {
+        for (var entry in multipleFiles.entries) {
+          String keyName = entry.key;
+          List<File> fileList = entry.value;
+
+          for (var file in fileList) {
+            if (await file.exists()) {
+              request.files.add(
+                await http.MultipartFile.fromPath('$keyName[]', file.path),
+              );
+              LogService.info("Added file: ${file.path} with key: $keyName[]");
+            } else {
+              LogService.warning(
+                "Skipping non-existent file in multipleFiles for key: $keyName",
+              );
+            }
+          }
+        }
+      }
+
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 401 || response.statusCode == 404) {
         await _handleUnauthorized();
-        return null;
+        return {"status": false, "error": "Unauthorized access"};
       }
 
       LogService.info("Response Status: ${response.statusCode}");

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:vendor_app/models/product.dart';
 import 'package:vendor_app/services/api_service.dart';
@@ -7,6 +8,7 @@ import 'package:vendor_app/services/log_service.dart';
 class ProductProvider with ChangeNotifier {
   List<Product> _products = [];
   bool _isLoading = false;
+  String? productImageURL;
 
   List<Product> get products => _products;
   bool get isLoading => _isLoading;
@@ -20,46 +22,20 @@ class ProductProvider with ChangeNotifier {
 
       if (response != null && response.statusCode == 200) {
         final data = json.decode(response.body);
+
         if (data['status'] == true && data['data'] != null) {
+          final productMap = data['data'] as Map<String, dynamic>;
+
           _products =
-              (data['data'] as List)
-                  .map(
-                    (item) => Product(
-                      id: item['id'],
-                      categoryId: item['category_id'],
-                      vendorId: item['vendor_id'],
-                      adminId: item['admin_id'],
-                      productName: item['product_name'],
-                      productCode: item['product_code'],
-                      productColor: item['product_color'],
-                      productPrice: item['product_price'],
-                      productDiscount: item['product_discount'],
-                      productWeight: item['product_weight'],
-                      productImage: item['product_image'],
-                      productVideo: item['product_video'],
-                      description: item['description'],
-                      newmancol: item['newmancol'],
-                      operatingSystem: item['operating_system'],
-                      screenSize: item['screen_size'],
-                      occasion: item['occasion'],
-                      fit: item['fit'],
-                      pattern: item['pattern'],
-                      sleeve: item['sleeve'],
-                      ram: item['ram'],
-                      fabric: item['fabric'],
-                      metaTitle: item['meta_title'],
-                      metaKeywords: item['meta_keywords'],
-                      metaDescription: item['meta_description'],
-                      isFeatured: item['is_featured'],
-                      isBestseller: item['is_bestseller'],
-                      status: item['status'],
-                      createdAt: item['created_at'],
-                      updatedAt: item['updated_at'],
-                      statusId: item['status_id'],
-                      isPinned: item['is_pinned'],
-                    ),
-                  )
+              productMap.entries
+                  .where((entry) => int.tryParse(entry.key) != null)
+                  .map((entry) => Product.fromJson(entry.value))
                   .toList();
+
+          productImageURL = data['data']['image_url'] ?? null;
+          print("PRODUCT IMAGE URL: $productImageURL");
+        } else {
+          LogService.error("Invalid response format in product data");
         }
       } else {
         throw Exception(
@@ -74,85 +50,179 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addProduct(Product product) async {
+  Future<bool> addProduct(
+    Product product,
+    List<File>? selectedIamges,
+    File? selectedImage,
+  ) async {
     try {
-      final response = await ApiService.postWithAuth('add-vendor-products', {
-        "category_id": product.categoryId ?? "1",
-        "product_name": product.productName ?? "Testing",
-        "product_code": product.productCode ?? "",
-        "product_color": product.productColor ?? "Black",
-        "product_price": product.productPrice ?? "100",
-        "product_discount": product.productDiscount ?? "10",
-        "product_weight": product.productWeight ?? "15",
-        "product_video": product.productVideo ?? "",
-        "description": product.description ?? "description",
-        "newmancol": product.newmancol ?? "",
-        "operating_system": product.operatingSystem ?? "testing",
-        "screen_size": product.screenSize ?? "",
-        "occasion": product.occasion ?? "tesitng",
-        "fit": product.fit ?? "testing",
-        "pattern": product.pattern ?? "testing",
-        "sleeve": product.sleeve ?? "testing",
-        "ram": product.ram ?? "testing",
-        "fabric": product.fabric ?? "testing",
-        "is_featured": product.isFeatured ?? "0",
-        "is_bestseller": product.isBestseller ?? "0",
-        "is_pinned": product.isPinned ?? "0",
-      });
+      final response = await ApiService.postWithAuth(
+        'add-vendor-products',
+        {
+          "category_id": product.categoryId ?? "1",
+          "product_name": product.productName ?? "",
+          "vendor_price": product.vendorPrice ?? "0",
+          "short_description": product.shortDescription ?? "",
+          "description": product.description ?? "",
+          "product_name_arabic": product.productNameArabic ?? "",
+          "product_name_hebrew": product.productNameHebrew ?? "",
+          "short_description_hebrew": product.shortDescriptionHebrew ?? "",
+          "short_description_arabic": product.shortDescriptionArabic ?? "",
+          "description_hebrew": product.descriptionHebrew ?? "",
+          "description_arabic": product.descriptionArabic ?? "",
+          "meta_title": product.metaTitle ?? "",
+          "meta_title_hebrew": product.metaTitleHebrew ?? "",
+          "meta_title_arabic": product.metaTitleArabic ?? "",
+          "meta_description": product.metaDescription ?? "",
+          "meta_description_hebrew": product.metaDescriptionHebrew ?? "",
+          "meta_description_arabic": product.metaDescriptionArabic ?? "",
+          "meta_keywords": product.metaKeywords ?? "",
+          "meta_keywords_hebrew": product.metaKeywordsHebrew ?? "",
+          "meta_keywords_arabic": product.metaKeywordsArabic ?? "",
+          "is_pinned": product.isPinned ?? "0",
+          "is_suggested": product.isSuggested ?? "0",
+          "is_featured": product.isFeatured ?? "0",
+          "is_bestseller": product.isBestseller ?? "0",
+          "status": product.status ?? "1",
+        },
+        files: {"product_image": selectedImage},
+        multipleFiles: {"product_images": selectedIamges ?? []},
+      );
 
       if (response['status'] == true) {
         final newProduct = Product(
-          id: response['data']['id'].toString(),
+          id: response['data']['id'],
           categoryId: product.categoryId,
           productName: product.productName,
-          productCode: product.productCode,
-          productColor: product.productColor,
-          productPrice: product.productPrice,
-          productDiscount: product.productDiscount,
-          productWeight: product.productWeight,
-          productVideo: product.productVideo,
+          vendorPrice: product.vendorPrice,
+          shortDescription: product.shortDescription,
           description: product.description,
-          newmancol: product.newmancol,
-          operatingSystem: product.operatingSystem,
-          screenSize: product.screenSize,
-          occasion: product.occasion,
-          fit: product.fit,
-          pattern: product.pattern,
-          sleeve: product.sleeve,
-          ram: product.ram,
-          fabric: product.fabric,
+          productNameArabic: product.productNameArabic,
+          productNameHebrew: product.productNameHebrew,
+          shortDescriptionHebrew: product.shortDescriptionHebrew,
+          shortDescriptionArabic: product.shortDescriptionArabic,
+          descriptionHebrew: product.descriptionHebrew,
+          descriptionArabic: product.descriptionArabic,
+          metaTitle: product.metaTitle,
+          metaTitleHebrew: product.metaTitleHebrew,
+          metaTitleArabic: product.metaTitleArabic,
+          metaDescription: product.metaDescription,
+          metaDescriptionHebrew: product.metaDescriptionHebrew,
+          metaDescriptionArabic: product.metaDescriptionArabic,
+          metaKeywords: product.metaKeywords,
+          metaKeywordsHebrew: product.metaKeywordsHebrew,
+          metaKeywordsArabic: product.metaKeywordsArabic,
+          isPinned: product.isPinned,
+          isSuggested: product.isSuggested,
           isFeatured: product.isFeatured,
           isBestseller: product.isBestseller,
-          isPinned: product.isPinned,
+          status: product.status,
         );
 
-        _products.add(newProduct);
+        fetchProducts();
         notifyListeners();
 
         return true;
       } else {
         LogService.error("Failed to add product: ${response['message']}");
-
         return false;
       }
     } catch (e) {
       LogService.error("addProduct() Error: $e");
-
       return false;
     }
   }
 
-  void toggleFavorite(String productId) {
-    int index = _products.indexWhere((product) => product.id == productId);
-    if (index != -1) {
-      _products[index] = _products[index].copyWith(
-        isFavorite: !_products[index].isFavorite,
+  Future<bool> updateProduct(
+    Product product,
+    List<File>? selectedIamges,
+  ) async {
+    try {
+      final response = await ApiService.postWithAuth(
+        'update-vendor-products/${product.id}',
+        {
+          "category_id": product.categoryId ?? "1",
+          "product_name": product.productName ?? "",
+          "vendor_price": product.vendorPrice ?? "0",
+          "short_description": product.shortDescription ?? "",
+          "description": product.description ?? "",
+          "product_name_arabic": product.productNameArabic ?? "",
+          "product_name_hebrew": product.productNameHebrew ?? "",
+          "short_description_hebrew": product.shortDescriptionHebrew ?? "",
+          "short_description_arabic": product.shortDescriptionArabic ?? "",
+          "description_hebrew": product.descriptionHebrew ?? "",
+          "description_arabic": product.descriptionArabic ?? "",
+          "meta_title": product.metaTitle ?? "",
+          "meta_title_hebrew": product.metaTitleHebrew ?? "",
+          "meta_title_arabic": product.metaTitleArabic ?? "",
+          "meta_description": product.metaDescription ?? "",
+          "meta_description_hebrew": product.metaDescriptionHebrew ?? "",
+          "meta_description_arabic": product.metaDescriptionArabic ?? "",
+          "meta_keywords": product.metaKeywords ?? "",
+          "meta_keywords_hebrew": product.metaKeywordsHebrew ?? "",
+          "meta_keywords_arabic": product.metaKeywordsArabic ?? "",
+          "is_pinned": product.isPinned ?? "0",
+          "is_suggested": product.isSuggested ?? "0",
+          "is_featured": product.isFeatured ?? "0",
+          "is_bestseller": product.isBestseller ?? "0",
+          "status": product.status ?? "1",
+        },
       );
-      notifyListeners();
+
+      if (response['status'] == true) {
+        final newProduct = Product(
+          id: response['data']['id'],
+          categoryId: product.categoryId,
+          productName: product.productName,
+          vendorPrice: product.vendorPrice,
+          shortDescription: product.shortDescription,
+          description: product.description,
+          productNameArabic: product.productNameArabic,
+          productNameHebrew: product.productNameHebrew,
+          shortDescriptionHebrew: product.shortDescriptionHebrew,
+          shortDescriptionArabic: product.shortDescriptionArabic,
+          descriptionHebrew: product.descriptionHebrew,
+          descriptionArabic: product.descriptionArabic,
+          metaTitle: product.metaTitle,
+          metaTitleHebrew: product.metaTitleHebrew,
+          metaTitleArabic: product.metaTitleArabic,
+          metaDescription: product.metaDescription,
+          metaDescriptionHebrew: product.metaDescriptionHebrew,
+          metaDescriptionArabic: product.metaDescriptionArabic,
+          metaKeywords: product.metaKeywords,
+          metaKeywordsHebrew: product.metaKeywordsHebrew,
+          metaKeywordsArabic: product.metaKeywordsArabic,
+          isPinned: product.isPinned,
+          isSuggested: product.isSuggested,
+          isFeatured: product.isFeatured,
+          isBestseller: product.isBestseller,
+          status: product.status,
+        );
+        fetchProducts();
+        notifyListeners();
+
+        return true;
+      } else {
+        LogService.error("Failed to add product: ${response['message']}");
+        return false;
+      }
+    } catch (e) {
+      LogService.error("addProduct() Error: $e");
+      return false;
     }
   }
 
-  Future<void> deleteProduct(String productId) async {
+  // void toggleFavorite(String productId) {
+  //   int index = _products.indexWhere((product) => product.id == productId);
+  //   if (index != -1) {
+  //     _products[index] = _products[index].copyWith(
+  //       isFavorite: !_products[index].isFavorite,
+  //     );
+  //     notifyListeners();
+  //   }
+  // }
+
+  Future<void> deleteProduct(int productId) async {
     try {
       final response = await ApiService.postWithAuth(
         'delete-vendor-products-details',

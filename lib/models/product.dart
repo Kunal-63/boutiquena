@@ -1,44 +1,41 @@
 class Product {
-  final String? id;
-  final String? categoryId;
-  final String? vendorId;
-  final String? adminId;
+  final int? id;
+  final int? categoryId;
+  final int? vendorId;
+  final int? adminId;
   final String? productName;
-  final String? productCode;
-  final String? productColor;
-  final String? productPrice;
-  final String? productDiscount;
-  final String? productWeight;
-  final String? productImage;
+  final String? productNameArabic;
+  final String? productNameHebrew;
+  final String? shortDescription;
+  final String? shortDescriptionArabic;
+  final String? shortDescriptionHebrew;
+  final String?
+  productImage; // Originally a list in string format (e.g. "[]"), still using String
   final String? productVideo;
   final String? description;
-  final String? newmancol;
-  final String? operatingSystem;
-  final String? screenSize;
-  final String? occasion;
-  final String? fit;
-  final String? pattern;
-  final String? sleeve;
-  final String? ram;
-  final String? fabric;
+  final String? descriptionArabic;
+  final String? descriptionHebrew;
   final String? metaTitle;
+  final String? metaTitleArabic;
+  final String? metaTitleHebrew;
   final String? metaKeywords;
+  final String? metaKeywordsArabic;
+  final String? metaKeywordsHebrew;
   final String? metaDescription;
-  final bool? isFeatured;
-  final bool? isBestseller;
-  final String? status;
-  final String? createdAt;
-  final String? updatedAt;
-  final String? statusId;
-  final bool? isPinned;
-  final bool isFavorite;
-
-  // 🆕 Additional Fields
-  final String? brand;
-  final String? stock;
-  final List<String>? tags;
-  final String? tax;
-  final String? warrantyPeriod;
+  final String? metaDescriptionArabic;
+  final String? metaDescriptionHebrew;
+  final String? isFeatured;
+  final String? isBestseller;
+  final String? isFavourite;
+  final int? status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final int? statusId;
+  final String? isPinned;
+  final String? isSuggested;
+  final double? vendorPrice;
+  final String? adminCommission;
+  final String? totalPrice;
 
   Product({
     this.id,
@@ -46,85 +43,39 @@ class Product {
     this.vendorId,
     this.adminId,
     this.productName,
-    this.productCode,
-    this.productColor,
-    this.productPrice,
-    this.productDiscount,
-    this.productWeight,
+    this.productNameArabic,
+    this.productNameHebrew,
+    this.shortDescription,
+    this.shortDescriptionArabic,
+    this.shortDescriptionHebrew,
     this.productImage,
     this.productVideo,
     this.description,
-    this.newmancol,
-    this.operatingSystem,
-    this.screenSize,
-    this.occasion,
-    this.fit,
-    this.pattern,
-    this.sleeve,
-    this.ram,
-    this.fabric,
+    this.descriptionArabic,
+    this.descriptionHebrew,
     this.metaTitle,
+    this.metaTitleArabic,
+    this.metaTitleHebrew,
     this.metaKeywords,
+    this.metaKeywordsArabic,
+    this.metaKeywordsHebrew,
     this.metaDescription,
+    this.metaDescriptionArabic,
+    this.metaDescriptionHebrew,
     this.isFeatured,
     this.isBestseller,
+    this.isFavourite,
     this.status,
     this.createdAt,
     this.updatedAt,
     this.statusId,
     this.isPinned,
-    this.brand,
-    this.stock,
-    this.tags,
-    this.tax,
-    this.warrantyPeriod,
-    this.isFavorite = false,
+    this.isSuggested,
+    this.vendorPrice,
+    this.adminCommission,
+    this.totalPrice,
   });
 
-  // ✅ Convert Product to JSON (for API request)
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "category_id": categoryId,
-      "vendor_id": vendorId,
-      "admin_id": adminId,
-      "product_name": productName,
-      "product_code": productCode,
-      "product_color": productColor,
-      "product_price": productPrice?.toString(),
-      "product_discount": productDiscount?.toString(),
-      "product_weight": productWeight?.toString(),
-      "product_image": productImage,
-      "product_video": productVideo,
-      "description": description,
-      "newmancol": newmancol,
-      "operating_system": operatingSystem,
-      "screen_size": screenSize,
-      "occasion": occasion,
-      "fit": fit,
-      "pattern": pattern,
-      "sleeve": sleeve,
-      "ram": ram,
-      "fabric": fabric,
-      "meta_title": metaTitle,
-      "meta_keywords": metaKeywords,
-      "meta_description": metaDescription,
-      "is_featured": isFeatured == true ? "1" : "0",
-      "is_bestseller": isBestseller == true ? "1" : "0",
-      "status": status,
-      "created_at": createdAt,
-      "updated_at": updatedAt,
-      "status_id": statusId,
-      "is_pinned": isPinned == true ? "1" : "0",
-      "brand": brand,
-      "stock": stock?.toString(),
-      "tags": tags?.join(","),
-      "tax": tax?.toString(),
-      "warranty_period": warrantyPeriod,
-    };
-  }
-
-  // ✅ Convert JSON to Product (for API response)
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['id'],
@@ -132,122 +83,43 @@ class Product {
       vendorId: json['vendor_id'],
       adminId: json['admin_id'],
       productName: json['product_name'],
-      productCode: json['product_code'],
-      productColor: json['product_color'],
-      productPrice: json['product_price']?.toString(),
-      productDiscount: json['product_discount']?.toString(),
-      productWeight: json['product_weight'].toString(),
-
+      productNameArabic: json['product_name_arabic'],
+      productNameHebrew: json['product_name_hebrew'],
+      shortDescription: json['short_description'],
+      shortDescriptionArabic: json['short_description_arabic'],
+      shortDescriptionHebrew: json['short_description_hebrew'],
       productImage: json['product_image'],
       productVideo: json['product_video'],
       description: json['description'],
-      newmancol: json['newmancol'],
-      operatingSystem: json['operating_system'],
-      screenSize: json['screen_size'],
-      occasion: json['occasion'],
-      fit: json['fit'],
-      pattern: json['pattern'],
-      sleeve: json['sleeve'],
-      ram: json['ram'],
-      fabric: json['fabric'],
+      descriptionArabic: json['description_arabic'],
+      descriptionHebrew: json['description_hebrew'],
       metaTitle: json['meta_title'],
+      metaTitleArabic: json['meta_title_arabic'],
+      metaTitleHebrew: json['meta_title_hebrew'],
       metaKeywords: json['meta_keywords'],
+      metaKeywordsArabic: json['meta_keywords_arabic'],
+      metaKeywordsHebrew: json['meta_keywords_hebrew'],
       metaDescription: json['meta_description'],
-      isFeatured: json['is_featured'] == "1",
-      isBestseller: json['is_bestseller'] == "1",
+      metaDescriptionArabic: json['meta_description_arabic'],
+      metaDescriptionHebrew: json['meta_description_hebrew'],
+      isFeatured: json['is_featured'] ?? 'No',
+      isBestseller: json['is_bestseller'] ?? 'No',
+      isFavourite: json['is_favourite'] ?? 'No',
       status: json['status'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : null,
+      updatedAt:
+          json['updated_at'] != null
+              ? DateTime.parse(json['updated_at'])
+              : null,
       statusId: json['status_id'],
-      isPinned: json['is_pinned'] == "1",
-      brand: json['brand'],
-      stock: (json['stock'].toString()),
-      tags: json['tags'] != null ? json['tags'].split(",") : [],
-      tax: json['tax'].toString(),
-      warrantyPeriod: json['warranty_period'],
-    );
-  }
-
-  // ✅ Copy Product with Updated Fields
-  Product copyWith({
-    String? id,
-    String? categoryId,
-    String? vendorId,
-    String? adminId,
-    String? productName,
-    String? productCode,
-    String? productColor,
-    String? productPrice,
-    String? productDiscount,
-    String? productWeight,
-    String? productImage,
-    String? productVideo,
-    String? description,
-    String? newmancol,
-    String? operatingSystem,
-    String? screenSize,
-    String? occasion,
-    String? fit,
-    String? pattern,
-    String? sleeve,
-    String? ram,
-    String? fabric,
-    String? metaTitle,
-    String? metaKeywords,
-    String? metaDescription,
-    bool? isFeatured,
-    bool? isBestseller,
-    String? status,
-    String? createdAt,
-    String? updatedAt,
-    String? statusId,
-    bool? isPinned,
-    String? brand,
-    String? stock,
-    List<String>? tags,
-    String? tax,
-    String? warrantyPeriod,
-    bool? isFavorite,
-  }) {
-    return Product(
-      id: id ?? this.id,
-      categoryId: categoryId ?? this.categoryId,
-      vendorId: vendorId ?? this.vendorId,
-      adminId: adminId ?? this.adminId,
-      productName: productName ?? this.productName,
-      productCode: productCode ?? this.productCode,
-      productColor: productColor ?? this.productColor,
-      productPrice: productPrice ?? this.productPrice,
-      productDiscount: productDiscount ?? this.productDiscount,
-      productWeight: productWeight ?? this.productWeight,
-      productImage: productImage ?? this.productImage,
-      productVideo: productVideo ?? this.productVideo,
-      description: description ?? this.description,
-      newmancol: newmancol ?? this.newmancol,
-      operatingSystem: operatingSystem ?? this.operatingSystem,
-      screenSize: screenSize ?? this.screenSize,
-      occasion: occasion ?? this.occasion,
-      fit: fit ?? this.fit,
-      pattern: pattern ?? this.pattern,
-      sleeve: sleeve ?? this.sleeve,
-      ram: ram ?? this.ram,
-      fabric: fabric ?? this.fabric,
-      metaTitle: metaTitle ?? this.metaTitle,
-      metaKeywords: metaKeywords ?? this.metaKeywords,
-      metaDescription: metaDescription ?? this.metaDescription,
-      isFeatured: isFeatured ?? this.isFeatured,
-      isBestseller: isBestseller ?? this.isBestseller,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      statusId: statusId ?? this.statusId,
-      isPinned: isPinned ?? this.isPinned,
-      brand: brand ?? this.brand,
-      stock: stock ?? this.stock,
-      tags: tags ?? this.tags,
-      tax: tax ?? this.tax,
-      warrantyPeriod: warrantyPeriod ?? this.warrantyPeriod,
-      isFavorite: isFavorite ?? this.isFavorite,
+      isPinned: json['is_pinned'] ?? 'No',
+      isSuggested: json['is_suggested'] ?? 'No',
+      vendorPrice: double.parse(json['vendor_price'].toString()),
+      adminCommission: json['admin_commission'],
+      totalPrice: json['total_price'],
     );
   }
 }
