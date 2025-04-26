@@ -1,5 +1,11 @@
-import 'package:customer_app/models/category_item.dart';
+import 'package:customer_app/models/banner.dart';
+import 'package:customer_app/models/product.dart';
+import 'package:customer_app/models/store.dart';
+import 'package:customer_app/models/top_category.dart';
+import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/screens/chat/chat_message.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
+import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
@@ -7,6 +13,7 @@ import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/headers/main_screen_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,15 +34,53 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  final List<CategoryItem> sampleCategories = [
-    CategoryItem("Fashion", "assets/images/fashion.png"),
-    CategoryItem("Gadgets", "assets/images/gadgets.png"),
-    CategoryItem("Home & Living", "assets/images/home_living.png"),
-    CategoryItem("Accessories", "assets/images/accessories.png"),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Fetch categories on screen load
+    Future.microtask(() {
+      Provider.of<HomeScreenProvider>(
+        context,
+        listen: false,
+      ).fetchTopCategories();
+    });
+
+    Future.microtask(() {
+      Provider.of<HomeScreenProvider>(context, listen: false).fetchBanners();
+    });
+
+    Future.microtask(() {
+      Provider.of<HomeScreenProvider>(
+        context,
+        listen: false,
+      ).fetchBestSellerProducts();
+    });
+
+    Future.microtask(() {
+      Provider.of<HomeScreenProvider>(
+        context,
+        listen: false,
+      ).fetchSuggestedProducts();
+    });
+
+    Future.microtask(() {
+      Provider.of<HomeScreenProvider>(
+        context,
+        listen: false,
+      ).fetchDiscountedProducts();
+    });
+
+    Future.microtask(() {
+      Provider.of<HomeScreenProvider>(
+        context,
+        listen: false,
+      ).fetchFeaturedStores();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<HomeScreenProvider>();
     return Scaffold(
       key: _scaffoldKey,
       body: SizedBox.expand(
@@ -68,20 +113,56 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _buildHeader(),
                         SizedBox(height: 15 * SizeConfig.heightScale),
-                        buildCategoryCarousel(sampleCategories),
+                        provider.isTopCategoriesLoading
+                            ? Container()
+                            : buildCategoryCarousel(
+                              provider.topCategories,
+                              provider.topCategoriesImageUrl,
+                            ),
+
                         SizedBox(height: 20 * SizeConfig.heightScale),
-                        _buildInfoCard(),
+                        provider.isBannersLoading
+                            ? Container()
+                            : _buildInfoCard(
+                              provider.banners,
+                              provider.bannerImageUrl,
+                              _pageController,
+                            ),
+
                         SizedBox(height: 10 * SizeConfig.heightScale),
-                        _buildProductsSection(),
+                        provider.isSuggestedProductsLoading
+                            ? Container()
+                            : _buildProductsSection(
+                              provider.suggestedProducts,
+                              provider.suggestedProductImageUrl,
+                            ),
+
                         SizedBox(height: 10 * SizeConfig.heightScale),
-                        buildBestSellersSection([]),
+                        provider.isBestSellersLoading
+                            ? Container()
+                            : buildBestSellersSection(
+                              provider.bestSellerProducts,
+                              provider.bestSellerImageUrl,
+                            ),
                         SizedBox(height: 10 * SizeConfig.heightScale),
-                        _buildExclusiveProductsSection(),
-                        SizedBox(height: 10 * SizeConfig.heightScale),
-                        buildFeaturedStoresSection(),
+                        provider.isDiscountedProductsLoading
+                            ? Container()
+                            : _buildExclusiveProductsSection(
+                              provider.discountedProducts,
+                              provider.discountedProductImageUrl,
+                              provider.discountedProductTitle,
+                            ),
+
                         SizedBox(height: 10 * SizeConfig.heightScale),
 
-                        buildNearByStoresSection(),
+                        // buildFeaturedStoresSection(),
+                        // SizedBox(height: 10 * SizeConfig.heightScale),
+                        provider.isStoresLoading
+                            ? Container()
+                            : _buildFeaturedStoresSection(
+                              provider.featuredStores,
+                              provider.storeImageUrl,
+                            ),
                       ],
                     ),
                   ),
@@ -92,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Custom endDrawer that shows BELOW AppBar
             if (_isDrawerOpen)
               Positioned(
-                top: 80,
+                top: 90,
                 right: 0,
                 child: Container(
                   width: 250 * SizeConfig.widthScale,
@@ -119,6 +200,39 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           onTap: () {},
+                        ),
+                        Divider(),
+                        ListTile(
+                          leading: Icon(
+                            Icons.message_outlined,
+                            color: Color.fromRGBO(243, 120, 102, 1),
+                            size: 20 * SizeConfig.heightScale,
+                          ),
+                          title: Text(
+                            "Live Chat",
+                            style: AppTextStyles.redw400Outfit(
+                              color: Colors.black,
+                            ).copyWith(
+                              fontSize: 14 * SizeConfig.widthScale,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          onTap: () {
+                            // Navigate to chat screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const ChatScreen(
+                                      conversationId: 2,
+                                      senderId: 1,
+                                      senderType: 'vendor',
+                                      receiverId: 1,
+                                      receiverType: 'user',
+                                    ),
+                              ),
+                            );
+                          },
                         ),
                         Divider(),
                         ListTile(
@@ -327,7 +441,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildCategoryCarousel(List<CategoryItem> categories) {
+  Widget buildCategoryCarousel(
+    List<TopCategory> categories,
+    String? imagePath,
+  ) {
     return SizedBox(
       height: 80,
       child: Row(
@@ -346,21 +463,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 final category = categories[index];
                 return Column(
                   children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage(category.imagePath),
-                          fit: BoxFit.cover,
-                        ),
-                        border: Border.all(color: Colors.black12),
-                      ),
+                    CustomNetworkImage(
+                      imageUrl: '${imagePath}/${category.categoryImage}',
+                      height: 60 * SizeConfig.heightScale,
+                      width: 60 * SizeConfig.widthScale,
+                      radius: 30 * SizeConfig.widthScale,
+                      fit: BoxFit.cover,
                     ),
                     SizedBox(height: 5),
                     Text(
-                      category.title,
+                      category.categoryName ?? '',
                       style: AppTextStyles.blackSubHeadingStyle().copyWith(
                         fontSize: 10 * SizeConfig.widthScale,
                         fontWeight: FontWeight.w400,
@@ -378,13 +490,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildInfoCard() {
-    List<String> images = [
-      "https://th.bing.com/th/id/OIP.JN2YuhRiEVw4-QjfLIBHkgHaE8?rs=1&pid=ImgDetMain",
-      "https://3.bp.blogspot.com/-4rTxMEZ5fUo/WQFHD8D0qxI/AAAAAAAAF68/L3NnSJzYuzQD4B9D8-5iWZhg-bGzybtZQCEw/s1600/Where-to-find-makeup-samples.JPG",
-      "https://th.bing.com/th/id/OIP.JN2YuhRiEVw4-QjfLIBHkgHaE8?rs=1&pid=ImgDetMain",
-      "https://3.bp.blogspot.com/-4rTxMEZ5fUo/WQFHD8D0qxI/AAAAAAAAF68/L3NnSJzYuzQD4B9D8-5iWZhg-bGzybtZQCEw/s1600/Where-to-find-makeup-samples.JPG",
-    ];
+  Widget _buildInfoCard(
+    List<BannerModel> banners,
+    String? imagePath,
+    PageController _pageController,
+  ) {
+    if (banners.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -395,12 +508,21 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             child: PageView.builder(
               controller: _pageController,
-              itemCount: images.length,
+              itemCount: banners.length,
               itemBuilder: (context, index) {
+                final banner = banners[index];
+                final imageUrl = "${imagePath ?? ''}/${banner.image ?? ''}";
+
                 return Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(images[index], fit: BoxFit.cover),
+                    CustomNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      height: 200 * SizeConfig.heightScale,
+                      width: double.infinity,
+                      radius: 20,
+                    ),
                     Container(color: Colors.black.withOpacity(0.3)),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -409,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           const SizedBox(height: 10),
                           Text(
-                            "Nevya Beauty",
+                            banner.title ?? '',
                             style: AppTextStyles.whitew400Outfit().copyWith(
                               fontSize: 14 * SizeConfig.widthScale,
                               fontWeight: FontWeight.w700,
@@ -417,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Moisturizing Cream",
+                            banner.alt ?? '',
                             style: AppTextStyles.whitew400Outfit().copyWith(
                               fontSize: 10 * SizeConfig.widthScale,
                               fontWeight: FontWeight.w700,
@@ -439,13 +561,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(
               child: SmoothPageIndicator(
                 controller: _pageController,
-                count: images.length,
+                count: banners.length,
                 effect: ExpandingDotsEffect(
                   dotHeight: 4,
                   dotWidth: 4,
                   spacing: 4,
                   activeDotColor: AppTheme.primaryColor,
-                  dotColor: AppTheme.primaryColor,
+                  dotColor: AppTheme.primaryColor.withOpacity(0.5),
                 ),
               ),
             ),
@@ -459,7 +581,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Color.fromRGBO(27, 46, 64, 1),
+        color: Color.fromRGBO(31, 88, 84, 1),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -479,34 +601,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExclusiveProductsSection() {
-    List<Map<String, dynamic>> sampleProducts = [
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-        "discount": "",
-        "productType": "Evening Dress",
-      },
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
-        "discount": "",
-        "productType": "Evening Dress",
-      },
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1618354691214-0a4a2f03a3b5",
-        "discount": "-10%",
-        "productType": "Evening Dress",
-      },
-    ];
-
+  Widget _buildExclusiveProductsSection(
+    List<Product> products,
+    String? imagePath,
+    String? discountTitle,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -555,7 +654,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   child: Text(
-                    'BUY 1 GET 1 FREE',
+                    '$discountTitle',
                     style: AppTextStyles.redw400Outfit(
                       color: Colors.black,
                     ).copyWith(
@@ -566,14 +665,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 SizedBox(
-                  height: (SizeConfig.heightScale ?? 1.0) * 255,
+                  height: (SizeConfig.heightScale ?? 1.0) * 270,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: sampleProducts.length,
+                    itemCount: products.length,
                     itemBuilder: (context, index) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: ProductCardWidget(data: sampleProducts[index]),
+                        child: ProductCardWidget(
+                          data: products[index],
+                          imageURL: imagePath,
+                        ),
                       );
                     },
                   ),
@@ -586,34 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProductsSection() {
-    List<Map<String, dynamic>> sampleProducts = [
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-        "discount": "",
-        "productType": "Evening Dress",
-      },
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
-        "discount": "",
-        "productType": "Evening Dress",
-      },
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1618354691214-0a4a2f03a3b5",
-        "discount": "-10%",
-        "productType": "Evening Dress",
-      },
-    ];
-
+  Widget _buildProductsSection(List<Product> products, String? imagePath) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -638,7 +713,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Container(
-          height: 255 * SizeConfig.heightScale,
+          height: 270 * SizeConfig.heightScale,
           decoration: BoxDecoration(
             boxShadow: const [
               BoxShadow(
@@ -653,9 +728,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: sampleProducts.length,
+            itemCount: products.length,
             itemBuilder: (context, index) {
-              return ProductCardWidget(data: sampleProducts[index]);
+              return ProductCardWidget(
+                data: products[index],
+                imageURL: imagePath,
+              );
             },
           ),
         ),
@@ -663,34 +741,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildBestSellersSection(List<Map<String, dynamic>> products) {
-    List<Map<String, dynamic>> sampleProducts = [
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-        "discount": "",
-        "productType": "Evening Dress",
-      },
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
-        "discount": "",
-        "productType": "Evening Dress",
-      },
-      {
-        "name": "Evening Dress",
-        "price": 10,
-        "imageUrl":
-            "https://images.unsplash.com/photo-1618354691214-0a4a2f03a3b5",
-        "discount": "-10%",
-        "productType": "Evening Dress",
-      },
-    ];
-    return BestSellersSection(products: sampleProducts);
+  Widget buildBestSellersSection(List<Product> products, String? imageURL) {
+    return BestSellersSection(products: products, imageURL: imageURL);
   }
 
   Widget buildFeaturedStoresSection() {
@@ -838,29 +890,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildNearByStoresSection() {
-    List<Map<String, dynamic>> featuredStores = [
-      {
-        "name": "Trendy Fashions",
-        "rating": 5,
-        "logoText": "Tf",
-        "products": List.generate(
-          5,
-          (index) =>
-              'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-        ),
-      },
-      {
-        "name": "Simona Hub",
-        "rating": 5,
-        "logoText": "si",
-        "products": List.generate(
-          5,
-          (index) =>
-              'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-        ),
-      },
-    ];
+  Widget _buildFeaturedStoresSection(List<Store> stores, String? imagePath) {
+    if (stores.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -871,7 +904,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
               Text(
-                "Near by stores",
+                "Featured Stores",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
@@ -899,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Column(
             children: [
-              ...featuredStores.map((store) => buildNearByStoreCard(store)),
+              ...stores.map((store) => buildNearByStoreCard(store, imagePath)),
             ],
           ),
         ),
@@ -907,7 +940,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildNearByStoreCard(Map<String, dynamic> store) {
+  Widget buildNearByStoreCard(Store store, String? imagePath) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       padding: const EdgeInsets.all(16),
@@ -917,14 +950,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          // Store Logo Circle
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: AppTheme.primaryColor,
-            child: Text(
-              store["logoText"],
-              style: const TextStyle(color: Colors.white, fontSize: 18),
-            ),
+          CustomNetworkImage(
+            imageUrl: '${imagePath}/${store.logo}',
+            height: 24 * SizeConfig.heightScale,
+            width: 24 * SizeConfig.widthScale,
+            radius: 24 * SizeConfig.widthScale,
+            fit: BoxFit.cover,
           ),
           const SizedBox(width: 12),
           // Store Name and Rating
@@ -932,17 +963,12 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                store["name"],
+                store.name ?? '',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.orange, size: 16),
-                  Text("${store["rating"]}/5"),
-                ],
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

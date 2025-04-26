@@ -13,9 +13,6 @@ import 'package:customer_app/widgets/popups/custom_popup.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:country_state_city/country_state_city.dart' as csc;
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -28,165 +25,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController pincodeController = TextEditingController();
-  final TextEditingController additionalPhoneController =
-      TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController storeLinkController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
-  final TextEditingController storeNameController = TextEditingController();
-  List<dynamic> storeTypes = [];
-  Map<int, bool> selectedStoreTypes = {};
-  final FocusNode blankFocusNode = FocusNode();
-
-  // Store Type Checkboxes
-  bool storeTypeOnline = false;
-  bool storeTypeOffline = false;
 
   File? storeLogo;
-
-  List<Map<String, String>> countryList = [];
-  List<Map<String, String>> stateList = [];
-  List<String> countries = [];
-  List<String> states = [];
-  List<String> cities = [];
-
-  String? selectedCountry;
-  String? selectedCountryCode;
-  String? selectedState;
-  String? selectedStateCode;
-  String? selectedCity;
-
-  // Store Category Selection
-  List<Map<String, dynamic>> storeCategories = [];
-  dynamic selectedCategory;
 
   @override
   void initState() {
     super.initState();
-    fetchStoreType();
-    fetchCategories();
-    fetchCountries();
-  }
-
-  Future<void> fetchCountries() async {
-    final response = await csc.getAllCountries();
-    setState(() {
-      countryList =
-          response.map((e) => {"name": e.name, "code": e.isoCode}).toList();
-      countries = countryList.map((e) => e["name"]!).toList();
-      selectedCountry = countries.isNotEmpty ? countries[0] : null;
-      selectedCountryCode =
-          countryList.isNotEmpty ? countryList[0]["code"] : null;
-      // if (selectedCountry != null) fet(selectedCountry!);
-    });
-  }
-
-  Future<void> fetchStates(String countryCode) async {
-    final response = await csc.getStatesOfCountry(countryCode);
-    setState(() {
-      // states = response.map((e) => e.name).toList();
-      // selectedState = states.isNotEmpty ? states[0] : null;
-      stateList =
-          response.map((e) => {"name": e.name, "code": e.isoCode}).toList();
-      states = stateList.map((e) => e["name"]!).toList();
-      selectedState = states.isNotEmpty ? states[0] : null;
-      selectedStateCode = stateList.isNotEmpty ? stateList[0]["code"] : null;
-    });
-  }
-
-  Future<void> fetchCities(String stateCode, String countryCode) async {
-    final response = await csc.getStateCities(countryCode, stateCode);
-    setState(() {
-      cities = response.map((e) => e.name).toList();
-    });
-  }
-
-  Future<void> fetchCategories() async {
-    try {
-      final response = await ApiService.get('store-category');
-
-      if (response == null) {
-        throw Exception("No response from server");
-      }
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['status'] == true && data['store_categories'] is List) {
-          setState(() {
-            storeCategories = List<Map<String, dynamic>>.from(
-              (data['store_categories'] as List).map(
-                (category) => {
-                  "id": category["id"].toString(),
-                  "name": category["name"] ?? "Unknown",
-                },
-              ),
-            );
-          });
-        } else {
-          throw Exception("Invalid data format");
-        }
-      } else {
-        throw Exception("API Error: ${response.statusCode} - ${response.body}");
-      }
-    } catch (e) {
-      LogService.error("fetchCategories() Error: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load categories: $e')));
-    }
-  }
-
-  Future<void> fetchStoreType() async {
-    try {
-      final response = await ApiService.get('get-store-type');
-
-      if (response == null) {
-        throw Exception("No response from server");
-      }
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data["status"] == true && data["data"] != null) {
-          setState(() {
-            storeTypes = List.from(data["data"]);
-            for (var type in storeTypes) {
-              selectedStoreTypes[type["id"]] = false; // Initialize as unchecked
-            }
-          });
-        } else {
-          throw Exception("Failed to fetch store types");
-        }
-      } else {
-        throw Exception("API Error: ${response.statusCode} - ${response.body}");
-      }
-    } catch (e) {
-      LogService.error("fetchCategories() Error: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load store types: $e')));
-    }
-  }
-
-  Future<void> pickImage() async {
-    var status = await Permission.photos.request();
-
-    if (status.isGranted) {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() {
-          storeLogo = File(image.path);
-        });
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission Denied to access Gallery')),
-      );
-    }
   }
 
   bool _validateInputs() {
@@ -200,28 +48,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       errorMessage = 'Phone number is required.';
     } else if (emailController.text.isEmpty) {
       errorMessage = 'Email is required.';
-    } else if (pincodeController.text.isEmpty) {
-      errorMessage = 'Pincode is required.';
     } else if (passwordController.text.isEmpty) {
       errorMessage = 'Password is required.';
     } else if (confirmPasswordController.text.isEmpty) {
       errorMessage = 'Confirm Password is required.';
     } else if (passwordController.text != confirmPasswordController.text) {
       errorMessage = 'Passwords do not match.';
-    } else if (storeNameController.text.isEmpty) {
-      errorMessage = 'Store name is required.';
-    } else if (selectedCategory == null) {
-      errorMessage = 'Please select a category.';
-    } else if (selectedCountry == null) {
-      errorMessage = 'Please select a country.';
-    } else if (selectedState == null) {
-      errorMessage = 'Please select a state.';
-    } else if (selectedCity == null) {
-      errorMessage = 'Please select a city.';
-    } else if (selectedStoreTypes.values.every((isSelected) => !isSelected)) {
-      errorMessage = 'Please select at least one store type.';
-    } else if (storeLogo == null) {
-      errorMessage = 'Store logo is required.';
     }
 
     if (errorMessage.isNotEmpty) {
@@ -247,68 +79,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return false;
     }
 
-    if (!Validators.isPasswordMatching(
-      passwordController.text,
-      confirmPasswordController.text,
-    )) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Passwords do not match.')));
-      return false;
-    }
-    if (storeLinkController.text.isNotEmpty &&
-        !Validators.isValidURL(storeLinkController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid store link.')),
-      );
-      return false;
-    }
-    if (storeLogo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please upload a store logo!")),
-      );
-      return false;
-    }
     return true;
   }
 
   Future<void> _submit() async {
     if (!_validateInputs()) return;
 
-    String categoryIds = selectedCategory.join(",");
-
-    // Extract selected store type IDs
-    List<int> selectedStoreTypeIds =
-        selectedStoreTypes.entries
-            .where((entry) => entry.value) // Filter selected ones
-            .map((entry) => entry.key) // Get IDs
-            .toList();
-
     final Map<String, dynamic> payload = {
       "email": emailController.text,
       "password": passwordController.text,
       "name": nameController.text,
       "address": addressController.text,
-      "city": selectedCity ?? "Ahmedabad",
-      "state": selectedState ?? "Gujarat",
-      "country": selectedCountry ?? "India",
-      "pincode": pincodeController.text,
       "mobile": phoneController.text,
-      "category_ids": categoryIds,
-      "store_type": selectedStoreTypeIds.join(
-        ",",
-      ), // Convert list to comma-separated string
-      "store_link": storeLinkController.text,
-      "store_name": storeNameController.text,
     };
 
     LogService.info("Payload for store register : ${json.encode(payload)}");
 
-    final response = await ApiService.post(
-      'register-vendor',
-      payload,
-      files: {'store_image': storeLogo},
-    );
+    final response = await ApiService.post('register-user', payload);
 
     if (response == null) {
       throw Exception("No response from server");
@@ -324,28 +111,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
               customMessageWidget: RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  text:
-                      "Your details have been successfully submitted. Now, you have to wait till",
+                  text: "Thank you for your time!",
                   style: AppTextStyles.greySubHeadingStyle().copyWith(
                     fontSize: 16 * SizeConfig.widthScale,
                     fontWeight: FontWeight.w300,
                   ),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: ' admin approves ',
-                      style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                        fontSize: 16 * SizeConfig.widthScale,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    TextSpan(
-                      text: "your request.\nThank you for your time!",
-                      style: AppTextStyles.greySubHeadingStyle().copyWith(
-                        fontSize: 16 * SizeConfig.widthScale,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    ),
-                  ],
                 ),
               ),
               onPressed: () {
@@ -353,26 +123,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Navigator.pushReplacementNamed(context, '/login');
               },
             ),
-      ).then((_) {
-        Navigator.pushReplacementNamed(context, '/login');
-      });
+      );
     } else {
-      Map<String, dynamic> errors = response["message"];
-      String errorMessage = "";
-
-      errors.forEach((key, value) {
-        if (value is List) {
-          errorMessage += "${value.join("\n")}\n";
-        } else {
-          errorMessage += "$value\n";
-        }
-      });
-
+      final message = response["message"];
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage.trim())));
-
-      throw Exception("API Error: ${response["message"]}");
+      ).showSnackBar(SnackBar(content: Text(message.toString())));
+      throw Exception("API Error: $message");
     }
   }
 
@@ -437,8 +194,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         SizedBox(height: 15 * SizeConfig.heightScale),
                         InputWidget(
                           label: 'Phone Number',
-                          hint: 'Enter your pincode..',
-
+                          hint: 'Enter your phone number..',
                           controller: phoneController,
                           prefix: '+972',
                           maxLength: 10,
@@ -449,6 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           hint: 'Enter your address..',
                           isRequired: true,
                           controller: addressController,
+                          maxLines: 3,
                         ),
                         SizedBox(height: 15 * SizeConfig.heightScale),
                         InputWidget(
@@ -457,6 +214,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           isRequired: true,
                           isPassword: true,
                           controller: passwordController,
+                        ),
+                        SizedBox(height: 15 * SizeConfig.heightScale),
+                        InputWidget(
+                          label: 'Confirm Password',
+                          hint: 'Re-enter your password..',
+                          isRequired: true,
+                          isPassword: true,
+                          controller: confirmPasswordController,
                         ),
                         SizedBox(height: 15 * SizeConfig.heightScale),
                         SubmitButton(text: 'Register', onPressed: _submit),

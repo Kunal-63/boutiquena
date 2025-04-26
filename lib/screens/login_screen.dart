@@ -15,6 +15,8 @@ import 'package:customer_app/widgets/popups/otp_popup.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -75,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
               "password": password,
             }; // Send email & password for email login
 
-    var response = await ApiService.post("login-vendor", requestData);
+    var response = await ApiService.post("login-user", requestData);
 
     if (response == null) {
       LogService.error("Login Failed", null);
@@ -136,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onSubmit: (String otp) async {
                 try {
                   final otpResponse = await ApiService.post(
-                    'verify-vendor-otp',
+                    'verify-user-otp',
                     isMobile
                         ? {"mobile": input, "otp": otp}
                         : {"email": input, "otp": otp},
@@ -184,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _navigateToSubscription = false;
         });
-        Navigator.pushNamed(context, '/subscription');
+        Navigator.pushNamed(context, '/main_screen');
       }
     });
     return Scaffold(
@@ -235,13 +237,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(height: 20 * SizeConfig.heightScale),
                         SubmitButton(
                           text: 'Log In',
-                          // onPressed: () => submitLogin(context),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(
-                              context,
-                              '/main_screen',
-                            );
-                          },
+                          onPressed: () => submitLogin(context),
+                          // onPressed: () {
+                          //   Navigator.pushReplacementNamed(
+                          //     context,
+                          //     '/main_screen',
+                          //   );
+                          // },
                         ),
                         SizedBox(height: 10 * SizeConfig.heightScale),
                         Center(
@@ -301,8 +303,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             GestureDetector(
-                              onTap: () {
-                                print("Google Login tapped");
+                              onTap: () async {
+                                try {
+                                  final GoogleSignInAccount? googleUser =
+                                      await GoogleSignIn().signIn();
+                                  if (googleUser != null) {
+                                    final email = googleUser.email;
+                                    final providerId = googleUser.id;
+                                    final name = googleUser.displayName ?? "";
+
+                                    await handleSocialLogin(
+                                      email: email,
+                                      provider: "google",
+                                      providerId: providerId,
+                                      name: name,
+                                    );
+                                  }
+                                } catch (e) {
+                                  print("Google Sign-In error: $e");
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Google Sign-In failed: $e",
+                                      ),
+                                    ),
+                                  );
+                                }
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(
@@ -339,8 +365,39 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
 
                             GestureDetector(
-                              onTap: () {
-                                print("Facebook Login tapped");
+                              onTap: () async {
+                                try {
+                                  final credential =
+                                      await SignInWithApple.getAppleIDCredential(
+                                        scopes: [
+                                          AppleIDAuthorizationScopes.email,
+                                          AppleIDAuthorizationScopes.fullName,
+                                        ],
+                                      );
+
+                                  final email =
+                                      credential.email ??
+                                      "unknown@email.com"; // fallback
+                                  final providerId =
+                                      credential.userIdentifier ?? "";
+                                  final name =
+                                      credential.givenName != null
+                                          ? "${credential.givenName} ${credential.familyName ?? ''}"
+                                          : "Unknown";
+
+                                  await handleSocialLogin(
+                                    email: email,
+                                    provider: "apple",
+                                    providerId: providerId,
+                                    name: name,
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Apple Sign-In failed: $e"),
+                                    ),
+                                  );
+                                }
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(
@@ -431,5 +488,68 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> handleSocialLogin({
+    required String email,
+    required String provider,
+    required String providerId,
+    String? mobile,
+    required String name,
+  }) async {
+    var requestData = {
+      "email": email,
+      "provider": provider,
+      "provider_id": providerId,
+      "name": name,
+      if (mobile != null) "mobile": mobile,
+    };
+
+    var response = await ApiService.post("login-user", requestData);
+
+    if (response == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No response from server")));
+      return;
+    }
+
+    if (response["status"] == true) {
+      LogService.info("Social Login Successful");
+      showDialog(
+        context: context,
+        builder:
+            (context) => OtpPopup(
+              mobile: mobile ?? "", // may still be required
+              onSubmit: (String otp) async {
+                final otpResponse = await ApiService.post('verify-user-otp', {
+                  "email": email,
+                  "otp": otp,
+                });
+
+                if (otpResponse["status"] == true) {
+                  await AuthTokenUtil.saveToken(otpResponse['token']);
+                  if (mounted) {
+                    setState(() {
+                      _navigateToSubscription = true;
+                    });
+                    Navigator.of(context, rootNavigator: true).pop();
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Login Successfully!")),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("OTP verification failed")),
+                  );
+                }
+              },
+            ),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(response["message"].toString())));
+    }
   }
 }

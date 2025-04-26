@@ -4,13 +4,13 @@ import '../utils/size_config.dart';
 
 class AppTheme {
   // 🎨 Color Palette
-  static const primaryColor = Color.fromRGBO(27, 46, 64, 1);
+  static const primaryColor = Color.fromRGBO(31, 88, 84, 1);
   static const secondaryColor = Colors.green;
   static const accentColor = Colors.orange;
   static const backgroundColor = Color.fromRGBO(255, 255, 255, 1);
   static const borderColor = Color.fromRGBO(219, 233, 233, 1);
   static const inputHintColor = Color.fromRGBO(0, 0, 0, 0.5);
-  static const buttonColor = Color.fromRGBO(27, 46, 64, 1);
+  static const buttonColor = Color.fromRGBO(31, 88, 84, 1);
 
   // 🔲 Borders
   static const double borderWidth = 0.94;

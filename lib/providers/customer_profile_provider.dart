@@ -1,28 +1,29 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:customer_app/models/vendor_profile.dart';
+import 'package:customer_app/models/customer_profile.dart';
 import 'package:customer_app/services/api_service.dart';
 import 'package:customer_app/services/log_service.dart';
 
-class VendorProfileProvider with ChangeNotifier {
-  VendorProfile? _vendorProfile;
+class CustomerProfileProvider with ChangeNotifier {
+  CustomerProfile? _customerProfile;
   bool _isLoading = false;
 
-  VendorProfile? get vendorProfile => _vendorProfile;
+  CustomerProfile? get vendorProfile => _customerProfile;
   bool get isLoading => _isLoading;
 
-  Future<void> fetchVendorProfile() async {
+  Future<void> fetchCustomerProfile() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response = await ApiService.getWithAuth('get-vendor-profile');
+      final response = await ApiService.getWithAuth('get-profile');
 
       if (response != null && response.statusCode == 200) {
         final data = json.decode(response.body);
 
         if (data['status'] == true && data['data'] != null) {
-          _vendorProfile = VendorProfile.fromJson(data['data']);
+          _customerProfile = CustomerProfile.fromJson(data['data']);
         }
       } else {
         throw Exception(
@@ -30,14 +31,14 @@ class VendorProfileProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      LogService.error("fetchVendorProfile() Error: $e");
+      LogService.error("fetchCustomerProfile() Error: $e");
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<bool> updateVendorProfile({
+  Future<bool> updateCustomerProfile({
     required String name,
     required String address,
     required String city,
@@ -46,6 +47,7 @@ class VendorProfileProvider with ChangeNotifier {
     required String pincode,
     required String mobile,
     String password = "123456",
+    File? profileImage,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -62,12 +64,13 @@ class VendorProfileProvider with ChangeNotifier {
     };
 
     try {
-      LogService.info("Updating Vendor Profile...");
+      LogService.info("Updating Customer Profile...");
       LogService.info("Request Body: $body");
 
       final response = await ApiService.postWithAuth(
-        'update-vendor-profile',
+        'update-profile',
         body,
+        files: {'image': profileImage},
       );
 
       if (response == null) {
@@ -78,7 +81,13 @@ class VendorProfileProvider with ChangeNotifier {
       LogService.info("Response Data: $response");
 
       if (response["status"] == true) {
-        _vendorProfile = VendorProfile.fromJson(response["data"]);
+        _customerProfile = CustomerProfile.fromJson(response["data"]);
+        fetchCustomerProfile();
+        _isLoading = false;
+        LogService.info(
+          "Profile updated successfully: ${_customerProfile?.name}",
+        );
+
         notifyListeners();
         return true;
       } else {

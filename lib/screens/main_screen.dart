@@ -1,4 +1,5 @@
 import 'package:customer_app/screens/orders/checkout_screen.dart';
+import 'package:customer_app/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:customer_app/screens/home_screen.dart';
 
@@ -18,7 +19,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     HomeScreen(),
-    HomeScreen(),
+    SearchScreen(),
     CheckOutScreen(),
     ProfileScreen(),
   ];

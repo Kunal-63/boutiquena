@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
@@ -7,10 +9,15 @@ class PopupMenuHelper {
   static PopupMenuItem<int> buildPopupMenuItem(
     int value,
     String svgPath,
-    String text,
-  ) {
+    String text, {
+    VoidCallback? onTap = null,
+  }) {
     return PopupMenuItem<int>(
-      onTap: () async {},
+      onTap: () async {
+        if (onTap != null) {
+          onTap();
+        }
+      },
       value: value,
       child: Center(
         child: Row(

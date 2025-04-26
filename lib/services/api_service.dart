@@ -192,4 +192,38 @@ class ApiService {
       return {"error": "Something went wrong", "exception": e.toString()};
     }
   }
+
+  static Future<http.Response?> deleteWithAuth(String endpoint) async {
+    final url = "${Env.apiBaseUrl}$endpoint";
+    LogService.info("DELETE Request with Auth: $url");
+
+    try {
+      String? token = await AuthTokenUtil.getToken();
+      if (token == null || token.isEmpty) {
+        LogService.error("Auth Token is missing or empty");
+        return null;
+      }
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+
+      if (response.statusCode == 401 || response.statusCode == 404) {
+        await _handleUnauthorized();
+        return null;
+      }
+
+      LogService.info("Response Status: ${response.statusCode}");
+      LogService.info("Response Body: ${response.body}");
+
+      return response;
+    } catch (e) {
+      LogService.error("Network Error during DELETE: $e");
+      return null;
+    }
+  }
 }

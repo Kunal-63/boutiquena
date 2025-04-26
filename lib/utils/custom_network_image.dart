@@ -11,7 +11,8 @@ class CustomNetworkImage extends StatelessWidget {
 
   const CustomNetworkImage({
     required this.imageUrl,
-    required this.errorImage,
+    this.errorImage = 'assets/icons/no-image.png',
+
     this.radius = 0.0,
     this.fit = BoxFit.cover,
     this.height,
@@ -28,8 +29,9 @@ class CustomNetworkImage extends StatelessWidget {
         fit: fit,
         height: height,
         width: width,
-        errorBuilder: (context, error, stackTrace) =>
-            Image.asset(errorImage, fit: fit, height: height, width: width),
+        errorBuilder:
+            (context, error, stackTrace) =>
+                Image.asset(errorImage, fit: fit, height: height, width: width),
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return const Center(

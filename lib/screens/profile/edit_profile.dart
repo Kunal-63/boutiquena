@@ -1,11 +1,9 @@
 import 'dart:io';
-
+import 'package:customer_app/utils/validator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:customer_app/config/text_styles.dart';
-import 'package:customer_app/config/theme.dart';
-import 'package:customer_app/providers/vendor_profile_provider.dart';
-import 'package:customer_app/screens/subscription_plan.dart';
+
+import 'package:customer_app/providers/customer_profile_provider.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
@@ -29,13 +27,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String profileImageUrl = '';
   // Controllers for input fields
   TextEditingController nameController = TextEditingController();
-  TextEditingController storeNameController = TextEditingController();
+  TextEditingController addressController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController subscriptionController = TextEditingController();
+  TextEditingController cityController = TextEditingController();
+  TextEditingController stateController = TextEditingController();
+  TextEditingController countryController = TextEditingController();
+  TextEditingController pincodeController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
-  TextEditingController workingHoursController = TextEditingController();
 
   /// Function to pick an image from the gallery
   Future<void> _pickImage() async {
@@ -52,13 +51,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     // Dispose controllers to free memory
     nameController.dispose();
-    storeNameController.dispose();
+    addressController.dispose();
     phoneController.dispose();
-    emailController.dispose();
-    subscriptionController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    countryController.dispose();
+    pincodeController.dispose();
+
     passwordController.dispose();
     confirmPasswordController.dispose();
-    workingHoursController.dispose();
+
     super.dispose();
   }
 
@@ -66,25 +68,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     Future.microtask(
-      () => Provider.of<VendorProfileProvider>(
-        context,
-        listen: false,
-      ).fetchVendorProfile(),
+      () =>
+          Provider.of<CustomerProfileProvider>(
+            context,
+            listen: false,
+          ).fetchCustomerProfile(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final profileProvider = Provider.of<VendorProfileProvider>(context);
+    final profileProvider = Provider.of<CustomerProfileProvider>(context);
     Future<void> submit() async {
+      if ((Validators.isPasswordMatching(
+            passwordController.text,
+            confirmPasswordController.text,
+          )) &&
+          passwordController.text.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+        return;
+      }
       try {
-        bool isSuccess = await profileProvider.updateVendorProfile(
+        bool isSuccess = await profileProvider.updateCustomerProfile(
           name: nameController.text,
-          address: 'a',
-          city: 'a',
-          state: 'a',
-          country: 'a',
-          pincode: '123456',
+          address: addressController.text,
+          city: cityController.text,
+          state: stateController.text,
+          country: countryController.text,
+          pincode: pincodeController.text,
           mobile: phoneController.text,
           password: passwordController.text,
         );
@@ -93,16 +106,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Future.delayed(Duration.zero, () {
           showDialog(
             context: context,
-            builder: (context) => CustomPopUp(
-              title:
-                  isSuccess ? 'Successfully Updated Profile' : 'Update Failed',
-              message: isSuccess
-                  ? 'All changes have been made to the profile'
-                  : 'Something went wrong. Please try again.',
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
+            builder:
+                (context) => CustomPopUp(
+                  title:
+                      isSuccess
+                          ? 'Successfully Updated Profile'
+                          : 'Update Failed',
+                  message:
+                      isSuccess
+                          ? 'All changes have been made to the profile'
+                          : 'Something went wrong. Please try again.',
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
           );
         });
       } catch (e, stacktrace) {
@@ -111,24 +128,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     if (profileProvider.isLoading) {
-      storeNameController.text = "Loading...";
+      addressController.text = "Loading...";
       phoneController.text = "Loading...";
-      emailController.text = "Loading...";
-      subscriptionController.text = "Loading...";
+
       passwordController.text = "Loading...";
-      workingHoursController.text = "Loading...";
+
       nameController.text = "Loading...";
     } else if (profileProvider.vendorProfile != null) {
       final profile = profileProvider.vendorProfile!;
-      storeNameController.text = profile.storeDetails?.name ?? "";
+
       phoneController.text = profile.mobile ?? "";
-      emailController.text = profile.email ?? "";
-      subscriptionController.text = profile.subscriptionsName ?? "";
-      passwordController.text = ""; // Keeping password field empty
-      workingHoursController.text = profile.storeDetails?.businessHours ?? "";
+
+      passwordController.text = "";
+      confirmPasswordController.text = "";
+      addressController.text = profile.address ?? "No Address";
+      cityController.text = profile.city ?? "No City";
+      stateController.text = profile.state ?? "No State";
+      countryController.text = profile.country ?? "No Country";
+      pincodeController.text = profile.pincode ?? "No Pincode";
       nameController.text = profile.name ?? "No Name";
-      profileImageUrl = profile.imagePath ?? "";
-      subscripitonID = profile.subscriptionId;
+      profileImageUrl = '${profile.imagePath}/${profile.image}';
     }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
@@ -174,20 +193,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       borderRadius: BorderRadius.circular(
                         100 * SizeConfig.widthScale,
                       ),
-                      child: _selectedImage != null
-                          ? Image.file(
-                              _selectedImage!,
-                              height: 100 * SizeConfig.widthScale,
-                              width: 100 * SizeConfig.widthScale,
-                              fit: BoxFit.cover,
-                            )
-                          : CustomNetworkImage(
-                              imageUrl: profileImageUrl,
-                              errorImage: 'assets/icons/no-image.png',
-                              height: 100 * SizeConfig.widthScale,
-                              width: 100 * SizeConfig.widthScale,
-                              radius: 100 * SizeConfig.widthScale,
-                            ),
+                      child:
+                          _selectedImage != null
+                              ? Image.file(
+                                _selectedImage!,
+                                height: 100 * SizeConfig.widthScale,
+                                width: 100 * SizeConfig.widthScale,
+                                fit: BoxFit.cover,
+                              )
+                              : CustomNetworkImage(
+                                imageUrl: profileImageUrl,
+                                errorImage: 'assets/icons/no-image.png',
+                                height: 100 * SizeConfig.widthScale,
+                                width: 100 * SizeConfig.widthScale,
+                                radius: 100 * SizeConfig.widthScale,
+                              ),
                     ),
                     Positioned(
                       bottom: 5 * SizeConfig.widthScale,
@@ -197,7 +217,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(5),
                           decoration: const BoxDecoration(
-                            color: Color.fromRGBO(27, 46, 64, 1),
+                            color: Color.fromRGBO(31, 88, 84, 1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -213,77 +233,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
-                hint: 'Kunal Adwani',
+                hint: 'Enter your name',
                 controller: nameController,
                 label: 'Name',
-                isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
-                hint: 'Trendy Fashions',
-                controller: storeNameController,
-                label: 'Store Name',
-                isDisabled: true,
+                hint: 'Enter your city',
+                controller: cityController,
+                label: 'City',
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
-                hint: '+91 79901 87279',
+                hint: 'Enter your state',
+                controller: stateController,
+                label: 'State',
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+              InputWidget(
+                hint: 'Enter your country',
+                controller: countryController,
+                label: 'Country',
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+              InputWidget(
+                hint: 'Enter your pincode',
+                controller: pincodeController,
+                label: 'Pincode',
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+
+              InputWidget(
+                hint: 'Enter your address',
+                controller: addressController,
+                label: 'Address',
+                maxLines: 3,
+              ),
+              SizedBox(height: 10 * SizeConfig.heightScale),
+              InputWidget(
+                hint: 'Enter your phone number',
                 controller: phoneController,
                 label: 'Phone Number',
                 isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              InputWidget(
-                hint: 'kunaladwani@gmail.com',
-                controller: emailController,
-                label: 'Email',
-                isDisabled: true,
-              ),
-              SizedBox(height: 10 * SizeConfig.heightScale),
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  InputWidget(
-                    hint: 'Advance Plan',
-                    controller: subscriptionController,
-                    label: 'Change Subscription Plan',
-                    isDisabled: true,
-                  ),
-                  Positioned(
-                    right: 10 * SizeConfig.widthScale,
-                    top: 35 * SizeConfig.heightScale,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SubscriptionScreen(
-                              initialPlanId: subscripitonID,
-                              isEdit: true,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5.68),
-                          color: AppTheme.buttonColor,
-                        ),
-                        child: Text(
-                          'Upgrade',
-                          style: AppTextStyles.whiteButtonStyle().copyWith(
-                            color: Colors.white,
-                            fontSize: 8 * SizeConfig.widthScale,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10 * SizeConfig.heightScale),
+
               InputWidget(
                 hint: 'Password',
                 controller: passwordController,
@@ -298,13 +292,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 isPassword: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              InputWidget(
-                hint: '9:00AM - 9:00PM',
-                controller: workingHoursController,
-                label: 'Working Hour',
-                svgPath: 'assets/icons/clock-icon.svg',
-              ),
-              SizedBox(height: 10 * SizeConfig.heightScale),
+
               SubmitButton(text: 'Update Profile', onPressed: submit),
             ],
           ),

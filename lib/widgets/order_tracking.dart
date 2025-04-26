@@ -16,6 +16,8 @@ class OrderTrackingTimeline extends StatelessWidget {
     TrackingStep(title: 'Delivered', date: 'Pending', isActive: false),
   ];
 
+  OrderTrackingTimeline({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -43,7 +45,7 @@ class OrderTrackingTimeline extends StatelessWidget {
                             color: Colors.white,
                             size: 14,
                           )
-                          : Container(height: 14, width: 14),
+                          : SizedBox(height: 14, width: 14),
                 ),
               );
             } else {

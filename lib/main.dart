@@ -1,41 +1,43 @@
+import 'package:customer_app/providers/chat_message_provider.dart';
+import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/providers/search_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:customer_app/providers/login_provider.dart';
 import 'package:customer_app/providers/orders_provider.dart';
-import 'package:customer_app/providers/product_provider.dart';
+
 import 'package:customer_app/providers/region_provider.dart';
-import 'package:customer_app/providers/subscription_provider.dart';
 import 'package:customer_app/providers/vendor_delivery_price.dart';
-import 'package:customer_app/providers/vendor_profile_provider.dart';
-import 'package:customer_app/screens/products/add_product.dart';
+import 'package:customer_app/providers/customer_profile_provider.dart';
+
 import 'package:customer_app/screens/profile/edit_profile.dart';
 import 'package:customer_app/screens/main_screen.dart';
 import 'package:customer_app/screens/orders/order_details.dart';
 import 'package:customer_app/screens/orders/order_list.dart';
 import 'package:customer_app/screens/products/product_details.dart';
-import 'package:customer_app/screens/products/product_list.dart';
+
 import 'package:customer_app/screens/profile/profile_screen.dart';
 import 'package:customer_app/screens/sign_up.dart';
-import 'package:customer_app/screens/store_setup.dart';
-import 'package:customer_app/screens/subscription_plan.dart';
+
 import 'package:customer_app/screens/splash_screen.dart';
 import 'package:customer_app/screens/login_screen.dart';
-import 'package:customer_app/screens/vendor%20delivery/vendor_delivery_screen.dart';
 import 'utils/size_config.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ProductProvider()),
-        ChangeNotifierProvider(create: (context) => VendorProfileProvider()),
-        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
+        ChangeNotifierProvider(create: (context) => CustomerProfileProvider()),
+        ChangeNotifierProvider(create: (_) => HomeScreenProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => RegionProvider()),
         ChangeNotifierProvider(create: (_) => VendorDeliveryProvider()),
+        ChangeNotifierProvider(create: (_) => SearchScreenProvider()),
+        ChangeNotifierProvider(create: (_) => ChatMessageProvider()),
       ],
       child: const MyApp(),
     ),
@@ -72,17 +74,13 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
-        '/subscription': (context) => const SubscriptionScreen(),
-        '/store_setup': (context) => const StoreSetupScreen(),
         '/main_screen': (context) => const MainScreen(),
-        '/add_product': (context) => const AddProductScreen(),
         '/profile': (context) => ProfileScreen(),
         '/product_details': (context) => const ProductDetailsScreen(),
-        '/product_list': (context) => const ProductListScreen(),
+
         '/order_list': (context) => const OrderListScreen(),
         '/order_details': (context) => const OrderDetailsScreen(),
         '/edit_profile': (context) => EditProfileScreen(),
-        '/vendor_delivery_price': (context) => VendorDeliveryScreen(),
       },
       builder: (context, child) {
         SizeConfig.init(context);

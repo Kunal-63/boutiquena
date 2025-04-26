@@ -4,7 +4,6 @@ import 'package:customer_app/screens/orders/checkout_screen.dart';
 import 'package:customer_app/screens/orders/tracking_screen.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
-import 'package:customer_app/widgets/order_tracking.dart';
 import 'package:flutter/material.dart';
 
 class OrderPlaced extends StatelessWidget {

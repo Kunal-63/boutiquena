@@ -1,15 +1,11 @@
 import 'package:customer_app/config/text_styles.dart';
-import 'package:customer_app/config/theme.dart';
-import 'package:customer_app/providers/vendor_profile_provider.dart';
+import 'package:customer_app/models/customer_profile.dart';
+import 'package:customer_app/providers/customer_profile_provider.dart';
 import 'package:customer_app/screens/profile/profile_header.dart';
-import 'package:customer_app/screens/subscription_plan.dart';
-import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
-import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:customer_app/widgets/popup_menu_item.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -26,26 +22,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _subscriptionController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _workingHoursController = TextEditingController();
+
   int? subscripitonID;
 
   String profileImageUrl = '';
   String userName = "Loading...";
+
+  CustomerProfile? customerProfile;
 
   @override
   void initState() {
     super.initState();
     Future.microtask(
       () =>
-          Provider.of<VendorProfileProvider>(
+          Provider.of<CustomerProfileProvider>(
             context,
             listen: false,
-          ).fetchVendorProfile(),
+          ).fetchCustomerProfile(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final profileProvider = Provider.of<VendorProfileProvider>(context);
+    final profileProvider = Provider.of<CustomerProfileProvider>(context);
     if (profileProvider.isLoading) {
       _storeNameController.text = "Loading...";
       _phoneController.text = "Loading...";
@@ -56,15 +55,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       userName = "Loading...";
     } else if (profileProvider.vendorProfile != null) {
       final profile = profileProvider.vendorProfile!;
-      _storeNameController.text = profile.storeDetails?.name ?? "";
+      customerProfile = profile;
+
       _phoneController.text = profile.mobile ?? "";
       _emailController.text = profile.email ?? "";
-      _subscriptionController.text = profile.subscriptionsName ?? "";
+
       _passwordController.text = ""; // Keeping password field empty
-      _workingHoursController.text = profile.storeDetails?.businessHours ?? "";
+
       userName = profile.name ?? "No Name";
       profileImageUrl = profile.imagePath ?? "";
-      subscripitonID = profile.subscriptionId;
     }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
@@ -89,7 +88,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Column(
           children: [
-            ProfileHeader(userName: 'Kunal Adwani', profileImageUrl: ''),
+            ProfileHeader(
+              userName: userName,
+              profileImageUrl:
+                  '${customerProfile?.imagePath}/${customerProfile?.image}',
+              onSettingsTap: () {
+                Navigator.pushNamed(context, '/edit_profile');
+              },
+            ),
             SizedBox(height: 10 * SizeConfig.heightScale),
             buildWishlistSection([]),
             SizedBox(height: 10 * SizeConfig.heightScale),

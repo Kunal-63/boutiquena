@@ -1,5 +1,4 @@
 import 'package:customer_app/config/text_styles.dart';
-import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/screens/orders/checkout_screen.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';

@@ -7,11 +7,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 class ProfileHeader extends StatelessWidget {
   final String userName;
   final String profileImageUrl;
+  final VoidCallback? onSettingsTap;
 
   const ProfileHeader({
     super.key,
     required this.userName,
     required this.profileImageUrl,
+    this.onSettingsTap,
   });
 
   @override
@@ -24,8 +26,7 @@ class ProfileHeader extends StatelessWidget {
           child: Row(
             children: [
               CustomNetworkImage(
-                imageUrl:
-                    'https://th.bing.com/th/id/OIP.302zgzUHVpOuGmsmRZudiAHaHk?rs=1&pid=ImgDetMain',
+                imageUrl: '$profileImageUrl',
                 errorImage: 'assets/icons/no-image.png',
                 height: 40 * SizeConfig.widthScale,
                 width: 40 * SizeConfig.widthScale,
@@ -41,20 +42,20 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              SvgPicture.asset(
-                'assets/icons/settings-icon.svg',
-                height: 20 * SizeConfig.widthScale,
-                colorFilter: ColorFilter.mode(
-                  Color.fromRGBO(112, 112, 112, 1),
-                  BlendMode.srcIn,
+              GestureDetector(
+                onTap: onSettingsTap,
+                child: SvgPicture.asset(
+                  'assets/icons/settings-icon.svg',
+                  height: 20 * SizeConfig.widthScale,
+                  colorFilter: ColorFilter.mode(
+                    Color.fromRGBO(112, 112, 112, 1),
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
-
-              const SizedBox(width: 16),
             ],
           ),
         ),
-
         SizedBox(
           height: 38 * SizeConfig.widthScale,
           child: ListView(
@@ -80,7 +81,6 @@ class ProfileHeader extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           side: BorderSide(color: Color.fromRGBO(112, 112, 112, 1), width: 0.5),
-
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
         child: Text(
