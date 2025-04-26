@@ -5,6 +5,7 @@ import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
 import 'package:customer_app/screens/chat/chat_message.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
+import 'package:customer_app/screens/shipping/shipping_address_list.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/config/text_styles.dart';
@@ -230,6 +231,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                       receiverId: 1,
                                       receiverType: 'user',
                                     ),
+                              ),
+                            );
+                          },
+                        ),
+                        Divider(),
+                        ListTile(
+                          leading: Icon(
+                            Icons.home_outlined,
+                            color: Color.fromRGBO(243, 120, 102, 1),
+                            size: 20 * SizeConfig.heightScale,
+                          ),
+                          title: Text(
+                            "My Address",
+                            style: AppTextStyles.redw400Outfit(
+                              color: Colors.black,
+                            ).copyWith(
+                              fontSize: 14 * SizeConfig.widthScale,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ShippingAddressListScreen(),
                               ),
                             );
                           },

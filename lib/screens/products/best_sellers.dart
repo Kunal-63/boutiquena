@@ -1,4 +1,5 @@
 import 'package:customer_app/models/product.dart';
+import 'package:customer_app/screens/products/product_details.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
 
@@ -85,6 +86,15 @@ class BestSellerCard extends StatelessWidget {
 
   const BestSellerCard({super.key, required this.data, required this.imageURL});
 
+  void _navigateToProductDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailsScreen(productID: data.id ?? 0),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageUrl = '${imageURL}/${data.productImage}';
@@ -166,9 +176,19 @@ class BestSellerCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              _iconButton(Icons.shopping_cart_outlined),
+              _iconButton(
+                Icons.shopping_cart_outlined,
+                () => _navigateToProductDetails(
+                  context,
+                ), // Wrap the call in a lambda function
+              ),
               const SizedBox(width: 8),
-              _iconButton(Icons.favorite_border),
+              _iconButton(
+                data.isFavourite == '1'
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+                () {},
+              ),
             ],
           ),
         ],
@@ -176,14 +196,21 @@ class BestSellerCard extends StatelessWidget {
     );
   }
 
-  Widget _iconButton(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(4),
+  Widget _iconButton(IconData icon, VoidCallback? onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: icon == Icons.favorite ? Colors.red : null,
+        ),
       ),
-      child: Icon(icon, size: 16),
     );
   }
 }

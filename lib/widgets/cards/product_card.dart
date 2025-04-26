@@ -1,8 +1,11 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/product.dart';
+import 'package:customer_app/providers/wishlist_provider.dart';
+import 'package:customer_app/screens/products/product_details.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProductCardWidget extends StatefulWidget {
   final Product data;
@@ -25,6 +28,16 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
     setState(() {
       isFavorite = !isFavorite;
     });
+  }
+
+  void _navigateToProductDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => ProductDetailsScreen(productID: widget.data.id ?? 0),
+      ),
+    );
   }
 
   @override
@@ -109,9 +122,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Add to cart logic
-                      },
+                      onPressed: () => _navigateToProductDetails(context),
                       icon: const Icon(Icons.shopping_cart_outlined, size: 14),
                       label: Text(
                         "Add to cart",
@@ -134,7 +145,14 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: toggleFavorite,
+                    onTap: () async {
+                      Future.microtask(
+                        () => Provider.of<WishlistProvider>(
+                          context,
+                          listen: false,
+                        ).toggleWishlist((widget.data.id.toString())),
+                      );
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(5),
                       decoration: const BoxDecoration(

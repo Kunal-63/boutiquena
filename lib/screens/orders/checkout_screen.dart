@@ -1,5 +1,8 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
+import 'package:customer_app/models/shipping_address.dart';
+import 'package:customer_app/providers/shipping_address_provider.dart';
+import 'package:customer_app/screens/shipping/shipping_details.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/checkbox.dart';
@@ -9,6 +12,7 @@ import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:customer_app/widgets/popups/order_success_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 
 class CheckOutScreen extends StatefulWidget {
   const CheckOutScreen({super.key});
@@ -420,22 +424,27 @@ class ShippingDetailsCard extends StatefulWidget {
 }
 
 class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
-  String selectedCity = 'Romania';
-  String selectedMethod = 'Express Delivery';
-  bool saveAddress = true;
+  String? selectedMethod;
+  String? selectedAddressId;
 
-  final TextEditingController nameController = TextEditingController(
-    text: "Jenny Liona",
-  );
-  final TextEditingController phoneController = TextEditingController(
-    text: "558-5556-42",
-  );
-  final TextEditingController addressController = TextEditingController(
-    text: "123 Herzl Street, Tel Aviv-Yafo, 6525801, Israel",
-  );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ShippingAddressProvider>(
+        context,
+        listen: false,
+      ).fetchShippingAddresses();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final shippingAddressProvider = Provider.of<ShippingAddressProvider>(
+      context,
+    );
+    final shippingAddresses = shippingAddressProvider.shippingAddresses;
+
     return Container(
       margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
       padding: EdgeInsets.all(16 * SizeConfig.widthScale),
@@ -444,137 +453,161 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 1)],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child:
+          shippingAddresses.isEmpty
+              ? _buildAddShippingAddress(context)
+              : _buildShippingDetails(context, shippingAddresses),
+    );
+  }
+
+  Widget _buildAddShippingAddress(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ShippingDetailsScreen(shippingAddress: null),
+          ),
+        );
+      },
+      child: Container(
+        height: 150 * SizeConfig.heightScale,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Icon(
+                Icons.add_location_alt_outlined,
+                size: 40,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 10),
               Text(
-                "Shipping Details",
-                style: AppTextStyles.blackSubHeadingStyle(
-                  color: Color.fromRGBO(0, 0, 0, 0.8),
-                ).copyWith(
+                "Add Shipping Address",
+                style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                  fontWeight: FontWeight.w400,
                   fontSize: 16 * SizeConfig.widthScale,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
-              InkWell(
-                onTap: () {},
-                child: Row(
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShippingDetails(
+    BuildContext context,
+    List<ShippingAddress> shippingAddresses,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: shippingAddresses.length,
+          itemBuilder: (context, index) {
+            final ShippingAddress address = shippingAddresses[index];
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color:
+                      (selectedAddressId == address.id)
+                          ? Colors.redAccent
+                          : Colors.grey.shade300,
+                ),
+              ),
+              child: RadioListTile<String>(
+                value: address.id?.toString() ?? '',
+                groupValue: selectedAddressId,
+                onChanged: (value) {
+                  setState(() {
+                    selectedAddressId = value;
+                  });
+                },
+                title: Row(
                   children: [
-                    SvgPicture.asset(
-                      'assets/icons/edit-popup-icon.svg',
-                      width: 10 * SizeConfig.widthScale,
-                      height: 10 * SizeConfig.widthScale,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      "Edit",
-                      style: AppTextStyles.redw400Outfit().copyWith(
-                        fontSize: 12 * SizeConfig.widthScale,
-                        fontWeight: FontWeight.w500,
+                    Expanded(child: Text(address.name ?? '')),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => ShippingDetailsScreen(
+                                  shippingAddress: address,
+                                ),
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        Icons.edit,
+                        color: Color.fromRGBO(243, 120, 102, 1),
+
+                        size: 20 * SizeConfig.widthScale,
                       ),
                     ),
                   ],
                 ),
+                subtitle: Text('${address.address}, ${address.city}'),
+                activeColor: Colors.redAccent,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
-            ],
+            );
+          },
+        ),
+        const Divider(),
+
+        // Shipping Methods Section
+        Text(
+          "Choose Shipping Method",
+          style: AppTextStyles.blackSubHeadingStyle().copyWith(
+            fontWeight: FontWeight.w400,
+            fontSize: 16 * SizeConfig.widthScale,
           ),
-          const Divider(height: 24),
+        ),
 
-          InputWidget(controller: nameController, label: "Name"),
-          SizedBox(height: 12 * SizeConfig.heightScale),
+        _radioTile("Express Delivery"),
+        _radioTile("Regular Delivery"),
+        _radioTile("Store Pickup"),
 
-          InputWidget(
-            controller: phoneController,
-            label: "Phone Number",
-            prefix: '+972',
+        // Estimated Delivery Date
+        Container(
+          margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
+          padding: EdgeInsets.all(12 * SizeConfig.widthScale),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFFEEEEE)),
+            borderRadius: BorderRadius.circular(8),
           ),
-          SizedBox(height: 12 * SizeConfig.heightScale),
-
-          CustomDropdown(
-            items: ["Romania", "Israel", "Germany", "USA"],
-            onChanged: (val) => setState(() => selectedCity = val!),
-            label: "City",
-          ),
-          SizedBox(height: 12 * SizeConfig.heightScale),
-
-          InputWidget(
-            controller: addressController,
-            label: "Full Address",
-            maxLines: 3,
-            hint: "Street, Building, Apartment",
-          ),
-          SizedBox(height: 12 * SizeConfig.heightScale),
-
-          /// Save Address Checkbox
-          Row(
-            children: [
-              CustomCheckbox(
-                label: '',
-                value: saveAddress,
-                onChanged: (val) {},
-                borderColor: const Color.fromRGBO(0, 0, 0, 0.5),
-                fillColor: const Color.fromRGBO(0, 0, 0, 0.05),
-                tickAsset: 'assets/icons/tick-icon.svg',
+          child: RichText(
+            text: TextSpan(
+              text: "Estimated Delivery Date: ",
+              style: AppTextStyles.greySubHeadingStyle().copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: 14 * SizeConfig.widthScale,
               ),
-
-              Text(
-                "Save Address",
-                style: AppTextStyles.greySubHeadingStyle().copyWith(
-                  fontSize: 14 * SizeConfig.widthScale,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ],
-          ),
-          Divider(),
-
-          /// Shipping Methods
-          Text(
-            "Choose Shipping Method",
-            style: AppTextStyles.blackSubHeadingStyle().copyWith(
-              fontWeight: FontWeight.w400,
-              fontSize: 16 * SizeConfig.widthScale,
-            ),
-          ),
-
-          _radioTile("Express Delivery"),
-          _radioTile("Regular Delivery"),
-          _radioTile("Store Pickup"),
-
-          /// Estimated Delivery Date
-          Container(
-            margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
-            padding: EdgeInsets.all(12 * SizeConfig.widthScale),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFFEEEEE)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: RichText(
-              text: TextSpan(
-                text: "Estimated Delivery Date: ",
-                style: AppTextStyles.greySubHeadingStyle().copyWith(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14 * SizeConfig.widthScale,
-                ),
-                children: [
-                  TextSpan(
-                    text: "29 March,2025",
-                    style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 14 * SizeConfig.widthScale,
-                    ),
+              children: [
+                TextSpan(
+                  text: "29 March, 2025",
+                  style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                    fontWeight: FontWeight.w300,
+                    fontSize: 14 * SizeConfig.widthScale,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -582,7 +615,7 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
     return RadioListTile<String>(
       value: label,
       groupValue: selectedMethod,
-      onChanged: (val) => setState(() => selectedMethod = val!),
+      onChanged: (val) => setState(() => selectedMethod = val),
       title: Text(
         label,
         style: AppTextStyles.blackSubHeadingStyle(

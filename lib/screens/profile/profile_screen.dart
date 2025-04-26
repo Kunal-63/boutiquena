@@ -1,8 +1,11 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/customer_profile.dart';
+import 'package:customer_app/models/product.dart';
 import 'package:customer_app/providers/customer_profile_provider.dart';
+import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/profile/profile_header.dart';
 import 'package:customer_app/utils/size_config.dart';
+import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
 import 'package:customer_app/widgets/popup_menu_item.dart';
 import 'package:flutter/material.dart';
@@ -40,11 +43,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             listen: false,
           ).fetchCustomerProfile(),
     );
+    Future.microtask(
+      () =>
+          Provider.of<WishlistProvider>(context, listen: false).fetchWishlist(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<CustomerProfileProvider>(context);
+    final wishlistProvider = Provider.of<WishlistProvider>(context);
     if (profileProvider.isLoading) {
       _storeNameController.text = "Loading...";
       _phoneController.text = "Loading...";
@@ -97,9 +105,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             SizedBox(height: 10 * SizeConfig.heightScale),
-            buildWishlistSection([]),
-            SizedBox(height: 10 * SizeConfig.heightScale),
-            buildWishlistSection([]),
+            buildWishlistSection(
+              wishlistProvider.wishlistProducts,
+              wishlistProvider.productBaseImageUrl,
+            ),
             SizedBox(height: 10 * SizeConfig.heightScale),
             Container(
               padding: EdgeInsets.all(10 * SizeConfig.widthScale),
@@ -196,195 +205,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-Widget buildWishlistSection(List<Map<String, dynamic>> products) {
-  List<Map<String, dynamic>> sampleProducts = [
-    {
-      "name": "Evening Dress",
-      "price": 10,
-      "imageUrl":
-          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-      "discount": "",
-      "productType": "Evening Dress",
-    },
-    {
-      "name": "Evening Dress",
-      "price": 10,
-      "imageUrl":
-          "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
-      "discount": "",
-      "productType": "Evening Dress",
-    },
-    {
-      "name": "Evening Dress",
-      "price": 10,
-      "imageUrl":
-          "https://images.unsplash.com/photo-1618354691214-0a4a2f03a3b5",
-      "discount": "-10%",
-      "productType": "Evening Dress",
-    },
-  ];
-  return WishlistSection(products: sampleProducts);
+Widget buildWishlistSection(List<Product> products, String? imageURL) {
+  return WishlistSection(products: products, imageURL: imageURL);
 }
 
 class WishlistSection extends StatelessWidget {
-  final List<Map<String, dynamic>> products;
+  final List<Product> products;
+  final String? imageURL;
 
-  const WishlistSection({super.key, required this.products});
+  const WishlistSection({super.key, required this.products, this.imageURL});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          height: 250 * SizeConfig.heightScale,
-          padding: EdgeInsets.all(10 * SizeConfig.widthScale),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.06),
-                blurRadius: 3,
-                spreadRadius: 0,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Wishlist",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "See all",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.redAccent.shade200,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 5),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: products.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (context, index) {
-                    return WishlistCard(data: products[index]);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class WishlistCard extends StatelessWidget {
-  final Map<String, dynamic> data;
-
-  const WishlistCard({super.key, required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = data['imageUrl'] ?? '';
-    final title = data['title'] ?? 'Evening Dress';
-    final brand = data['brand'] ?? 'Dorothy Perkins';
-    final price = data['price']?.toString() ?? '10';
-
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey.shade300, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              height: 90,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder:
-                  (_, __, ___) => Container(
-                    height: 90,
-                    width: double.infinity,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image_not_supported),
+        products.isNotEmpty
+            ? Container(
+              height: 290 * SizeConfig.heightScale,
+              padding: EdgeInsets.all(10 * SizeConfig.widthScale),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 0, 0.06),
+                    blurRadius: 3,
+                    spreadRadius: 0,
+                    offset: Offset(0, 1),
                   ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+                ],
+              ),
+              child: Column(
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Wishlist",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "See all",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.redAccent.shade200,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-
-                  Text(
-                    brand,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                  SizedBox(height: 5),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: products.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        return ProductCardWidget(
+                          data: products[index],
+                          imageURL: imageURL,
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
-              Text(
-                "$price ₪",
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 5 * SizeConfig.heightScale),
-          _iconButton(Icons.favorite_rounded),
-        ],
-      ),
-    );
-  }
-
-  Widget _iconButton(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black12),
-      ),
-      child: Icon(icon, size: 18, color: Colors.redAccent),
+            )
+            : Container(),
+      ],
     );
   }
 }
