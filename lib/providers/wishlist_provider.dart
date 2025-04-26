@@ -31,6 +31,7 @@ class WishlistProvider extends ChangeNotifier {
               }).toList();
         }
       } else {
+        wishlistProducts = [];
         LogService.error('Wishlist fetch failed: ${response?.statusCode}');
       }
     } catch (e) {
@@ -58,6 +59,9 @@ class WishlistProvider extends ChangeNotifier {
       }
     } catch (e) {
       LogService.error('Toggle wishlist error: $e');
+    } finally {
+      await fetchWishlist();
+      LogService.info("fetching wishlist in finally");
     }
   }
 }

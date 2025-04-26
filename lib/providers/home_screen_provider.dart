@@ -73,7 +73,7 @@ class HomeScreenProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.getWithAuth('/get-banners');
+      final response = await ApiService.getWithAuth('get-home-banners');
 
       if (response != null && response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -147,6 +147,8 @@ class HomeScreenProvider extends ChangeNotifier {
           final data = decoded['data'];
 
           suggestedProductImageUrl = data['image_url'];
+          // suggestedProductImageUrl =
+          //     'http://69.62.72.21/dev/public/front/images/product';
           final List<dynamic> productList = data['products'] ?? [];
 
           suggestedProducts =

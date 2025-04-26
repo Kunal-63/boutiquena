@@ -6,6 +6,7 @@ import 'package:customer_app/providers/home_screen_provider.dart';
 import 'package:customer_app/screens/chat/chat_message.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
 import 'package:customer_app/screens/shipping/shipping_address_list.dart';
+import 'package:customer_app/screens/view_all/suggested_products_grid.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/config/text_styles.dart';
@@ -728,12 +729,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 "Suggested products",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              Text(
-                "View all",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.red,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SuggestedProductsGrid(),
+                    ),
+                  );
+                },
+                child: Text(
+                  "View all",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ],

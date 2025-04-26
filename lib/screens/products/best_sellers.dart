@@ -1,5 +1,6 @@
 import 'package:customer_app/models/product.dart';
 import 'package:customer_app/screens/products/product_details.dart';
+import 'package:customer_app/screens/view_all/best_seller_products_grid.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
 
@@ -27,12 +28,22 @@ class BestSellersSection extends StatelessWidget {
                 "Best Sellers",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              Text(
-                "See all",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.redAccent.shade200,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BestSellerProductsGrid(),
+                    ),
+                  );
+                },
+                child: Text(
+                  "See all",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ],
