@@ -45,6 +45,7 @@ class ProductDetail {
   final Map<String, List<AttributeValue>>? attributes;
   final bool? isInCart;
   final CartData? cartData;
+  final String? storeName;
 
   ProductDetail({
     this.id,
@@ -93,6 +94,7 @@ class ProductDetail {
     this.attributes,
     this.isInCart,
     this.cartData,
+    this.storeName,
   });
 
   factory ProductDetail.fromJson(Map<String, dynamic> json) {
@@ -147,10 +149,10 @@ class ProductDetail {
               ? Map<String, int>.from(json['categories'])
               : null,
       attributes:
-          (json['attritubes'] != null &&
-                  json['attritubes'] != {} &&
-                  json['attributes'] != [])
-              ? (json['attritubes'] as Map<String, dynamic>).map(
+          (json['attributes'] != null &&
+                  json['attributes'] is Map<String, dynamic> &&
+                  (json['attributes'] as Map).isNotEmpty)
+              ? (json['attributes'] as Map<String, dynamic>).map(
                 (key, value) => MapEntry(
                   key,
                   (value as List<dynamic>)
@@ -164,6 +166,7 @@ class ProductDetail {
           json['cart_data'] != null
               ? CartData.fromJson(json['cart_data'])
               : null,
+      storeName: json['store_name'],
     );
   }
 }
