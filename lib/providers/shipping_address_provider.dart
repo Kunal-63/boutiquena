@@ -25,20 +25,23 @@ class ShippingAddressProvider extends ChangeNotifier {
                     (item) => ShippingAddress.fromJson(item),
                   )
                   .toList();
+          print("SHIPPING ADDRESS" + shippingAddresses.toString());
         } else {
+          shippingAddresses = [];
           LogService.error(
             'Shipping address fetch failed: ${decoded['message']}',
           );
         }
       } else {
+        shippingAddresses = [];
         LogService.error(
           'Shipping address fetch failed: ${response?.statusCode}',
         );
       }
     } catch (e) {
+      shippingAddresses = [];
       LogService.error('Shipping address fetch error: $e');
     } finally {
-      shippingAddresses = [];
       isShippingAddressLoading = false;
       notifyListeners();
     }

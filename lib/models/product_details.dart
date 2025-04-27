@@ -147,7 +147,9 @@ class ProductDetail {
               ? Map<String, int>.from(json['categories'])
               : null,
       attributes:
-          json['attritubes'] != null
+          (json['attritubes'] != null &&
+                  json['attritubes'] != {} &&
+                  json['attributes'] != [])
               ? (json['attritubes'] as Map<String, dynamic>).map(
                 (key, value) => MapEntry(
                   key,

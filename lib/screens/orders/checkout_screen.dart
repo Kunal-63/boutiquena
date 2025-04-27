@@ -508,6 +508,11 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [Container()],
+        ),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -565,8 +570,6 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
           },
         ),
         const Divider(),
-
-        // Shipping Methods Section
         Text(
           "Choose Shipping Method",
           style: AppTextStyles.blackSubHeadingStyle().copyWith(

@@ -2,6 +2,7 @@ import 'package:customer_app/models/shipping_address.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
 import 'package:customer_app/utils/size_config.dart';
+import 'package:customer_app/widgets/buttons/submit_button.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,21 +21,24 @@ class _ShippingAddressListScreenState extends State<ShippingAddressListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ShippingAddressProvider>(
-        context,
-        listen: false,
-      ).fetchShippingAddresses();
-    });
+    _fetchAndNavigate();
   }
 
-  void _checkAndNavigate(ShippingAddressProvider provider) {
-    if (!_navigatedToAdd && provider.shippingAddresses.isEmpty) {
-      _navigatedToAdd = true;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => ShippingDetailsScreen()),
-      );
+  Future<void> _fetchAndNavigate() async {
+    final provider = Provider.of<ShippingAddressProvider>(
+      context,
+      listen: false,
+    );
+    await provider.fetchShippingAddresses();
+
+    if (provider.shippingAddresses.isEmpty && mounted) {
+      if (!_navigatedToAdd) {
+        _navigatedToAdd = true;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ShippingDetailsScreen()),
+        );
+      }
     }
   }
 
@@ -56,45 +60,75 @@ class _ShippingAddressListScreenState extends State<ShippingAddressListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.shippingAddresses.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _checkAndNavigate(provider);
-            });
-
-            return const SizedBox();
-          }
-
-          return ListView.builder(
+          return Padding(
             padding: EdgeInsets.all(20 * SizeConfig.widthScale),
-            itemCount: provider.shippingAddresses.length,
-            itemBuilder: (context, index) {
-              final ShippingAddress address = provider.shippingAddresses[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) =>
-                              ShippingDetailsScreen(shippingAddress: address),
+            child: Column(
+              children: [
+                if (provider.shippingAddresses.isEmpty)
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "No addresses found.",
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
                     ),
-                  );
-                },
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  )
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: provider.shippingAddresses.length,
+                      itemBuilder: (context, index) {
+                        final ShippingAddress address =
+                            provider.shippingAddresses[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => ShippingDetailsScreen(
+                                      shippingAddress: address,
+                                    ),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 1,
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              tileColor: Colors.white,
+                              title: Text(address.name ?? ''),
+                              subtitle: Text(
+                                '${address.address}, ${address.city}',
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  elevation: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    tileColor: Colors.white,
-                    title: Text(address.name ?? ''),
-                    subtitle: Text('${address.address}, ${address.city}'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
+                SizedBox(height: 20 * SizeConfig.heightScale),
+                SubmitButton(
+                  text: 'Add New Address',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShippingDetailsScreen(),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+                SizedBox(height: 20 * SizeConfig.heightScale),
+              ],
+            ),
           );
         },
       ),
