@@ -66,7 +66,7 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
               child: CustomNetworkImage(
                 imageUrl: imageUrl,
                 errorImage: 'assets/icons/no-image.png',
-                height: 100 * SizeConfig.heightScale,
+                height: 200 * SizeConfig.heightScale,
                 width: double.infinity,
                 radius: 0,
               ),

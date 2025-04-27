@@ -59,7 +59,7 @@ class BestSellersSection extends StatelessWidget {
         if (products.isNotEmpty) const SizedBox(height: 12),
         if (products.isNotEmpty)
           Container(
-            height: 220,
+            height: 350 * SizeConfig.heightScale,
             padding: EdgeInsets.all(10 * SizeConfig.widthScale),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -129,7 +129,7 @@ class BestSellerCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
               imageUrl,
-              height: 90,
+              height: 200 * SizeConfig.heightScale,
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder:

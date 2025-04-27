@@ -693,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 SizedBox(
-                  height: (SizeConfig.heightScale ?? 1.0) * 270,
+                  height: (SizeConfig.heightScale ?? 1.0) * 350,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: products.length,
@@ -751,7 +751,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Container(
-          height: 270 * SizeConfig.heightScale,
+          height: 350 * SizeConfig.heightScale,
           decoration: BoxDecoration(
             boxShadow: const [
               BoxShadow(
