@@ -1,12 +1,15 @@
 import 'package:customer_app/models/banner.dart';
-import 'package:customer_app/models/product.dart';
+import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/models/store.dart';
 import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/screens/chat/chat_list.dart';
 import 'package:customer_app/screens/chat/chat_message.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
 import 'package:customer_app/screens/shipping/shipping_address_list.dart';
+import 'package:customer_app/screens/view_all/category_products_grid.dart';
 import 'package:customer_app/screens/view_all/suggested_products_grid.dart';
+import 'package:customer_app/screens/view_all/wishlist_products_grid.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/config/text_styles.dart';
@@ -17,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +34,31 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
+  Future<void> _refreshHomePage() async {
+    // Trigger the fetching of data again when the page is refreshed
+    Provider.of<HomeScreenProvider>(
+      context,
+      listen: false,
+    ).fetchTopCategories();
+    Provider.of<HomeScreenProvider>(context, listen: false).fetchBanners();
+    Provider.of<HomeScreenProvider>(
+      context,
+      listen: false,
+    ).fetchBestSellerProducts();
+    Provider.of<HomeScreenProvider>(
+      context,
+      listen: false,
+    ).fetchSuggestedProducts();
+    Provider.of<HomeScreenProvider>(
+      context,
+      listen: false,
+    ).fetchDiscountedProducts();
+    Provider.of<HomeScreenProvider>(
+      context,
+      listen: false,
+    ).fetchFeaturedStores();
+  }
+
   void _toggleDrawer() {
     setState(() {
       _isDrawerOpen = !_isDrawerOpen;
@@ -39,44 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch categories on screen load
-    Future.microtask(() {
-      Provider.of<HomeScreenProvider>(
-        context,
-        listen: false,
-      ).fetchTopCategories();
-    });
-
-    Future.microtask(() {
-      Provider.of<HomeScreenProvider>(context, listen: false).fetchBanners();
-    });
-
-    Future.microtask(() {
-      Provider.of<HomeScreenProvider>(
-        context,
-        listen: false,
-      ).fetchBestSellerProducts();
-    });
-
-    Future.microtask(() {
-      Provider.of<HomeScreenProvider>(
-        context,
-        listen: false,
-      ).fetchSuggestedProducts();
-    });
-
-    Future.microtask(() {
-      Provider.of<HomeScreenProvider>(
-        context,
-        listen: false,
-      ).fetchDiscountedProducts();
-    });
-
-    Future.microtask(() {
-      Provider.of<HomeScreenProvider>(
-        context,
-        listen: false,
-      ).fetchFeaturedStores();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshHomePage();
     });
   }
 
@@ -99,7 +92,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         "https://st3.depositphotos.com/1007566/13310/v/450/depositphotos_133109560-stock-illustration-male-profile-avatar-with-brown.jpg",
                     errorImage: "assets/icons/avatar.jpg",
                     onBellPressed: () {},
-                    onHeartPressed: () {},
+                    onHeartPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WishlistProductsGrid(),
+                        ),
+                      );
+                    },
                     onMenuPressed: () {
                       setState(() {
                         _isDrawerOpen = !_isDrawerOpen;
@@ -108,64 +108,67 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(16.0 * SizeConfig.widthScale),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
-                        SizedBox(height: 15 * SizeConfig.heightScale),
-                        provider.isTopCategoriesLoading
-                            ? Container()
-                            : buildCategoryCarousel(
-                              provider.topCategories,
-                              provider.topCategoriesImageUrl,
-                            ),
+                  child: RefreshIndicator(
+                    onRefresh: _refreshHomePage,
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(16.0 * SizeConfig.widthScale),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          SizedBox(height: 15 * SizeConfig.heightScale),
+                          provider.isTopCategoriesLoading
+                              ? Container()
+                              : buildCategoryCarousel(
+                                provider.topCategories,
+                                provider.topCategoriesImageUrl,
+                              ),
 
-                        SizedBox(height: 20 * SizeConfig.heightScale),
-                        provider.isBannersLoading
-                            ? Container()
-                            : _buildInfoCard(
-                              provider.banners,
-                              provider.bannerImageUrl,
-                              _pageController,
-                            ),
+                          SizedBox(height: 20 * SizeConfig.heightScale),
+                          provider.isBannersLoading
+                              ? Container()
+                              : _buildInfoCard(
+                                provider.banners,
+                                provider.bannerImageUrl,
+                                _pageController,
+                              ),
 
-                        SizedBox(height: 10 * SizeConfig.heightScale),
-                        provider.isSuggestedProductsLoading
-                            ? Container()
-                            : _buildProductsSection(
-                              provider.suggestedProducts,
-                              provider.suggestedProductImageUrl,
-                            ),
+                          SizedBox(height: 10 * SizeConfig.heightScale),
+                          provider.isSuggestedProductsLoading
+                              ? Container()
+                              : _buildProductsSection(
+                                provider.suggestedProducts,
+                                provider.suggestedProductImageUrl,
+                              ),
 
-                        SizedBox(height: 10 * SizeConfig.heightScale),
-                        provider.isBestSellersLoading
-                            ? Container()
-                            : buildBestSellersSection(
-                              provider.bestSellerProducts,
-                              provider.bestSellerImageUrl,
-                            ),
-                        SizedBox(height: 10 * SizeConfig.heightScale),
-                        provider.isDiscountedProductsLoading
-                            ? Container()
-                            : _buildExclusiveProductsSection(
-                              provider.discountedProducts,
-                              provider.discountedProductImageUrl,
-                              provider.discountedProductTitle,
-                            ),
+                          SizedBox(height: 10 * SizeConfig.heightScale),
+                          provider.isBestSellersLoading
+                              ? Container()
+                              : buildBestSellersSection(
+                                provider.bestSellerProducts,
+                                provider.bestSellerImageUrl,
+                              ),
+                          SizedBox(height: 10 * SizeConfig.heightScale),
+                          provider.isDiscountedProductsLoading
+                              ? Container()
+                              : _buildExclusiveProductsSection(
+                                provider.discountedProducts,
+                                provider.discountedProductImageUrl,
+                                provider.discountedProductTitle,
+                              ),
 
-                        SizedBox(height: 10 * SizeConfig.heightScale),
+                          SizedBox(height: 10 * SizeConfig.heightScale),
 
-                        // buildFeaturedStoresSection(),
-                        // SizedBox(height: 10 * SizeConfig.heightScale),
-                        provider.isStoresLoading
-                            ? Container()
-                            : _buildFeaturedStoresSection(
-                              provider.featuredStores,
-                              provider.storeImageUrl,
-                            ),
-                      ],
+                          // buildFeaturedStoresSection(),
+                          // SizedBox(height: 10 * SizeConfig.heightScale),
+                          provider.isStoresLoading
+                              ? Container()
+                              : _buildFeaturedStoresSection(
+                                provider.featuredStores,
+                                provider.storeImageUrl,
+                              ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -225,13 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (context) => const ChatScreen(
-                                      conversationId: 2,
-                                      senderId: 1,
-                                      senderType: 'vendor',
-                                      receiverId: 1,
-                                      receiverType: 'user',
-                                    ),
+                                    (context) => const ConversationListScreen(),
                               ),
                             );
                           },
@@ -491,12 +488,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 final category = categories[index];
                 return Column(
                   children: [
-                    CustomNetworkImage(
-                      imageUrl: '${imagePath}/${category.categoryImage}',
-                      height: 60 * SizeConfig.heightScale,
-                      width: 60 * SizeConfig.widthScale,
-                      radius: 30 * SizeConfig.widthScale,
-                      fit: BoxFit.cover,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    CategoryProductsGrid(category: category),
+                          ),
+                        );
+                      },
+                      child: CustomNetworkImage(
+                        imageUrl: '$imagePath/${category.categoryImage}',
+                        height: 60 * SizeConfig.heightScale,
+                        width: 60 * SizeConfig.widthScale,
+                        radius: 30 * SizeConfig.widthScale,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     SizedBox(height: 5),
                     Text(
@@ -521,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildInfoCard(
     List<BannerModel> banners,
     String? imagePath,
-    PageController _pageController,
+    PageController pageController,
   ) {
     if (banners.isEmpty) {
       return const SizedBox.shrink();
@@ -535,7 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 200,
             width: double.infinity,
             child: PageView.builder(
-              controller: _pageController,
+              controller: pageController,
               itemCount: banners.length,
               itemBuilder: (context, index) {
                 final banner = banners[index];
@@ -576,19 +585,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: _buildExploreButton(banner.link ?? ''),
+                    ),
                   ],
                 );
               },
             ),
           ),
-          Positioned(top: 10, right: 10, child: _buildExploreButton()),
+
           Positioned(
             bottom: 10,
             left: 0,
             right: 0,
             child: Center(
               child: SmoothPageIndicator(
-                controller: _pageController,
+                controller: pageController,
                 count: banners.length,
                 effect: ExpandingDotsEffect(
                   dotHeight: 4,
@@ -605,32 +619,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExploreButton() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Color.fromRGBO(31, 88, 84, 1),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Explore",
-            style: AppTextStyles.whiteButtonStyle().copyWith(
-              fontSize: 10 * SizeConfig.widthScale,
-              fontWeight: FontWeight.w600,
+  Widget _buildExploreButton(String url) {
+    return GestureDetector(
+      onTap: () async {
+        // Open the URL when the button is clicked
+        if (await canLaunch(url)) {
+          await launch(url);
+        } else {
+          throw 'Could not launch $url';
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: Color.fromRGBO(31, 88, 84, 1),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Explore",
+              style: AppTextStyles.whiteButtonStyle().copyWith(
+                fontSize: 10 * SizeConfig.widthScale,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(width: 5),
-          SvgPicture.asset('assets/icons/north-east-arrow.svg'),
-        ],
+            const SizedBox(width: 5),
+            SvgPicture.asset('assets/icons/north-east-arrow.svg'),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildExclusiveProductsSection(
-    List<Product> products,
+    List<ProductDetail> products,
     String? imagePath,
     String? discountTitle,
   ) {
@@ -694,16 +718,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 SizedBox(
                   height: (SizeConfig.heightScale ?? 1.0) * 350,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: ProductCardWidget(
-                          data: products[index],
-                          imageURL: imagePath,
-                        ),
+                  child: Consumer<HomeScreenProvider>(
+                    builder: (context, provider, _) {
+                      final products = provider.discountedProducts;
+
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: products.length,
+                        itemBuilder: (context, index) {
+                          return ProductCardWidget(
+                            data: products[index],
+                            imageURL: imagePath,
+                            onWishlistTap: () {
+                              provider.fetchDiscountedProducts();
+                            },
+                          );
+                        },
                       );
                     },
                   ),
@@ -716,7 +746,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProductsSection(List<Product> products, String? imagePath) {
+  Widget _buildProductsSection(
+    List<ProductDetail> products,
+    String? imagePath,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -764,13 +797,22 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(10.37),
           ),
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              return ProductCardWidget(
-                data: products[index],
-                imageURL: imagePath,
+          child: Consumer<HomeScreenProvider>(
+            builder: (context, provider, _) {
+              final products = provider.suggestedProducts;
+
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  return ProductCardWidget(
+                    data: products[index],
+                    imageURL: imagePath,
+                    onWishlistTap: () {
+                      provider.fetchSuggestedProducts();
+                    },
+                  );
+                },
               );
             },
           ),
@@ -779,7 +821,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildBestSellersSection(List<Product> products, String? imageURL) {
+  Widget buildBestSellersSection(
+    List<ProductDetail> products,
+    String? imageURL,
+  ) {
     return BestSellersSection(products: products, imageURL: imageURL);
   }
 
@@ -894,7 +939,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const Spacer(),
               // Explore Button
-              _buildExploreButton(),
+              _buildExploreButton(store['link']),
             ],
           ),
           Divider(),
@@ -981,7 +1026,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildNearByStoreCard(Store store, String? imagePath) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Color.fromRGBO(250, 250, 250, 1),
         borderRadius: BorderRadius.circular(10.37),
@@ -989,10 +1034,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           CustomNetworkImage(
-            imageUrl: '${imagePath}/${store.logo}',
-            height: 24 * SizeConfig.heightScale,
-            width: 24 * SizeConfig.widthScale,
-            radius: 24 * SizeConfig.widthScale,
+            imageUrl: '$imagePath/${store.logo}',
+            height: 45 * SizeConfig.heightScale,
+            width: 45 * SizeConfig.widthScale,
+            radius: 45 * SizeConfig.widthScale,
             fit: BoxFit.cover,
           ),
           const SizedBox(width: 12),
@@ -1012,7 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const Spacer(),
           // Explore Button
-          _buildExploreButton(),
+          _buildExploreButton(store.storeLink ?? ''),
         ],
       ),
     );

@@ -1,6 +1,5 @@
 import 'package:customer_app/models/shipping_address.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
-import 'package:customer_app/screens/orders/order_placed_screen.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';

@@ -1,5 +1,5 @@
-import 'package:customer_app/models/product.dart';
 import 'package:customer_app/providers/suggested_product_provider.dart';
+import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
 
@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class SuggestedProductsGrid extends StatefulWidget {
-  const SuggestedProductsGrid({Key? key}) : super(key: key);
+  const SuggestedProductsGrid({super.key});
 
   @override
   _SuggestedProductsGridState createState() => _SuggestedProductsGridState();
@@ -73,19 +73,23 @@ class _SuggestedProductsGridState extends State<SuggestedProductsGrid> {
                 padding: const EdgeInsets.all(8.0),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 0.75,
+                  mainAxisSpacing: 5,
+                  crossAxisSpacing: 5,
+                  childAspectRatio: 0.53,
                 ),
                 itemCount: provider.suggestedProducts.length,
                 itemBuilder: (context, index) {
                   final product = provider.suggestedProducts[index];
-                  return ProductCardWidget(
-                    data: product,
-                    imageURL: provider.productBaseImageUrl,
+                  return SizedBox(
+                    height: 350 * SizeConfig.heightScale,
+                    child: ProductCardWidget(
+                      data: product,
+                      imageURL: provider.productBaseImageUrl,
+                    ),
                   );
                 },
               ),
+
               if (provider.isFetchingMore)
                 Positioned(
                   left: 0,

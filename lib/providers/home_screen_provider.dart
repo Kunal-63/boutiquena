@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:customer_app/models/banner.dart';
-import 'package:customer_app/models/product.dart';
+import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/models/store.dart';
 import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/services/api_service.dart';
@@ -22,13 +22,13 @@ class HomeScreenProvider extends ChangeNotifier {
   List<BannerModel> banners = [];
   String? bannerImageUrl;
 
-  List<Product> bestSellerProducts = [];
+  List<ProductDetail> bestSellerProducts = [];
   String? bestSellerImageUrl;
 
-  List<Product> suggestedProducts = [];
+  List<ProductDetail> suggestedProducts = [];
   String? suggestedProductImageUrl;
 
-  List<Product> discountedProducts = [];
+  List<ProductDetail> discountedProducts = [];
   String? discountedProductImageUrl;
   String? discountedProductTitle;
 
@@ -116,7 +116,7 @@ class HomeScreenProvider extends ChangeNotifier {
           final List<dynamic> productList = data['products'] ?? [];
 
           bestSellerProducts =
-              productList.map((e) => Product.fromJson(e)).toList();
+              productList.map((e) => ProductDetail.fromJson(e)).toList();
         }
       } else {
         LogService.error(
@@ -147,12 +147,10 @@ class HomeScreenProvider extends ChangeNotifier {
           final data = decoded['data'];
 
           suggestedProductImageUrl = data['image_url'];
-          // suggestedProductImageUrl =
-          //     'http://69.62.72.21/dev/public/front/images/product';
           final List<dynamic> productList = data['products'] ?? [];
 
           suggestedProducts =
-              productList.map((e) => Product.fromJson(e)).toList();
+              productList.map((e) => ProductDetail.fromJson(e)).toList();
         }
       } else {
         LogService.error(
@@ -185,7 +183,7 @@ class HomeScreenProvider extends ChangeNotifier {
           final List<dynamic> productList = data['products'] ?? [];
 
           discountedProducts =
-              productList.map((e) => Product.fromJson(e)).toList();
+              productList.map((e) => ProductDetail.fromJson(e)).toList();
         }
       } else {
         LogService.error(

@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:customer_app/models/product.dart';
+import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/services/api_service.dart';
 import 'package:customer_app/services/log_service.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +6,7 @@ import 'package:flutter/material.dart';
 class BestSellerProductsProvider extends ChangeNotifier {
   bool isLoading = false;
   bool isFetchingMore = false;
-  List<Product> bestSellerProducts = [];
+  List<ProductDetail> bestSellerProducts = [];
   String productBaseImageUrl = '';
   int totalCount = 0;
   int limit = 5;
@@ -42,7 +40,7 @@ class BestSellerProductsProvider extends ChangeNotifier {
 
           final newProducts =
               productsData
-                  .map<Product>((item) => Product.fromJson(item))
+                  .map<ProductDetail>((item) => ProductDetail.fromJson(item))
                   .toList();
 
           if (page == 1) {

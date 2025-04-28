@@ -100,6 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           pincode: pincodeController.text,
           mobile: phoneController.text,
           password: passwordController.text,
+          profileImage: _selectedImage,
         );
 
         // Ensure the dialog is shown inside `Future.delayed`

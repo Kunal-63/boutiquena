@@ -1,6 +1,6 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/customer_profile.dart';
-import 'package:customer_app/models/product.dart';
+import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/providers/customer_profile_provider.dart';
 import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/profile/profile_header.dart';
@@ -92,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           vertical: 15.0 * SizeConfig.heightScale,
-          horizontal: 30 * SizeConfig.widthScale,
+          horizontal: 15 * SizeConfig.widthScale,
         ),
         child: Column(
           children: [
@@ -205,12 +205,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-Widget buildWishlistSection(List<Product> products, String? imageURL) {
+Widget buildWishlistSection(List<ProductDetail> products, String? imageURL) {
   return WishlistSection(products: products, imageURL: imageURL);
 }
 
 class WishlistSection extends StatelessWidget {
-  final List<Product> products;
+  final List<ProductDetail> products;
   final String? imageURL;
 
   const WishlistSection({super.key, required this.products, this.imageURL});
@@ -222,7 +222,7 @@ class WishlistSection extends StatelessWidget {
       children: [
         products.isNotEmpty
             ? Container(
-              height: 290 * SizeConfig.heightScale,
+              height: 390 * SizeConfig.heightScale,
               padding: EdgeInsets.all(10 * SizeConfig.widthScale),
               decoration: BoxDecoration(
                 color: Colors.white,

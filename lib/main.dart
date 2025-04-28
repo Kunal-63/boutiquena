@@ -1,4 +1,6 @@
 import 'package:customer_app/providers/best_seller_provider.dart';
+import 'package:customer_app/providers/cart_provider.dart';
+import 'package:customer_app/providers/category_products_provider.dart';
 import 'package:customer_app/providers/chat_message_provider.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
 import 'package:customer_app/providers/product_provider.dart';
@@ -48,6 +50,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ShippingAddressProvider()),
         ChangeNotifierProvider(create: (_) => SuggestedProductsProvider()),
         ChangeNotifierProvider(create: (_) => BestSellerProductsProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProductsProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: const MyApp(),
     ),

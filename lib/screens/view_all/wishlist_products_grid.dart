@@ -1,4 +1,5 @@
-import 'package:customer_app/providers/best_seller_provider.dart';
+import 'package:customer_app/providers/suggested_product_provider.dart';
+import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
@@ -6,14 +7,14 @@ import 'package:customer_app/widgets/headers/common_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class BestSellerProductsGrid extends StatefulWidget {
-  const BestSellerProductsGrid({super.key});
+class WishlistProductsGrid extends StatefulWidget {
+  const WishlistProductsGrid({super.key});
 
   @override
-  _BestSellerProductsGridState createState() => _BestSellerProductsGridState();
+  _WishlistProductsGridState createState() => _WishlistProductsGridState();
 }
 
-class _BestSellerProductsGridState extends State<BestSellerProductsGrid> {
+class _WishlistProductsGridState extends State<WishlistProductsGrid> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -23,18 +24,12 @@ class _BestSellerProductsGridState extends State<BestSellerProductsGrid> {
     _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BestSellerProductsProvider>(
-        context,
-        listen: false,
-      ).fetchBestSellerProducts();
+      Provider.of<WishlistProvider>(context, listen: false).fetchWishlist();
     });
   }
 
   void _onScroll() {
-    final provider = Provider.of<BestSellerProductsProvider>(
-      context,
-      listen: false,
-    );
+    final provider = Provider.of<WishlistProvider>(context, listen: false);
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 300) {
       provider.loadMore();
@@ -55,14 +50,14 @@ class _BestSellerProductsGridState extends State<BestSellerProductsGrid> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
         child: CommonAppBar(
-          title: "Best Seller Products",
+          title: "Wishlist Products",
           menuPressed: () {},
           menuItems: [],
         ),
       ),
-      body: Consumer<BestSellerProductsProvider>(
+      body: Consumer<WishlistProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading && provider.bestSellerProducts.isEmpty) {
+          if (provider.isWishlistLoading && provider.wishlistProducts.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -77,9 +72,9 @@ class _BestSellerProductsGridState extends State<BestSellerProductsGrid> {
                   crossAxisSpacing: 5,
                   childAspectRatio: 0.53,
                 ),
-                itemCount: provider.bestSellerProducts.length,
+                itemCount: provider.wishlistProducts.length,
                 itemBuilder: (context, index) {
-                  final product = provider.bestSellerProducts[index];
+                  final product = provider.wishlistProducts[index];
                   return SizedBox(
                     height: 350 * SizeConfig.heightScale,
                     child: ProductCardWidget(
@@ -89,6 +84,7 @@ class _BestSellerProductsGridState extends State<BestSellerProductsGrid> {
                   );
                 },
               ),
+
               if (provider.isFetchingMore)
                 Positioned(
                   left: 0,

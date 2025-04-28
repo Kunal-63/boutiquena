@@ -18,7 +18,7 @@ class CustomerProfile {
   final String? accessToken;
   final String? createdAt;
   final String? updatedAt;
-  final String? imagePath;
+  final String imagePath;
 
   CustomerProfile({
     this.id,
@@ -40,7 +40,7 @@ class CustomerProfile {
     this.accessToken,
     this.createdAt,
     this.updatedAt,
-    this.imagePath,
+    required this.imagePath,
   });
 
   factory CustomerProfile.fromJson(Map<String, dynamic> json) {

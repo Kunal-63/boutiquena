@@ -1,11 +1,14 @@
-import 'package:customer_app/models/product.dart';
+import 'package:customer_app/models/product_details.dart';
+import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/products/product_details.dart';
 import 'package:customer_app/screens/view_all/best_seller_products_grid.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class BestSellersSection extends StatelessWidget {
-  final List<Product> products;
+  final List<ProductDetail> products;
   final String? imageURL;
 
   const BestSellersSection({
@@ -73,15 +76,21 @@ class BestSellersSection extends StatelessWidget {
                 ),
               ],
             ),
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                return BestSellerCard(
-                  data: products[index],
-                  imageURL: imageURL,
+            child: Consumer<HomeScreenProvider>(
+              builder: (context, provider, _) {
+                final products = provider.bestSellerProducts;
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: products.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    return BestSellerCard(
+                      data: products[index],
+                      imageURL: imageURL,
+                    );
+                  },
                 );
               },
             ),
@@ -92,7 +101,7 @@ class BestSellersSection extends StatelessWidget {
 }
 
 class BestSellerCard extends StatelessWidget {
-  final Product data;
+  final ProductDetail data;
   final String? imageURL;
 
   const BestSellerCard({super.key, required this.data, required this.imageURL});
@@ -108,13 +117,13 @@ class BestSellerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = '${imageURL}/${data.productImage}';
+    final imageUrl = '$imageURL/${data.productImage}';
     final title = data.productName;
     final brand = data.description ?? '';
     final price = data.totalPrice?.toString() ?? '10';
 
     return Container(
-      width: 150 * SizeConfig.widthScale,
+      width: 170 * SizeConfig.widthScale,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -195,10 +204,24 @@ class BestSellerCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               _iconButton(
-                data.isFavourite == '1'
+                data.isInWishlist == true
                     ? Icons.favorite
                     : Icons.favorite_border,
-                () {},
+                () async {
+                  await Future.microtask(
+                    () => Provider.of<WishlistProvider>(
+                      context,
+                      listen: false,
+                    ).toggleWishlist((data.id.toString())),
+                  );
+                  await Future.microtask(
+                    () =>
+                        Provider.of<HomeScreenProvider>(
+                          context,
+                          listen: false,
+                        ).fetchBestSellerProducts(),
+                  );
+                },
               ),
             ],
           ),

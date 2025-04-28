@@ -3,17 +3,17 @@ import 'package:customer_app/services/api_service.dart';
 import 'package:customer_app/services/log_service.dart';
 import 'package:flutter/material.dart';
 
-class SuggestedProductsProvider extends ChangeNotifier {
+class CategoryProductsProvider extends ChangeNotifier {
   bool isLoading = false;
   bool isFetchingMore = false;
-  List<ProductDetail> suggestedProducts = [];
+  List<ProductDetail> categoryProducts = [];
   String productBaseImageUrl = '';
   int totalCount = 0;
   int limit = 5;
   int currentPage = 1;
   int totalPages = 1;
 
-  Future<void> fetchSuggestedProducts({int page = 1}) async {
+  Future<void> fetchCateogryProducts(int categoryId, {int page = 1}) async {
     if (page == 1) {
       isLoading = true;
     } else {
@@ -22,10 +22,10 @@ class SuggestedProductsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.postWithAuth('get-suggested-products', {
-        'offset': (page - 1) * limit,
-        'limit': limit,
-      });
+      final response = await ApiService.postWithAuth(
+        'get-products-by-category/${categoryId}',
+        {'offset': (page - 1) * limit, 'limit': limit},
+      );
 
       if (response != null) {
         if (response['status'] == true) {
@@ -44,9 +44,9 @@ class SuggestedProductsProvider extends ChangeNotifier {
                   .toList();
 
           if (page == 1) {
-            suggestedProducts = newProducts;
+            categoryProducts = newProducts;
           } else {
-            suggestedProducts.addAll(newProducts);
+            categoryProducts.addAll(newProducts);
           }
         }
       } else {
@@ -63,9 +63,9 @@ class SuggestedProductsProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadMore() async {
+  Future<void> loadMore(int categoryId) async {
     if (currentPage < totalPages && !isFetchingMore) {
-      await fetchSuggestedProducts(page: currentPage + 1);
+      await fetchCateogryProducts(page: currentPage + 1, categoryId);
     }
   }
 }

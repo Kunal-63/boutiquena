@@ -1,17 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:customer_app/models/product.dart';
 import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/services/api_service.dart';
 import 'package:customer_app/services/log_service.dart';
 
 class ProductProvider with ChangeNotifier {
-  List<Product> _products = [];
-  bool _isLoading = false;
+  final List<ProductDetail> _products = [];
+  final bool _isLoading = false;
   String? productImageURL;
 
-  List<Product> get products => _products;
+  List<ProductDetail> get products => _products;
   bool get isLoading => _isLoading;
 
   ProductDetail? _selectedProductDetail;

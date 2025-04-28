@@ -1,51 +1,54 @@
 class ProductDetail {
-  final int? id;
-  final String? categoryId;
-  final int? vendorId;
-  final int? adminId;
-  final int? storeId;
-  final String? productName;
-  final String? productNameArabic;
-  final String? productNameHebrew;
-  final String? shortDescription;
-  final String? shortDescriptionHebrew;
-  final String? shortDescriptionArabic;
+  int? id;
+  String? categoryId;
+  int? vendorId;
+  int? adminId;
+  int? storeId;
+  String? productName;
+  String? productNameArabic;
+  String? productNameHebrew;
+  String? shortDescription;
+  String? shortDescriptionHebrew;
+  String? shortDescriptionArabic;
   String? productImage;
-  final String? productVideo;
-  final String? description;
-  final String? descriptionHebrew;
-  final String? descriptionArabic;
-  final String? metaTitle;
-  final String? metaTitleHebrew;
-  final String? metaTitleArabic;
-  final String? metaKeywords;
-  final String? metaKeywordsHebrew;
-  final String? metaKeywordsArabic;
-  final String? metaDescription;
-  final String? metaDescriptionHebrew;
-  final String? metaDescriptionArabic;
-  final String? isFeatured;
-  final String? isBestseller;
-  final String? isFavourite;
-  final int? status;
-  final String? createdAt;
-  final String? updatedAt;
-  final int? statusId;
-  final String? isPinned;
-  final String? isSuggested;
-  final String? vendorPrice;
-  final String? adminCommission;
-  final String? totalPrice;
-  final List<ProductImage>? images;
-  final String? imageUrl;
-  final String? imagesLargeUrl;
-  final String? imagesSmallUrl;
-  final String? imagesMediumUrl;
-  final Map<String, int>? categories;
-  final Map<String, List<AttributeValue>>? attributes;
-  final bool? isInCart;
-  final CartData? cartData;
-  final String? storeName;
+  String? productVideo;
+  String? description;
+  String? descriptionHebrew;
+  String? descriptionArabic;
+  String? metaTitle;
+  String? metaTitleHebrew;
+  String? metaTitleArabic;
+  String? metaKeywords;
+  String? metaKeywordsHebrew;
+  String? metaKeywordsArabic;
+  String? metaDescription;
+  String? metaDescriptionHebrew;
+  String? metaDescriptionArabic;
+  String? isFeatured;
+  String? isBestseller;
+  String? isFavourite;
+  int? status;
+  String? createdAt;
+  String? updatedAt;
+  int? statusId;
+  String? isPinned;
+  String? isSuggested;
+  String? vendorPrice;
+  String? adminCommission;
+  String? totalPrice;
+  String? storeName;
+  String? imageUrl;
+  String? imagesLargeUrl;
+  String? imagesSmallUrl;
+  String? imagesMediumUrl;
+  List<ProductImage>? images;
+  Map<String, int>? categories;
+  List<SkuRecord>? skuRecords;
+  List<ProductAttribute>? productAttributes;
+  bool? isInCart;
+  CartData? cartData;
+  bool? isInWishlist;
+  WishlistData? wishlistData;
 
   ProductDetail({
     this.id,
@@ -85,16 +88,19 @@ class ProductDetail {
     this.vendorPrice,
     this.adminCommission,
     this.totalPrice,
-    this.images,
+    this.storeName,
     this.imageUrl,
     this.imagesLargeUrl,
     this.imagesSmallUrl,
     this.imagesMediumUrl,
+    this.images,
     this.categories,
-    this.attributes,
+    this.skuRecords,
+    this.productAttributes,
     this.isInCart,
     this.cartData,
-    this.storeName,
+    this.isInWishlist,
+    this.wishlistData,
   });
 
   factory ProductDetail.fromJson(Map<String, dynamic> json) {
@@ -136,48 +142,49 @@ class ProductDetail {
       vendorPrice: json['vendor_price'],
       adminCommission: json['admin_commission'],
       totalPrice: json['total_price'],
-      images:
-          (json['images'] as List<dynamic>?)
-              ?.map((image) => ProductImage.fromJson(image))
-              .toList(),
+      storeName: json['store_name'],
       imageUrl: json['image_url'],
       imagesLargeUrl: json['images_large_url'],
       imagesSmallUrl: json['images_small_url'],
       imagesMediumUrl: json['images_medium_url'],
-      categories:
-          json['categories'] != null
-              ? Map<String, int>.from(json['categories'])
-              : null,
-      attributes:
-          (json['attributes'] != null &&
-                  json['attributes'] is Map<String, dynamic> &&
-                  (json['attributes'] as Map).isNotEmpty)
-              ? (json['attributes'] as Map<String, dynamic>).map(
-                (key, value) => MapEntry(
-                  key,
-                  (value as List<dynamic>)
-                      .map((item) => AttributeValue.fromJson(item))
-                      .toList(),
-                ),
-              )
-              : null,
+      images:
+          (json['images'] as List<dynamic>?)
+              ?.map((e) => ProductImage.fromJson(e))
+              .toList(),
+      categories: (json['categories'] as Map<String, dynamic>?)?.map(
+        (key, value) => MapEntry(key, value as int),
+      ),
+      skuRecords:
+          (json['sku_records'] as List<dynamic>?)
+              ?.map((e) => SkuRecord.fromJson(e))
+              .toList(),
+      productAttributes:
+          (json['product_attributes'] as List<dynamic>?)
+              ?.map((e) => ProductAttribute.fromJson(e))
+              .toList(),
       isInCart: json['is_in_cart'],
       cartData:
           json['cart_data'] != null
               ? CartData.fromJson(json['cart_data'])
               : null,
-      storeName: json['store_name'],
+      isInWishlist: json['is_in_wishlist'],
+      wishlistData:
+          json['wishlist_data'] != null
+              ? WishlistData.fromJson(json['wishlist_data'])
+              : null,
     );
   }
 }
 
+// Nested Models:
+
 class ProductImage {
-  final int? id;
-  final int? productId;
-  final String? image;
-  final int? status;
-  final String? createdAt;
-  final String? updatedAt;
+  int? id;
+  int? productId;
+  String? image;
+  int? status;
+  String? createdAt;
+  String? updatedAt;
 
   ProductImage({
     this.id,
@@ -200,25 +207,93 @@ class ProductImage {
   }
 }
 
-class AttributeValue {
-  final int? id;
-  final String? value;
+class SkuRecord {
+  int? id;
+  int? price;
+  int? stock;
+  String? sku;
+  List<Attribute>? attributes;
 
-  AttributeValue({this.id, this.value});
+  SkuRecord({this.id, this.price, this.stock, this.sku, this.attributes});
+
+  factory SkuRecord.fromJson(Map<String, dynamic> json) {
+    return SkuRecord(
+      id: json['id'],
+      price: json['price'],
+      stock: json['stock'],
+      sku: json['sku'],
+      attributes:
+          (json['attributes'] as List<dynamic>?)
+              ?.map((e) => Attribute.fromJson(e))
+              .toList(),
+    );
+  }
+}
+
+class Attribute {
+  String? attributeName;
+  String? attributeValue;
+  int? attributeTypeId;
+  int? attributeValueId;
+
+  Attribute({
+    this.attributeName,
+    this.attributeValue,
+    this.attributeTypeId,
+    this.attributeValueId,
+  });
+
+  factory Attribute.fromJson(Map<String, dynamic> json) {
+    return Attribute(
+      attributeName: json['attribute_name'],
+      attributeValue: json['attribute_value'],
+      attributeTypeId: json['attribute_type_id'],
+      attributeValueId: json['attribute_value_id'],
+    );
+  }
+}
+
+class ProductAttribute {
+  String? attributeName;
+  int? attributeTypeId;
+  List<AttributeValue>? values;
+
+  ProductAttribute({this.attributeName, this.attributeTypeId, this.values});
+
+  factory ProductAttribute.fromJson(Map<String, dynamic> json) {
+    return ProductAttribute(
+      attributeName: json['attribute_name'],
+      attributeTypeId: json['attribute_type_id'],
+      values:
+          (json['values'] as List<dynamic>?)
+              ?.map((e) => AttributeValue.fromJson(e))
+              .toList(),
+    );
+  }
+}
+
+class AttributeValue {
+  int? attributeValueId;
+  String? value;
+
+  AttributeValue({this.attributeValueId, this.value});
 
   factory AttributeValue.fromJson(Map<String, dynamic> json) {
-    return AttributeValue(id: json['id'], value: json['value']);
+    return AttributeValue(
+      attributeValueId: json['attribute_value_id'],
+      value: json['value'],
+    );
   }
 }
 
 class CartData {
-  final int? id;
-  final int? userId;
-  final int? productId;
-  final int? attributeId;
-  final int? quantity;
-  final String? createdAt;
-  final String? updatedAt;
+  int? id;
+  int? userId;
+  int? productId;
+  int? attributeId;
+  int? quantity;
+  String? createdAt;
+  String? updatedAt;
 
   CartData({
     this.id,
@@ -237,6 +312,35 @@ class CartData {
       productId: json['product_id'],
       attributeId: json['attribute_id'],
       quantity: json['quantity'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+    );
+  }
+}
+
+class WishlistData {
+  int? id;
+  int? userId;
+  int? productId;
+  int? storeId;
+  String? createdAt;
+  String? updatedAt;
+
+  WishlistData({
+    this.id,
+    this.userId,
+    this.productId,
+    this.storeId,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  factory WishlistData.fromJson(Map<String, dynamic> json) {
+    return WishlistData(
+      id: json['id'],
+      userId: json['user_id'],
+      productId: json['product_id'],
+      storeId: json['store_id'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );

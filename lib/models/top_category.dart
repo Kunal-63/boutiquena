@@ -1,5 +1,5 @@
 class TopCategory {
-  final String? id;
+  final int? id;
   final String? parentId;
   final String? sectionId;
   final String? categoryName;
@@ -35,7 +35,7 @@ class TopCategory {
 
   factory TopCategory.fromJson(Map<String, dynamic> json) {
     return TopCategory(
-      id: json['id']?.toString(),
+      id: json['id'],
       parentId: json['parent_id']?.toString(),
       sectionId: json['section_id']?.toString(),
       categoryName: json['category_name']?.toString(),

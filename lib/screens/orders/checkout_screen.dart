@@ -1,13 +1,14 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
+import 'package:customer_app/models/cart_product.dart';
 import 'package:customer_app/models/shipping_address.dart';
+import 'package:customer_app/providers/cart_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/checkbox.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
-import 'package:customer_app/widgets/inputs/dropdown.dart';
 import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:customer_app/widgets/popups/order_success_popup.dart';
 import 'package:flutter/material.dart';
@@ -205,160 +206,269 @@ class StoreSelectorTile extends StatelessWidget {
   }
 }
 
-class ProductSummaryCard extends StatelessWidget {
+class ProductSummaryCard extends StatefulWidget {
   const ProductSummaryCard({super.key});
 
   @override
+  _ProductSummaryCardState createState() => _ProductSummaryCardState();
+}
+
+class _ProductSummaryCardState extends State<ProductSummaryCard> {
+  late CartProvider _cartProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _cartProvider = Provider.of<CartProvider>(context, listen: false);
+    // Fetch the cart items on widget initialization
+    _cartProvider.fetchCart();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
-      padding: EdgeInsets.all(12 * SizeConfig.widthScale),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 1, spreadRadius: 0),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CustomNetworkImage(
-                imageUrl:
-                    'https://ts1.mm.bing.net/th?id=OIP.A1DvA7N7QgNLsblkh0pG6gHaEv&pid=15.1',
-                errorImage: 'assets/icons/no-image.png',
-                width: 60 * SizeConfig.widthScale,
-                height: 70 * SizeConfig.widthScale,
-                fit: BoxFit.cover,
-                radius: 5,
-              ),
-              SizedBox(width: 12 * SizeConfig.widthScale),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Evening Dress',
-                      style: AppTextStyles.blackSubHeadingStyle(
-                        color: Color.fromRGBO(0, 0, 0, 0.6),
-                      ).copyWith(
-                        fontSize: 10 * SizeConfig.widthScale,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    Text(
-                      'Dorothy Perkins',
-                      style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                        fontSize: 14 * SizeConfig.widthScale,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 6 * SizeConfig.heightScale),
-                    Row(
-                      children: [
-                        Container(
-                          height: 30 * SizeConfig.heightScale,
-
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8 * SizeConfig.widthScale,
-                            vertical: 4 * SizeConfig.heightScale,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            "M",
-                            style: AppTextStyles.blackSubHeadingStyle()
-                                .copyWith(
-                                  fontSize: 12 * SizeConfig.widthScale,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                          ),
-                        ),
-                        SizedBox(width: 8 * SizeConfig.widthScale),
-                        QuantitySelector(),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  // Edit action
-                },
-                child: Row(
-                  children: [
-                    SvgPicture.asset(
-                      'assets/icons/edit-popup-icon.svg',
-                      width: 10 * SizeConfig.widthScale,
-                      height: 10 * SizeConfig.widthScale,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      "Edit",
-                      style: AppTextStyles.redw400Outfit().copyWith(
-                        fontSize: 12 * SizeConfig.widthScale,
-                        color: const Color(0xFFFF5B5B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Divider(),
-          InfoRow(label: "Subtotal (10 x 2)", value: "20 ₪"),
-          Divider(),
-
-          InfoRow(label: "Shipping Charges:", value: "5 ₪"),
-          Divider(),
-
-          InfoRow(label: "Taxes:", value: "2 ₪"),
-          SizedBox(height: 8 * SizeConfig.heightScale),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 12 * SizeConfig.widthScale,
-              vertical: 10 * SizeConfig.heightScale,
-            ),
+    return Consumer<CartProvider>(
+      builder: (context, cartProvider, child) {
+        if (cartProvider.cartItems.isEmpty) {
+          return Container(
+            margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
+            padding: EdgeInsets.all(12 * SizeConfig.widthScale),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFEEEEE)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Grand Total",
-                  style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16 * SizeConfig.widthScale,
-                  ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 1,
+                  spreadRadius: 0,
                 ),
-                Text(
-                  "27 ₪",
-                  style: AppTextStyles.redw400Outfit().copyWith(
-                    fontSize: 18 * SizeConfig.widthScale,
-                    fontWeight: FontWeight.bold,
+              ],
+            ),
+            child: Center(
+              child: Text(
+                'Cart is empty',
+                style: AppTextStyles.blackSubHeadingStyle(
+                  color: Colors.grey,
+                ).copyWith(
+                  fontSize: 16 * SizeConfig.widthScale,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Calculate subtotal and grand total
+        double totalAmount = 0;
+        double taxes = 0;
+        for (var cartItem in cartProvider.cartItems) {
+          totalAmount += cartItem.totalPrice * cartItem.quantity;
+          taxes +=
+              cartItem.totalPrice * cartItem.quantity * 0.1; // Assuming 10% tax
+        }
+        double grandTotal = totalAmount + taxes;
+
+        return SingleChildScrollView(
+          // Wrapping the entire content in a scrollable widget
+          child: Container(
+            margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
+            padding: EdgeInsets.all(12 * SizeConfig.widthScale),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 1,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: cartProvider.cartItems.length,
+                  itemBuilder: (context, index) {
+                    final CartProduct cartItem = cartProvider.cartItems[index];
+
+                    // Calculate the subtotal for each item
+                    double itemSubtotal =
+                        cartItem.totalPrice * cartItem.quantity;
+
+                    return Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomNetworkImage(
+                              imageUrl: cartItem.productImageUrl,
+                              errorImage: 'assets/icons/no-image.png',
+                              width: 60 * SizeConfig.widthScale,
+                              height: 70 * SizeConfig.widthScale,
+                              fit: BoxFit.cover,
+                              radius: 5,
+                            ),
+                            SizedBox(width: 12 * SizeConfig.widthScale),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cartItem.productName,
+                                    style: AppTextStyles.blackSubHeadingStyle(
+                                      color: Color.fromRGBO(0, 0, 0, 0.6),
+                                    ).copyWith(
+                                      fontSize: 10 * SizeConfig.widthScale,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Dorothy Perkins', // Assuming this is static for now
+                                    style: AppTextStyles.blackSubHeadingStyle()
+                                        .copyWith(
+                                          fontSize: 14 * SizeConfig.widthScale,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                  SizedBox(height: 6 * SizeConfig.heightScale),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        height: 30 * SizeConfig.heightScale,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 8 * SizeConfig.widthScale,
+                                          vertical: 4 * SizeConfig.heightScale,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "M", // Static attribute for now, replace with dynamic
+                                          style:
+                                              AppTextStyles.blackSubHeadingStyle()
+                                                  .copyWith(
+                                                    fontSize:
+                                                        12 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 8 * SizeConfig.widthScale,
+                                      ),
+                                      QuantitySelector(
+                                        initialQuantity: cartItem.quantity,
+                                        onQuantityChanged: (newQuantity) {
+                                          cartProvider.updateCart(
+                                            cartId: cartItem.cartId,
+                                            quantity: newQuantity,
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                cartProvider.deleteCart(
+                                  cartId: cartItem.cartId,
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  SvgPicture.asset(
+                                    'assets/icons/delete-icon.svg',
+                                    width: 10 * SizeConfig.widthScale,
+                                    height: 10 * SizeConfig.widthScale,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    "Delete",
+                                    style: AppTextStyles.redw400Outfit()
+                                        .copyWith(
+                                          fontSize: 12 * SizeConfig.widthScale,
+                                          color: const Color(0xFFFF5B5B),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Divider(),
+                        InfoRow(
+                          label:
+                              "Subtotal (${cartItem.quantity} x ${cartItem.totalPrice} ₪)",
+                          value: "$itemSubtotal ₪", // Dynamic subtotal
+                        ),
+                        Divider(),
+                      ],
+                    );
+                  },
+                ),
+                InfoRow(label: "Taxes:", value: "$taxes ₪"),
+                SizedBox(height: 8 * SizeConfig.heightScale),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12 * SizeConfig.widthScale,
+                    vertical: 10 * SizeConfig.heightScale,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFEEEEE)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Grand Total",
+                        style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16 * SizeConfig.widthScale,
+                        ),
+                      ),
+                      Text(
+                        "$grandTotal ₪",
+                        style: AppTextStyles.redw400Outfit().copyWith(
+                          fontSize: 18 * SizeConfig.widthScale,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class QuantitySelector extends StatelessWidget {
-  const QuantitySelector({super.key});
+  final int initialQuantity;
+  final ValueChanged<int> onQuantityChanged;
+
+  const QuantitySelector({
+    super.key,
+    required this.initialQuantity,
+    required this.onQuantityChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
+    int quantity = initialQuantity;
+
     return Container(
       height: 30 * SizeConfig.heightScale,
       decoration: BoxDecoration(
@@ -371,10 +481,27 @@ class QuantitySelector extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.remove, size: 12),
-            onPressed: () {},
+            onPressed: () {
+              if (quantity > 1) {
+                quantity--;
+                onQuantityChanged(quantity);
+              }
+            },
           ),
-          const Text("2"),
-          IconButton(icon: const Icon(Icons.add, size: 12), onPressed: () {}),
+          Text(
+            '$quantity',
+            style: TextStyle(
+              fontSize: 14 * SizeConfig.widthScale,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add, size: 12),
+            onPressed: () {
+              quantity++;
+              onQuantityChanged(quantity);
+            },
+          ),
         ],
       ),
     );

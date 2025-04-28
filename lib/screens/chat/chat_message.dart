@@ -2,13 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/providers/chat_message_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
 import 'package:customer_app/widgets/popup_menu_item.dart';
-import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
   final int conversationId;
@@ -46,13 +48,12 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // Method to pick an image from the gallery
   Future<void> _pickImage() async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() {
-          _selectedImage = pickedFile; // Update state with selected image
+          _selectedImage = pickedFile;
         });
       }
     } catch (e) {
@@ -62,13 +63,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Method to send the message along with the selected image
   void _sendMessage() {
     final text = _messageController.text.trim();
-    if (text.isEmpty && _selectedImage == null)
-      return; // Do nothing if both are empty
+    if (text.isEmpty && _selectedImage == null) {
+      return;
+    }
 
-    // Send the message with or without an image
     Provider.of<ChatMessageProvider>(context, listen: false).sendMessage(
       conversationId: widget.conversationId,
       senderId: widget.senderId,
@@ -79,14 +79,12 @@ class _ChatScreenState extends State<ChatScreen> {
       imageFile: _selectedImage != null ? File(_selectedImage!.path) : null,
     );
 
-    // Clear message and reset selected image after sending
     _messageController.clear();
     setState(() {
       _selectedImage = null;
     });
   }
 
-  // Method to delete the conversation
   void _deleteConversation() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -160,9 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
               0,
               'assets/icons/delete-icon.svg',
               'Delete',
-              onTap: () {
-                _deleteConversation();
-              },
+              onTap: _deleteConversation,
             ),
           ],
         ),
@@ -174,112 +170,147 @@ class _ChatScreenState extends State<ChatScreen> {
                 chatProvider.isLoadingMessages
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(16),
                       itemCount: chatProvider.messages.length,
                       itemBuilder: (context, index) {
                         final message = chatProvider.messages[index];
                         final isMe = message.senderId == widget.senderId;
                         final isImageMessage =
-                            message.message?.contains('http://') ?? false;
+                            message.message?.contains('http') ?? false;
 
-                        return Align(
-                          alignment:
+                        return Column(
+                          crossAxisAlignment:
                               isMe
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            decoration: BoxDecoration(
-                              color:
-                                  isMe
-                                      ? AppTheme.primaryColor
-                                      : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child:
-                                isImageMessage
-                                    ? Image.network(
-                                      message.message!,
-                                      height: 150,
-                                      width: 150,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              const Icon(Icons.error),
-                                    )
-                                    : Text(
-                                      message.message ?? '',
-                                      style: TextStyle(
-                                        color:
-                                            isMe ? Colors.white : Colors.black,
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.only(bottom: 10),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isMe
+                                        ? const Color(0xFFFFF4EC)
+                                        : Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(20),
+                                  topRight: const Radius.circular(20),
+                                  bottomLeft:
+                                      isMe
+                                          ? const Radius.circular(20)
+                                          : const Radius.circular(0),
+                                  bottomRight:
+                                      isMe
+                                          ? const Radius.circular(0)
+                                          : const Radius.circular(20),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 5,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child:
+                                  isImageMessage
+                                      ? Image.network(
+                                        message.message!,
+                                        height: 150,
+                                        width: 150,
+                                        fit: BoxFit.cover,
+                                      )
+                                      : Text(
+                                        message.message ?? '',
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 14,
+                                        ),
                                       ),
-                                    ),
-                          ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: Text(
+                                message.createdAt != null
+                                    ? DateFormat(
+                                      'h:mm a',
+                                    ).format(message.createdAt!)
+                                    : '',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                         );
                       },
                     ),
           ),
+
           if (chatProvider.isSendingMessage)
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(8),
               child: CircularProgressIndicator(),
             ),
+
+          // Input Field + Send Button
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 8.0,
-            ),
+            padding: const EdgeInsets.all(12),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(30.0),
+                borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
                   ),
                 ],
               ),
               child: Column(
                 children: [
                   if (_selectedImage != null)
-                    Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Stack(
-                            alignment: Alignment.topRight,
-                            clipBehavior: Clip.none,
-                            children: [
-                              Image.file(
-                                File(_selectedImage!.path),
-                                height: 100,
-                                width: 100,
-                                fit: BoxFit.cover,
-                              ),
-                              // Cross Icon
-                              Positioned(
-                                top: -18,
-                                right: -18,
-                                child: IconButton(
-                                  icon: Icon(Icons.cancel, color: Colors.red),
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedImage = null;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              File(_selectedImage!.path),
+                              height: 120,
+                              width: 120,
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.cancel,
+                                color: Colors.red,
+                                size: 22,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedImage = null;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   Row(
                     children: [
@@ -290,14 +321,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       Expanded(
                         child: TextField(
                           controller: _messageController,
-                          maxLines: 1,
                           decoration: InputDecoration(
-                            hintText: 'Type a message...',
+                            hintText: "Type here...",
                             border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 16,
-                            ),
                           ),
                         ),
                       ),
@@ -305,10 +331,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         icon: Icon(
                           Icons.send_rounded,
                           color: AppTheme.primaryColor,
+                          size: 28,
                         ),
                         onPressed: _sendMessage,
-                        splashRadius: 25,
-                        iconSize: 28,
                       ),
                     ],
                   ),

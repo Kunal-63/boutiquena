@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/providers/search_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
@@ -5,6 +8,7 @@ import 'package:customer_app/widgets/headers/common_appbar.dart';
 import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,6 +19,9 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController searchController = TextEditingController();
+  XFile? _imageFile;
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
@@ -25,6 +32,26 @@ class _SearchScreenState extends State<SearchScreen> {
   void _refreshProducts(String query) {
     if (query.trim().isNotEmpty) {
       context.read<SearchScreenProvider>().fetchSearchedProducts(query.trim());
+    }
+  }
+
+  // Pick image from camera
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
+  }
+
+  // Pick image from gallery
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
     }
   }
 
@@ -51,10 +78,71 @@ class _SearchScreenState extends State<SearchScreen> {
               hint: "Search",
               svgPath: 'assets/icons/search-icon.svg',
               onChanged: (value) {
-                _refreshProducts(value); // Trigger product refresh
+                _refreshProducts(value);
               },
             ),
+            SizedBox(height: 10.0 * SizeConfig.heightScale),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _pickImageFromCamera,
+                    child: Container(
+                      height: 50 * SizeConfig.heightScale,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppTheme.primaryColor,
+                          width: 0.5,
+                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.camera_alt),
+                          SizedBox(width: 8),
+                          Text('Camera'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _pickImageFromGallery,
+                    child: Container(
+                      // padding: EdgeInsets.all(20 * SizeConfig.widthScale),
+                      height: 50 * SizeConfig.heightScale,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppTheme.primaryColor,
+                          width: 0.5,
+                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.image),
+                          SizedBox(width: 8),
+                          Text('Gallery'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             SizedBox(height: 20.0 * SizeConfig.heightScale),
+            if (_imageFile != null) ...[
+              Image.file(File(_imageFile!.path), width: 100, height: 100),
+              SizedBox(height: 10),
+            ],
             Expanded(
               child: Consumer<SearchScreenProvider>(
                 builder: (context, provider, child) {
@@ -70,19 +158,16 @@ class _SearchScreenState extends State<SearchScreen> {
                     padding: EdgeInsets.zero,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 10.0 * SizeConfig.widthScale,
-                      mainAxisSpacing: 10.0 * SizeConfig.heightScale,
-                      childAspectRatio: 0.7,
+                      crossAxisSpacing: 5.0 * SizeConfig.widthScale,
+                      mainAxisSpacing: 5.0 * SizeConfig.heightScale,
+                      childAspectRatio: 0.5,
                     ),
                     itemCount: provider.filteredProducts.length,
                     itemBuilder: (context, index) {
                       final product = provider.filteredProducts[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                        child: ProductCardWidget(
-                          data: product,
-                          imageURL: provider.imagePath ?? '',
-                        ),
+                      return ProductCardWidget(
+                        data: product,
+                        imageURL: provider.imagePath ?? '',
                       );
                     },
                   );

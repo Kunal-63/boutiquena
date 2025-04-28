@@ -26,7 +26,7 @@ class ProfileHeader extends StatelessWidget {
           child: Row(
             children: [
               CustomNetworkImage(
-                imageUrl: '$profileImageUrl',
+                imageUrl: profileImageUrl,
                 errorImage: 'assets/icons/no-image.png',
                 height: 40 * SizeConfig.widthScale,
                 width: 40 * SizeConfig.widthScale,

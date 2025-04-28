@@ -10,7 +10,7 @@ class PopupMenuHelper {
     int value,
     String svgPath,
     String text, {
-    VoidCallback? onTap = null,
+    VoidCallback? onTap,
   }) {
     return PopupMenuItem<int>(
       onTap: () async {

@@ -25,7 +25,7 @@ class ShippingAddressProvider extends ChangeNotifier {
                     (item) => ShippingAddress.fromJson(item),
                   )
                   .toList();
-          print("SHIPPING ADDRESS" + shippingAddresses.toString());
+          print("SHIPPING ADDRESS$shippingAddresses");
         } else {
           shippingAddresses = [];
           LogService.error(

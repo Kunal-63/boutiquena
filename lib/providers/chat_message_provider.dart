@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:customer_app/models/conversation.dart';
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
 import '../services/api_service.dart';
@@ -9,7 +10,9 @@ import '../services/log_service.dart';
 class ChatMessageProvider extends ChangeNotifier {
   bool isLoadingMessages = false;
   bool isSendingMessage = false;
+  bool isLoadingConversations = false;
   List<ChatMessage> messages = [];
+  List<Conversation> conversations = [];
 
   Future<void> fetchMessages(int conversationId) async {
     isLoadingMessages = true;
@@ -98,5 +101,36 @@ class ChatMessageProvider extends ChangeNotifier {
       LogService.error("Error deleting conversation: $e");
     }
     return false;
+  }
+
+  Future<void> fetchConversations(int userId, String userType) async {
+    final body = {'user_id': userId, 'user_type': userType};
+
+    isLoadingConversations = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.postWithAuth(
+        'get-conversation-list',
+        body,
+      );
+
+      if (response != null && response['success'] == true) {
+        final List<dynamic> data = response['data'] ?? [];
+        conversations =
+            data.map((item) {
+              return Conversation.fromJson(item);
+            }).toList();
+      } else {
+        LogService.error(
+          "Failed to fetch conversations: ${response?['message']}",
+        );
+      }
+    } catch (e) {
+      LogService.error("Error fetching conversations: $e");
+    } finally {
+      isLoadingConversations = false;
+      notifyListeners();
+    }
   }
 }
