@@ -1,8 +1,8 @@
 import 'package:customer_app/providers/cart_provider.dart';
 import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/main_screen.dart';
-import 'package:customer_app/screens/orders/checkout_screen.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
+import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:provider/provider.dart';
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/product_details.dart';
@@ -29,15 +29,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int? selectedAttributeId;
   String selectedSize = 'M'; // Default size
 
+  List<ProductDetail> _similarProducts = [];
+
   Future<void> _loadProductDetail(int id) async {
     final productProvider = Provider.of<ProductProvider>(
       context,
       listen: false,
     );
     await productProvider.fetchProductDetailById(id);
+    await productProvider.fetchSimilarProducts(id);
 
     setState(() {
       _productDetail = productProvider.selectedProductDetail;
+      _similarProducts = productProvider.similarProducts;
     });
   }
 
@@ -406,7 +410,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             listen: false,
                           ).addToCart(
                             productId: _productDetail?.id ?? 0,
-                            attributeId: 1,
+                            attributeId: _productDetail?.skuRecords?[0].id ?? 0,
                             quantity: 1,
                           );
                           await _loadProductDetail(widget.productID ?? 0);
@@ -424,6 +428,58 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         isTransparent: true,
                       ),
                 ],
+              ),
+            ),
+            SizedBox(height: 20 * SizeConfig.heightScale),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Similar Products",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              height: 350 * SizeConfig.heightScale,
+              decoration: BoxDecoration(
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 1,
+                    spreadRadius: 0,
+                    // offset: Offset(0, 2),
+                  ),
+                ],
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10.37),
+              ),
+              child: Consumer<ProductProvider>(
+                builder: (context, provider, _) {
+                  final products = provider.similarProducts;
+
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      return ProductCardWidget(
+                        data: products[index],
+                        imageURL: provider.similarProductImageURL,
+                        onWishlistTap: () {
+                          provider.fetchSimilarProducts(
+                            _productDetail?.id ?? 0,
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
@@ -475,6 +531,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 }
 
 class NotifyMeSwitch extends StatefulWidget {
+  const NotifyMeSwitch({super.key});
+
   @override
   _NotifyMeSwitchState createState() => _NotifyMeSwitchState();
 }

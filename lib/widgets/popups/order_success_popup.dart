@@ -1,4 +1,5 @@
 import 'package:customer_app/config/text_styles.dart';
+import 'package:customer_app/screens/orders/tracking_screen.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
@@ -103,9 +104,7 @@ class _OrderPlacedPopupState extends State<OrderPlacedPopup> {
               text: 'Submit',
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ShippingDetailsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => TrackingScreen()),
                 );
               },
             ),

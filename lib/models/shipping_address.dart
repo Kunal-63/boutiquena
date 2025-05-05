@@ -3,7 +3,7 @@ class ShippingAddress {
   final int? userId;
   final String? name;
   final String? address;
-  final String? city;
+  final int? cityID;
   final String? state;
   final String? country;
   final String? pincode;
@@ -17,7 +17,7 @@ class ShippingAddress {
     this.userId,
     this.name,
     this.address,
-    this.city,
+    this.cityID,
     this.state,
     this.country,
     this.pincode,
@@ -33,7 +33,7 @@ class ShippingAddress {
       userId: json['user_id'] as int?,
       name: json['name'] as String?,
       address: json['address'] as String?,
-      city: json['city'] as String?,
+      cityID: json['city_id'] as int?,
       state: json['state'] as String?,
       country: json['country'] as String?,
       pincode: json['pincode'] as String?,
@@ -56,7 +56,7 @@ class ShippingAddress {
       'user_id': userId,
       'name': name,
       'address': address,
-      'city': city,
+      'city_id': cityID,
       'state': state,
       'country': country,
       'pincode': pincode,

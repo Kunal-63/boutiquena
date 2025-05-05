@@ -189,6 +189,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         InputWidget(
                           label: 'Email',
                           hint: 'Enter your email..',
+                          isRequired: true,
                           controller: emailController,
                         ),
                         SizedBox(height: 15 * SizeConfig.heightScale),
@@ -197,6 +198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           hint: 'Enter your phone number..',
                           controller: phoneController,
                           prefix: '+972',
+                          isRequired: true,
                           maxLength: 10,
                         ),
                         SizedBox(height: 15 * SizeConfig.heightScale),

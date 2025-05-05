@@ -1,8 +1,10 @@
 import 'package:customer_app/models/shipping_address.dart';
+import 'package:customer_app/providers/city_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
+import 'package:customer_app/widgets/inputs/dropdown.dart';
 import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:customer_app/widgets/popup_menu_item.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,7 @@ class _ShippingDetailsScreenState extends State<ShippingDetailsScreen> {
   late TextEditingController stateController;
   late TextEditingController countryController;
   late TextEditingController pincodeController;
+  int? selectedCityId;
 
   bool get isEditMode => widget.shippingAddress != null;
 
@@ -39,9 +42,8 @@ class _ShippingDetailsScreenState extends State<ShippingDetailsScreen> {
     addressController = TextEditingController(
       text: widget.shippingAddress?.address ?? '',
     );
-    cityController = TextEditingController(
-      text: widget.shippingAddress?.city ?? '',
-    );
+    cityController = TextEditingController();
+    selectedCityId = widget.shippingAddress?.cityID;
     stateController = TextEditingController(
       text: widget.shippingAddress?.state ?? '',
     );
@@ -51,21 +53,39 @@ class _ShippingDetailsScreenState extends State<ShippingDetailsScreen> {
     pincodeController = TextEditingController(
       text: widget.shippingAddress?.pincode ?? '',
     );
+    Future.microtask(
+      () => Provider.of<CityProvider>(context, listen: false).fetchCities(),
+    );
+  }
+
+  bool _areFieldsValid() {
+    return fullNameController.text.trim().isNotEmpty &&
+        phoneNumberController.text.trim().isNotEmpty &&
+        selectedCityId != null &&
+        stateController.text.trim().isNotEmpty &&
+        pincodeController.text.trim().isNotEmpty &&
+        addressController.text.trim().isNotEmpty;
   }
 
   Future<void> handleSave() async {
+    if (!_areFieldsValid()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
     final provider = Provider.of<ShippingAddressProvider>(
       context,
       listen: false,
     );
 
     if (isEditMode) {
-      // Editing existing address
       final success = await provider.editShippingAddress(
         id: widget.shippingAddress!.id!,
         name: fullNameController.text,
         address: addressController.text,
-        city: cityController.text,
+        cityID: selectedCityId!,
         state: stateController.text,
         country: countryController.text,
         pincode: pincodeController.text,
@@ -79,11 +99,10 @@ class _ShippingDetailsScreenState extends State<ShippingDetailsScreen> {
         Navigator.pop(context);
       }
     } else {
-      // Adding new address
       final success = await provider.addShippingAddress(
         name: fullNameController.text,
         address: addressController.text,
-        city: cityController.text,
+        cityID: selectedCityId!,
         state: stateController.text,
         country: countryController.text,
         pincode: pincodeController.text,
@@ -143,6 +162,7 @@ class _ShippingDetailsScreenState extends State<ShippingDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cityProvider = Provider.of<CityProvider>(context);
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
       appBar: PreferredSize(
@@ -187,26 +207,66 @@ class _ShippingDetailsScreenState extends State<ShippingDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InputWidget(controller: fullNameController, label: 'Full Name'),
+              InputWidget(
+                controller: fullNameController,
+                label: 'Full Name',
+                isRequired: true,
+              ),
               SizedBox(height: 20 * SizeConfig.heightScale),
               InputWidget(
                 controller: phoneNumberController,
                 label: 'Phone Number',
+                isRequired: true,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
-              InputWidget(controller: cityController, label: 'City'),
+              if (cityProvider.cities.isNotEmpty)
+                CustomDropdown(
+                  items:
+                      cityProvider.cities
+                          .map((city) => city.name ?? '')
+                          .toList(),
+                  onChanged: (value) {
+                    final selected = cityProvider.cities.firstWhere(
+                      (c) => c.name == value,
+                    );
+                    setState(() {
+                      selectedCityId = selected.id;
+                    });
+                  },
+                  selectedItem:
+                      cityProvider.cities
+                          .firstWhere(
+                            (c) => c.id == selectedCityId,
+                            orElse: () => cityProvider.cities.first,
+                          )
+                          .name ??
+                      '',
+                  label: 'City',
+                  isRequired: true,
+                )
+              else
+                const SizedBox(),
               SizedBox(height: 20 * SizeConfig.heightScale),
-              InputWidget(controller: stateController, label: 'State'),
+              InputWidget(
+                controller: stateController,
+                label: 'State',
+                isRequired: true,
+              ),
               SizedBox(height: 20 * SizeConfig.heightScale),
-              InputWidget(controller: countryController, label: 'Country'),
-              SizedBox(height: 20 * SizeConfig.heightScale),
-              InputWidget(controller: pincodeController, label: 'Pincode'),
+              // InputWidget(controller: countryController, label: 'Country'),
+              // SizedBox(height: 20 * SizeConfig.heightScale),
+              InputWidget(
+                controller: pincodeController,
+                label: 'Pincode',
+                isRequired: true,
+              ),
               SizedBox(height: 20 * SizeConfig.heightScale),
               InputWidget(
                 controller: addressController,
                 label: 'Full Address',
                 hint: 'Street, Building, Floor',
                 maxLines: 3,
+                isRequired: true,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
               SubmitButton(

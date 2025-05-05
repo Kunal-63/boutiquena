@@ -42,7 +42,7 @@ class ProductDetail {
   String? imagesSmallUrl;
   String? imagesMediumUrl;
   List<ProductImage>? images;
-  Map<String, int>? categories;
+  final List<Category>? categories;
   List<SkuRecord>? skuRecords;
   List<ProductAttribute>? productAttributes;
   bool? isInCart;
@@ -151,9 +151,12 @@ class ProductDetail {
           (json['images'] as List<dynamic>?)
               ?.map((e) => ProductImage.fromJson(e))
               .toList(),
-      categories: (json['categories'] as Map<String, dynamic>?)?.map(
-        (key, value) => MapEntry(key, value as int),
-      ),
+      categories:
+          (json['categories'] as List<dynamic>?)
+              ?.map((e) => Category.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+
       skuRecords:
           (json['sku_records'] as List<dynamic>?)
               ?.map((e) => SkuRecord.fromJson(e))
@@ -343,6 +346,47 @@ class WishlistData {
       storeId: json['store_id'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
+    );
+  }
+}
+
+class Category {
+  final int id;
+  final int parentId;
+  final int sectionId;
+  final String categoryName;
+  final String categoryImage;
+  final int categoryDiscount;
+  final String url;
+  final String metaTitle;
+  final String metaDescription;
+  final String metaKeywords;
+
+  Category({
+    required this.id,
+    required this.parentId,
+    required this.sectionId,
+    required this.categoryName,
+    required this.categoryImage,
+    required this.categoryDiscount,
+    required this.url,
+    required this.metaTitle,
+    required this.metaDescription,
+    required this.metaKeywords,
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'],
+      parentId: json['parent_id'],
+      sectionId: json['section_id'],
+      categoryName: json['category_name'],
+      categoryImage: json['category_image'],
+      categoryDiscount: json['category_discount'],
+      url: json['url'],
+      metaTitle: json['meta_title'],
+      metaDescription: json['meta_description'],
+      metaKeywords: json['meta_keywords'],
     );
   }
 }

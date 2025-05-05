@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/services/api_service.dart';
 import 'package:customer_app/services/log_service.dart';

@@ -4,9 +4,9 @@ import 'package:customer_app/models/store.dart';
 import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
 import 'package:customer_app/screens/chat/chat_list.dart';
-import 'package:customer_app/screens/chat/chat_message.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
 import 'package:customer_app/screens/shipping/shipping_address_list.dart';
+import 'package:customer_app/screens/store/store_details.dart';
 import 'package:customer_app/screens/view_all/category_products_grid.dart';
 import 'package:customer_app/screens/view_all/suggested_products_grid.dart';
 import 'package:customer_app/screens/view_all/wishlist_products_grid.dart';
@@ -166,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               : _buildFeaturedStoresSection(
                                 provider.featuredStores,
                                 provider.storeImageUrl,
+                                provider.storeCoverImageUrl,
                               ),
                         ],
                       ),
@@ -619,14 +620,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExploreButton(String url) {
+  Widget _buildExploreButton(
+    String url, {
+    bool isURL = true,
+    VoidCallback? onClick,
+  }) {
     return GestureDetector(
       onTap: () async {
-        // Open the URL when the button is clicked
-        if (await canLaunch(url)) {
-          await launch(url);
+        if (isURL) {
+          if (await canLaunch(url)) {
+            await launch(url);
+          } else {
+            throw 'Could not launch $url';
+          }
         } else {
-          throw 'Could not launch $url';
+          onClick?.call();
         }
       },
       child: Container(
@@ -800,6 +808,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Consumer<HomeScreenProvider>(
             builder: (context, provider, _) {
               final products = provider.suggestedProducts;
+              if (products.isEmpty) {
+                return const Center(child: Text("No products available"));
+              }
 
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -973,7 +984,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeaturedStoresSection(List<Store> stores, String? imagePath) {
+  Widget _buildFeaturedStoresSection(
+    List<Store> stores,
+    String? imagePath,
+    String? coverImagePath,
+  ) {
     if (stores.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -1015,7 +1030,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Column(
             children: [
-              ...stores.map((store) => buildNearByStoreCard(store, imagePath)),
+              ...stores.map(
+                (store) =>
+                    buildNearByStoreCard(store, imagePath, coverImagePath),
+              ),
             ],
           ),
         ),
@@ -1023,7 +1041,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildNearByStoreCard(Store store, String? imagePath) {
+  Widget buildNearByStoreCard(
+    Store store,
+    String? imagePath,
+    String? coverImagePath,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       padding: const EdgeInsets.all(10),
@@ -1057,7 +1079,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const Spacer(),
           // Explore Button
-          _buildExploreButton(store.storeLink ?? ''),
+          _buildExploreButton(
+            store.storeLink ?? '',
+            isURL: false,
+            onClick: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => StoreDetails(
+                        storeDetails: store,
+                        storeImageUrl: imagePath,
+                        storeCoverImageUrl: coverImagePath,
+                      ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

@@ -23,7 +23,7 @@ class CategoryProductsProvider extends ChangeNotifier {
 
     try {
       final response = await ApiService.postWithAuth(
-        'get-products-by-category/${categoryId}',
+        'get-products-by-category/$categoryId',
         {'offset': (page - 1) * limit, 'limit': limit},
       );
 

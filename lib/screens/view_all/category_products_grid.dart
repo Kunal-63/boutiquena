@@ -1,6 +1,5 @@
 import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/providers/category_products_provider.dart';
-import 'package:customer_app/providers/suggested_product_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';
@@ -10,7 +9,7 @@ import 'package:provider/provider.dart';
 
 class CategoryProductsGrid extends StatefulWidget {
   final TopCategory category;
-  CategoryProductsGrid({Key? key, required this.category}) : super(key: key);
+  const CategoryProductsGrid({super.key, required this.category});
 
   @override
   _CategoryProdyuctsGridState createState() => _CategoryProdyuctsGridState();

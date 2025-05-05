@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';

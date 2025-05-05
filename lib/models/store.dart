@@ -17,6 +17,9 @@ class Store {
   final int? createdBy;
   final String? createdAt;
   final String? updatedAt;
+  final bool? isFollowed;
+  final String? imagePath;
+  final String? coverImageUrl;
 
   Store({
     this.id,
@@ -37,6 +40,9 @@ class Store {
     this.createdBy,
     this.createdAt,
     this.updatedAt,
+    this.isFollowed,
+    this.imagePath,
+    this.coverImageUrl,
   });
 
   factory Store.fromJson(Map<String, dynamic> json) => Store(
@@ -58,5 +64,8 @@ class Store {
     createdBy: json['created_by'],
     createdAt: json['created_at'],
     updatedAt: json['updated_at'],
+    isFollowed: json['is_followed'],
+    imagePath: json['image_path'],
+    coverImageUrl: json['cover_image_url'],
   );
 }

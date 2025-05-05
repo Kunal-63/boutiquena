@@ -96,28 +96,29 @@ class TooltipShapeMatch extends ShapeBorder {
       rect.height - arrowHeight,
     );
 
-    final Path path = Path()
-      // Rounded rectangle
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          adjustedRect,
-          const Radius.circular(radius),
-        ),
-      )
-      // Triangle (arrow) at the top-right corner
-      ..moveTo(
-        adjustedRect.right - arrowWidth - shiftRight,
-        rect.top + arrowHeight,
-      ) // Left point
-      ..lineTo(
-        adjustedRect.right - shiftRight - arrowHeight / 2,
-        rect.top,
-      ) // Tip of arrow
-      ..lineTo(
-        adjustedRect.right - shiftRight,
-        rect.top + arrowHeight,
-      ) // Right point
-      ..close();
+    final Path path =
+        Path()
+          // Rounded rectangle
+          ..addRRect(
+            RRect.fromRectAndRadius(
+              adjustedRect,
+              const Radius.circular(radius),
+            ),
+          )
+          // Triangle (arrow) at the top-right corner
+          ..moveTo(
+            adjustedRect.right - arrowWidth - shiftRight,
+            rect.top + arrowHeight,
+          ) // Left point
+          ..lineTo(
+            adjustedRect.right - shiftRight - arrowHeight / 2,
+            rect.top,
+          ) // Tip of arrow
+          ..lineTo(
+            adjustedRect.right - shiftRight,
+            rect.top + arrowHeight,
+          ) // Right point
+          ..close();
 
     return path;
   }

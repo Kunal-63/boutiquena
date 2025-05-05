@@ -1,6 +1,6 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
-import 'package:customer_app/models/cart_product.dart';
+import 'package:customer_app/models/cart_group.dart';
 import 'package:customer_app/models/shipping_address.dart';
 import 'package:customer_app/providers/cart_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
@@ -9,6 +9,7 @@ import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/checkbox.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
+import 'package:customer_app/widgets/inputs/dropdown.dart';
 import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:customer_app/widgets/popups/order_success_popup.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +24,21 @@ class CheckOutScreen extends StatefulWidget {
 }
 
 class _CheckOutScreenState extends State<CheckOutScreen> {
-  bool trendySelected = true;
-  bool simonaSelected = true;
-  bool jaukSelected = false;
+  late CartProvider _cartProvider;
+  CartGroup? selectedGroup;
+  Map<int, Set<int>> groupStoreSelections = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _cartProvider = Provider.of<CartProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _cartProvider.nullifyCart();
+      _cartProvider.fetchCartGroups();
+      _cartProvider.fetchCartCoupons();
+    });
+  }
+
   void _onSubmit() {
     showDialog(
       context: context,
@@ -38,6 +51,9 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mergeableGroups = context.watch<CartProvider>().mergeableGroups;
+    final groupNames = mergeableGroups?.map((g) => g.groupName).toList() ?? [];
+
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
       body: SingleChildScrollView(
@@ -46,6 +62,8 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 30 * SizeConfig.heightScale),
+
+            // Mergeable Group Container
             Container(
               padding: EdgeInsets.all(10 * SizeConfig.widthScale),
               decoration: BoxDecoration(
@@ -59,7 +77,6 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10.37),
               ),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -69,7 +86,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                         'assets/icons/left-icon.svg',
                         height: 14 * SizeConfig.widthScale,
                         width: 14 * SizeConfig.widthScale,
-                        colorFilter: ColorFilter.mode(
+                        colorFilter: const ColorFilter.mode(
                           Colors.black,
                           BlendMode.srcIn,
                         ),
@@ -84,27 +101,141 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
 
-                  StoreSelectorTile(
-                    title: 'Trendy Fashion',
-                    products: 5,
-                    isSelected: trendySelected,
-                    onChanged: (val) => setState(() => trendySelected = val!),
-                    logoAsset: 'assets/images/trendy_fashion.png',
+                  CustomDropdown(
+                    items: groupNames,
+                    onChanged: (selectedGroupName) {
+                      final selected = mergeableGroups?.firstWhere(
+                        (g) => g.groupName == selectedGroupName,
+                        orElse:
+                            () => CartGroup(
+                              groupId: 0,
+                              groupName: 'Unknown',
+                              cost: 0,
+                              storeIds: [],
+                              matchedStores: [],
+                            ),
+                      );
+
+                      setState(() {
+                        selectedGroup = selected;
+                        // Ensure current group has an entry
+                        groupStoreSelections.putIfAbsent(
+                          selectedGroup!.groupId,
+                          () => {},
+                        );
+                      });
+                    },
                   ),
-                  StoreSelectorTile(
-                    title: 'Simona Hub',
-                    products: 5,
-                    isSelected: simonaSelected,
-                    onChanged: (val) => setState(() => simonaSelected = val!),
-                    logoAsset: 'assets/images/simona_hub.png',
-                  ),
-                  StoreSelectorTile(
-                    title: 'Jauk Fashion Hub',
-                    products: 5,
-                    isSelected: jaukSelected,
-                    onChanged: (val) => setState(() => jaukSelected = val!),
-                    logoAsset: 'assets/images/jauk_fashion.png',
+                  const SizedBox(height: 10),
+
+                  if (selectedGroup != null)
+                    ...selectedGroup!.matchedStores.map((store) {
+                      final groupId = selectedGroup!.groupId;
+                      final selectedSet = groupStoreSelections[groupId] ?? {};
+                      return StoreSelectorTile(
+                        title: store.name,
+                        products: 0,
+                        isSelected: selectedSet.contains(store.id),
+                        onChanged: (val) {
+                          setState(() {
+                            final storeSet = groupStoreSelections.putIfAbsent(
+                              groupId,
+                              () => {},
+                            );
+                            if (val == true) {
+                              storeSet.add(store.id);
+                            } else {
+                              storeSet.remove(store.id);
+                            }
+                          });
+                        },
+                        logoAsset: '',
+                      );
+                    }).toList(),
+
+                  SizedBox(height: 5 * SizeConfig.widthScale),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Clear All Button
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            groupStoreSelections.clear();
+                            CartProvider.selectedStoreIds = [];
+                            CartProvider.selectedGroupIds = [];
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Selections cleared.'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Clear All",
+                          style: AppTextStyles.redw400Outfit().copyWith(
+                            fontSize: 14 * SizeConfig.widthScale,
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+
+                      // Update Button
+                      GestureDetector(
+                        onTap: () {
+                          final allSelectedStoreIds =
+                              groupStoreSelections.values
+                                  .expand((storeSet) => storeSet)
+                                  .toSet();
+
+                          final selectedGroups =
+                              mergeableGroups
+                                  ?.where(
+                                    (group) => group.matchedStores.any(
+                                      (store) => allSelectedStoreIds.contains(
+                                        store.id,
+                                      ),
+                                    ),
+                                  )
+                                  .map((g) => g.groupId)
+                                  .toList() ??
+                              [];
+
+                          setState(() {
+                            CartProvider.selectedStoreIds =
+                                allSelectedStoreIds.toList();
+                            CartProvider.selectedGroupIds = selectedGroups;
+                          });
+
+                          Provider.of<CartProvider>(
+                            context,
+                            listen: false,
+                          ).fetchCart();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Cart updated successfully.'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Update",
+                          style: AppTextStyles.redw400Outfit().copyWith(
+                            fontSize: 14 * SizeConfig.widthScale,
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -115,9 +246,10 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
             DiscountPromoCard(),
             AdditionalNotesCard(),
             SizedBox(height: 10 * SizeConfig.heightScale),
-            SubmitButton(text: 'Place Order & Pay', onPressed: _onSubmit),
-            SizedBox(height: 5 * SizeConfig.heightScale),
 
+            SubmitButton(text: 'Place Order & Pay', onPressed: _onSubmit),
+
+            SizedBox(height: 5 * SizeConfig.heightScale),
             Text(
               'Orders cannot be canceled or modified after completion.',
               style: AppTextStyles.redw400Outfit().copyWith(
@@ -158,13 +290,17 @@ class StoreSelectorTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CustomNetworkImage(
-            imageUrl:
-                'https://ts1.mm.bing.net/th?id=OIP.A1DvA7N7QgNLsblkh0pG6gHaEv&pid=15.1',
-            errorImage: 'assets/icons/no-image.png',
-            width: 40 * SizeConfig.widthScale,
-            height: 40 * SizeConfig.widthScale,
+          CircleAvatar(
+            backgroundColor: Colors.grey.shade300,
             radius: 20 * SizeConfig.widthScale,
+            child: Text(
+              title.isNotEmpty ? title[0].toUpperCase() : '',
+              style: TextStyle(
+                fontSize: 18 * SizeConfig.widthScale,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
           ),
           SizedBox(width: 12 * SizeConfig.widthScale),
           Expanded(
@@ -177,15 +313,6 @@ class StoreSelectorTile extends StatelessWidget {
                     color: Color.fromRGBO(0, 0, 0, 0.5),
                   ).copyWith(
                     fontSize: 14 * SizeConfig.widthScale,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-                Text(
-                  "$products products",
-                  style: AppTextStyles.redw400Outfit(
-                    color: Color.fromRGBO(0, 0, 0, 0.5),
-                  ).copyWith(
-                    fontSize: 12 * SizeConfig.widthScale,
                     fontWeight: FontWeight.w300,
                   ),
                 ),
@@ -220,15 +347,18 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
   void initState() {
     super.initState();
     _cartProvider = Provider.of<CartProvider>(context, listen: false);
-    // Fetch the cart items on widget initialization
-    _cartProvider.fetchCart();
+
+    // Delay fetching cart until after first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cartProvider.fetchCart();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
-        if (cartProvider.cartItems.isEmpty) {
+        if (CartProvider.cartItems.isEmpty) {
           return Container(
             margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
             padding: EdgeInsets.all(12 * SizeConfig.widthScale),
@@ -257,18 +387,7 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
           );
         }
 
-        // Calculate subtotal and grand total
-        double totalAmount = 0;
-        double taxes = 0;
-        for (var cartItem in cartProvider.cartItems) {
-          totalAmount += cartItem.totalPrice * cartItem.quantity;
-          taxes +=
-              cartItem.totalPrice * cartItem.quantity * 0.1; // Assuming 10% tax
-        }
-        double grandTotal = totalAmount + taxes;
-
         return SingleChildScrollView(
-          // Wrapping the entire content in a scrollable widget
           child: Container(
             margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
             padding: EdgeInsets.all(12 * SizeConfig.widthScale),
@@ -287,18 +406,16 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
               children: [
                 ListView.builder(
                   shrinkWrap: true,
-                  itemCount: cartProvider.cartItems.length,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: CartProvider.cartItems.length,
                   itemBuilder: (context, index) {
-                    final CartProduct cartItem = cartProvider.cartItems[index];
-
-                    // Calculate the subtotal for each item
-                    double itemSubtotal =
-                        cartItem.totalPrice * cartItem.quantity;
+                    final cartItem = CartProvider.cartItems[index];
+                    final itemSubtotal =
+                        double.tryParse(cartItem.totalPrice) ?? 0;
 
                     return Column(
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CustomNetworkImage(
@@ -324,7 +441,7 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                                     ),
                                   ),
                                   Text(
-                                    'Dorothy Perkins', // Assuming this is static for now
+                                    'Dorothy Perkins',
                                     style: AppTextStyles.blackSubHeadingStyle()
                                         .copyWith(
                                           fontSize: 14 * SizeConfig.widthScale,
@@ -349,7 +466,7 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                                           ),
                                         ),
                                         child: Text(
-                                          "M", // Static attribute for now, replace with dynamic
+                                          "M",
                                           style:
                                               AppTextStyles.blackSubHeadingStyle()
                                                   .copyWith(
@@ -365,11 +482,18 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                                       ),
                                       QuantitySelector(
                                         initialQuantity: cartItem.quantity,
-                                        onQuantityChanged: (newQuantity) {
-                                          cartProvider.updateCart(
-                                            cartId: cartItem.cartId,
-                                            quantity: newQuantity,
-                                          );
+                                        onQuantityChanged: (newQuantity) async {
+                                          return await cartProvider
+                                              .updateCart(
+                                                cartId: cartItem.cartId,
+                                                quantity: newQuantity,
+                                              )
+                                              .then((isSuccess) {
+                                                if (isSuccess) {
+                                                  cartProvider.fetchCart();
+                                                }
+                                                return isSuccess;
+                                              });
                                         },
                                       ),
                                     ],
@@ -408,14 +532,27 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                         InfoRow(
                           label:
                               "Subtotal (${cartItem.quantity} x ${cartItem.totalPrice} ₪)",
-                          value: "$itemSubtotal ₪", // Dynamic subtotal
+                          value: "${cartItem.finalPrice.toStringAsFixed(2)} ₪",
                         ),
                         Divider(),
                       ],
                     );
                   },
                 ),
-                InfoRow(label: "Taxes:", value: "$taxes ₪"),
+
+                /// Tax, delivery, total section
+                InfoRow(
+                  label: "Delivery Charges:",
+                  value: "${cartProvider.deliveryCharges.toStringAsFixed(2)} ₪",
+                ),
+                InfoRow(
+                  label: "Taxes:",
+                  value: "${cartProvider.tax.toStringAsFixed(2)} ₪",
+                ),
+                InfoRow(
+                  label: "Subtotal:",
+                  value: "${cartProvider.cartValue.toStringAsFixed(2)} ₪",
+                ),
                 SizedBox(height: 8 * SizeConfig.heightScale),
                 Container(
                   padding: EdgeInsets.symmetric(
@@ -437,7 +574,7 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                         ),
                       ),
                       Text(
-                        "$grandTotal ₪",
+                        "${cartProvider.totalCartValue.toStringAsFixed(2)} ₪",
                         style: AppTextStyles.redw400Outfit().copyWith(
                           fontSize: 18 * SizeConfig.widthScale,
                           fontWeight: FontWeight.bold,
@@ -455,9 +592,9 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
   }
 }
 
-class QuantitySelector extends StatelessWidget {
+class QuantitySelector extends StatefulWidget {
   final int initialQuantity;
-  final ValueChanged<int> onQuantityChanged;
+  final Future<bool> Function(int) onQuantityChanged;
 
   const QuantitySelector({
     super.key,
@@ -466,9 +603,36 @@ class QuantitySelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    int quantity = initialQuantity;
+  State<QuantitySelector> createState() => _QuantitySelectorState();
+}
 
+class _QuantitySelectorState extends State<QuantitySelector> {
+  late int quantity;
+
+  @override
+  void initState() {
+    super.initState();
+    quantity = widget.initialQuantity;
+  }
+
+  void _updateQuantity(int newQuantity) async {
+    bool success = await widget.onQuantityChanged(newQuantity);
+    if (success) {
+      setState(() {
+        quantity = newQuantity;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update quantity.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 30 * SizeConfig.heightScale,
       decoration: BoxDecoration(
@@ -483,8 +647,7 @@ class QuantitySelector extends StatelessWidget {
             icon: const Icon(Icons.remove, size: 12),
             onPressed: () {
               if (quantity > 1) {
-                quantity--;
-                onQuantityChanged(quantity);
+                _updateQuantity(quantity - 1);
               }
             },
           ),
@@ -498,8 +661,7 @@ class QuantitySelector extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.add, size: 12),
             onPressed: () {
-              quantity++;
-              onQuantityChanged(quantity);
+              _updateQuantity(quantity + 1);
             },
           ),
         ],
@@ -558,10 +720,13 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Fetch shipping addresses when the screen is first loaded
       Provider.of<ShippingAddressProvider>(
         context,
         listen: false,
       ).fetchShippingAddresses();
+      // Fetch cart details once addresses are fetched
+      Provider.of<CartProvider>(context, listen: false).fetchCart();
     });
   }
 
@@ -571,6 +736,8 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
       context,
     );
     final shippingAddresses = shippingAddressProvider.shippingAddresses;
+    // Correctly define cartProvider
+    final cartProvider = Provider.of<CartProvider>(context);
 
     return Container(
       margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
@@ -583,7 +750,7 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
       child:
           shippingAddresses.isEmpty
               ? _buildAddShippingAddress(context)
-              : _buildShippingDetails(context, shippingAddresses),
+              : _buildShippingDetails(context, shippingAddresses, cartProvider),
     );
   }
 
@@ -631,15 +798,11 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
   Widget _buildShippingDetails(
     BuildContext context,
     List<ShippingAddress> shippingAddresses,
+    CartProvider cartProvider, // Passed in cartProvider here
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [Container()],
-        ),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -647,6 +810,7 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
           itemBuilder: (context, index) {
             final ShippingAddress address = shippingAddresses[index];
             return Container(
+              margin: EdgeInsets.only(bottom: 10 * SizeConfig.heightScale),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
@@ -663,6 +827,8 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
                 onChanged: (value) {
                   setState(() {
                     selectedAddressId = value;
+                    CartProvider.selectedShippingId = int.parse(value!);
+                    cartProvider.fetchCart();
                   });
                 },
                 title: Row(
@@ -683,13 +849,12 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
                       child: Icon(
                         Icons.edit,
                         color: Color.fromRGBO(243, 120, 102, 1),
-
                         size: 20 * SizeConfig.widthScale,
                       ),
                     ),
                   ],
                 ),
-                subtitle: Text('${address.address}, ${address.city}'),
+                subtitle: Text('${address.address}, ${address.state}'),
                 activeColor: Colors.redAccent,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
@@ -704,7 +869,6 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
             fontSize: 16 * SizeConfig.widthScale,
           ),
         ),
-
         _radioTile("Express Delivery"),
         _radioTile("Regular Delivery"),
         _radioTile("Store Pickup"),
@@ -916,13 +1080,11 @@ class _DiscountPromoCardState extends State<DiscountPromoCard> {
               Expanded(
                 child: TextFormField(
                   controller: promoCodeController,
-
                   autofocus: false,
                   style: const TextStyle(fontSize: 16, color: Colors.black),
                   decoration: AppTheme.inputDecoration.copyWith(
                     hintText: 'Enter Promo Code',
-                    counterText:
-                        "", // ✅ Hides default character counter to keep UI clean
+                    counterText: "", // Hides the character counter
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(8),
@@ -960,23 +1122,25 @@ class _DiscountPromoCardState extends State<DiscountPromoCard> {
                   ),
                 ),
               ),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF151D27),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20 * SizeConfig.widthScale,
-                    vertical: 12 * SizeConfig.heightScale,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF151D27),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20 * SizeConfig.widthScale,
+                      vertical: 12 * SizeConfig.heightScale,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
                     ),
                   ),
+                  onPressed: () {},
+                  child: Text("Apply", style: AppTextStyles.whitew400Outfit()),
                 ),
-                onPressed: () {},
-                child: Text("Apply", style: AppTextStyles.whitew400Outfit()),
               ),
             ],
           ),
@@ -1010,6 +1174,113 @@ class _DiscountPromoCardState extends State<DiscountPromoCard> {
                 ),
               ),
             ],
+          ),
+          Consumer<CartProvider>(
+            builder: (context, cartProvider, _) {
+              final coupons = cartProvider.coupons ?? [];
+
+              if (coupons.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              return Container(
+                margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
+                height: 110 * SizeConfig.heightScale,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: coupons.length,
+                  itemBuilder: (context, index) {
+                    final coupon = coupons[index];
+                    final isSelected =
+                        CartProvider.selectedCouponId == coupon.id;
+
+                    return Container(
+                      width: 230 * SizeConfig.widthScale,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Color(0xFFFFEEEE) : Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: isSelected ? Colors.red : Colors.grey.shade300,
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Discount',
+                                style: AppTextStyles.blackSubHeadingStyle()
+                                    .copyWith(
+                                      fontSize: 16 * SizeConfig.widthScale,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                              ),
+                              Text(
+                                '${coupon.discountValue ?? '0'}% OFF',
+                                style: AppTextStyles.greySubHeadingStyle()
+                                    .copyWith(
+                                      fontSize: 14 * SizeConfig.widthScale,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                              ),
+                              Text(
+                                'Valid till ${coupon.expiryDate}',
+                                style: AppTextStyles.greySubHeadingStyle()
+                                    .copyWith(
+                                      fontSize: 12 * SizeConfig.widthScale,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                              ),
+                              Text(
+                                coupon.code ?? '',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          if (!isSelected)
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    backgroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  onPressed: () {
+                                    CartProvider.selectedCouponId = coupon.id;
+                                    cartProvider.fetchCart();
+                                  },
+                                  child: Text(
+                                    "Apply",
+                                    style: AppTextStyles.whiteButtonStyle()
+                                        .copyWith(
+                                          fontSize: 12 * SizeConfig.widthScale,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),

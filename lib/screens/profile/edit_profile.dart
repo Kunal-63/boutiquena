@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:customer_app/providers/city_provider.dart';
 import 'package:customer_app/utils/validator.dart';
+import 'package:customer_app/widgets/inputs/dropdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +27,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final ImagePicker _picker = ImagePicker();
   int? subscripitonID;
   String profileImageUrl = '';
+  String? selectedCityName;
   // Controllers for input fields
   TextEditingController nameController = TextEditingController();
   TextEditingController addressController = TextEditingController();
@@ -74,10 +77,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             listen: false,
           ).fetchCustomerProfile(),
     );
+    Future.microtask(
+      () => Provider.of<CityProvider>(context, listen: false).fetchCities(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final cityProvider = Provider.of<CityProvider>(context);
     final profileProvider = Provider.of<CustomerProfileProvider>(context);
     Future<void> submit() async {
       if ((Validators.isPasswordMatching(
@@ -94,7 +101,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         bool isSuccess = await profileProvider.updateCustomerProfile(
           name: nameController.text,
           address: addressController.text,
-          city: cityController.text,
+          city: selectedCityName ?? cityController.text,
           state: stateController.text,
           country: countryController.text,
           pincode: pincodeController.text,
@@ -149,6 +156,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       pincodeController.text = profile.pincode ?? "No Pincode";
       nameController.text = profile.name ?? "No Name";
       profileImageUrl = '${profile.imagePath}/${profile.image}';
+      selectedCityName = profile.city ?? "No City";
     }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
@@ -239,11 +247,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 label: 'Name',
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              InputWidget(
-                hint: 'Enter your city',
-                controller: cityController,
-                label: 'City',
-              ),
+              if (cityProvider.cities.isNotEmpty)
+                CustomDropdown(
+                  items:
+                      cityProvider.cities
+                          .map((city) => city.name ?? '')
+                          .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      cityController.text = value;
+                      selectedCityName = value;
+                    });
+                  },
+                  selectedItem: selectedCityName ?? '',
+                  label: 'City',
+                )
+              else
+                const SizedBox(),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Enter your state',
@@ -252,18 +272,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
-                hint: 'Enter your country',
-                controller: countryController,
-                label: 'Country',
-              ),
-              SizedBox(height: 10 * SizeConfig.heightScale),
-              InputWidget(
                 hint: 'Enter your pincode',
                 controller: pincodeController,
                 label: 'Pincode',
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-
               InputWidget(
                 hint: 'Enter your address',
                 controller: addressController,
@@ -275,6 +288,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 hint: 'Enter your phone number',
                 controller: phoneController,
                 label: 'Phone Number',
+                prefix: '+972',
                 isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),

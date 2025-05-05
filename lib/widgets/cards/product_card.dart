@@ -2,7 +2,6 @@ import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/main_screen.dart';
-import 'package:customer_app/screens/orders/checkout_screen.dart';
 import 'package:customer_app/screens/products/product_details.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
@@ -56,7 +55,16 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
     final productPrice = widget.data.totalPrice.toString();
 
     return GestureDetector(
-      onTap: () => _navigateToProductDetails(context),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) =>
+                    ProductDetailsScreen(productID: widget.data.id ?? 0),
+          ),
+        );
+      },
       child: Container(
         width: 160 * SizeConfig.widthScale,
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),

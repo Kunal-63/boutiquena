@@ -102,7 +102,7 @@ class _ShippingAddressListScreenState extends State<ShippingAddressListScreen> {
                               tileColor: Colors.white,
                               title: Text(address.name ?? ''),
                               subtitle: Text(
-                                '${address.address}, ${address.city}',
+                                '${address.address}, ${address.state}',
                               ),
                               trailing: const Icon(
                                 Icons.arrow_forward_ios,

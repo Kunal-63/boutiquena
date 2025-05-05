@@ -41,19 +41,13 @@ class _MainScreenState extends State<MainScreen> {
         valueListenable: MainScreen.selectedIndexNotifier,
         builder: (context, selectedIndex, _) {
           return Container(
-            height: 70,
+            height: 50,
             width: double.infinity,
             padding: EdgeInsets.symmetric(
               horizontal: 0.0 * SizeConfig.widthScale,
               vertical: 10,
             ),
-            decoration: BoxDecoration(
-              color: Color.fromRGBO(31, 88, 84, 1),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(35.0 * SizeConfig.widthScale),
-                topRight: Radius.circular(35.0 * SizeConfig.widthScale),
-              ),
-            ),
+            decoration: BoxDecoration(color: Color.fromRGBO(31, 88, 84, 1)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

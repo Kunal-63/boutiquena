@@ -51,13 +51,13 @@ class _CustomDropdownState extends State<CustomDropdown> {
       builder: (BuildContext context) {
         return widget.isMultiSelect
             ? MultiSelectBottomSheet(
-                items: widget.items,
-                selectedItems: _selectedItems,
-              )
+              items: widget.items,
+              selectedItems: _selectedItems,
+            )
             : SingleSelectBottomSheet(
-                items: widget.items,
-                selectedItem: _selectedSingleItem,
-              );
+              items: widget.items,
+              selectedItem: _selectedSingleItem,
+            );
       },
     );
 
@@ -153,9 +153,10 @@ class _MultiSelectBottomSheetState extends State<MultiSelectBottomSheet> {
 
   void _filterItems(String query) {
     setState(() {
-      _filteredItems = widget.items
-          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      _filteredItems =
+          widget.items
+              .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+              .toList();
     });
   }
 
@@ -187,25 +188,27 @@ class _MultiSelectBottomSheetState extends State<MultiSelectBottomSheet> {
           ),
           Expanded(
             child: ListView(
-              children: _filteredItems.map((item) {
-                final isSelected = _tempSelectedItems.contains(item);
-                return ListTile(
-                  title: Text(item),
-                  trailing: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          color: AppTheme.primaryColor,
-                        )
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      isSelected
-                          ? _tempSelectedItems.remove(item)
-                          : _tempSelectedItems.add(item);
-                    });
-                  },
-                );
-              }).toList(),
+              children:
+                  _filteredItems.map((item) {
+                    final isSelected = _tempSelectedItems.contains(item);
+                    return ListTile(
+                      title: Text(item),
+                      trailing:
+                          isSelected
+                              ? const Icon(
+                                Icons.check,
+                                color: AppTheme.primaryColor,
+                              )
+                              : null,
+                      onTap: () {
+                        setState(() {
+                          isSelected
+                              ? _tempSelectedItems.remove(item)
+                              : _tempSelectedItems.add(item);
+                        });
+                      },
+                    );
+                  }).toList(),
             ),
           ),
           SubmitButton(
@@ -242,13 +245,15 @@ class _SingleSelectBottomSheetState extends State<SingleSelectBottomSheet> {
   void initState() {
     super.initState();
     _filteredItems = List.from(widget.items);
+    selectedItem = widget.selectedItem ?? "";
   }
 
   void _filterItems(String query) {
     setState(() {
-      _filteredItems = widget.items
-          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      _filteredItems =
+          widget.items
+              .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+              .toList();
     });
   }
 
@@ -280,29 +285,34 @@ class _SingleSelectBottomSheetState extends State<SingleSelectBottomSheet> {
           ),
           Expanded(
             child: ListView(
-              children: _filteredItems.map((item) {
-                return ListTile(
-                  title: Text(item),
-                  trailing: item == widget.selectedItem
-                      ? const Icon(
-                          Icons.check,
-                          color: AppTheme.primaryColor,
-                        )
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      selectedItem = item;
-                    });
-                    Navigator.pop(context, selectedItem);
-                  },
-                );
-              }).toList(),
+              children:
+                  _filteredItems.map((item) {
+                    return ListTile(
+                      title: Text(item),
+                      trailing:
+                          item == widget.selectedItem
+                              ? const Icon(
+                                Icons.check,
+                                color: AppTheme.primaryColor,
+                              )
+                              : null,
+                      onTap: () {
+                        setState(() {
+                          selectedItem = item;
+                        });
+                        Navigator.pop(context, selectedItem);
+                      },
+                    );
+                  }).toList(),
             ),
           ),
           SubmitButton(
             text: 'Done',
             onPressed: () {
-              Navigator.pop(context, selectedItem); // Return selected values
+              Navigator.pop(
+                context,
+                selectedItem.isNotEmpty ? selectedItem : widget.selectedItem,
+              );
             },
           ),
         ],

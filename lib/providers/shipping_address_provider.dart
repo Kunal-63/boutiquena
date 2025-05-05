@@ -50,7 +50,7 @@ class ShippingAddressProvider extends ChangeNotifier {
   Future<bool> addShippingAddress({
     required String name,
     required String address,
-    required String city,
+    required int cityID,
     required String state,
     required String country,
     required String pincode,
@@ -60,9 +60,9 @@ class ShippingAddressProvider extends ChangeNotifier {
       final response = await ApiService.postWithAuth('add-shipping-address', {
         'name': name,
         'address': address,
-        'city': city,
+        'city_id': cityID,
         'state': state,
-        'country': country,
+        // 'country': country,
         'pincode': pincode,
         'mobile': mobile,
       });
@@ -89,7 +89,7 @@ class ShippingAddressProvider extends ChangeNotifier {
     required int id,
     required String name,
     required String address,
-    required String city,
+    required int cityID,
     required String state,
     required String country,
     required String pincode,
@@ -100,7 +100,7 @@ class ShippingAddressProvider extends ChangeNotifier {
           await ApiService.postWithAuth('edit-shipping-address/$id', {
             'name': name,
             'address': address,
-            'city': city,
+            'city_id': cityID,
             'state': state,
             'country': country,
             'pincode': pincode,
