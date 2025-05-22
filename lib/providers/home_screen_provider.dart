@@ -228,4 +228,21 @@ class HomeScreenProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void toggleWishlistStatus(int productId) {
+    void _toggleInList(List<ProductDetail> list) {
+      for (var product in list) {
+        if (product.id == productId) {
+          product.isInWishlist = !(product.isInWishlist ?? false);
+          break;
+        }
+      }
+    }
+
+    _toggleInList(bestSellerProducts);
+    _toggleInList(suggestedProducts);
+    _toggleInList(discountedProducts);
+
+    notifyListeners();
+  }
 }

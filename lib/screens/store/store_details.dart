@@ -1,6 +1,7 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/store.dart';
 import 'package:customer_app/providers/store_provider.dart';
+import 'package:customer_app/screens/view_all/store_products_grid.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
@@ -158,14 +159,16 @@ class _StoreDetailsState extends State<StoreDetails> {
                                     success = await storeProvider.unfollowStore(
                                       storeId!,
                                     );
-                                    if (success)
+                                    if (success) {
                                       setState(() => isFollowed = false);
+                                    }
                                   } else {
                                     success = await storeProvider.followStore(
                                       storeId!,
                                     );
-                                    if (success)
+                                    if (success) {
                                       setState(() => isFollowed = true);
+                                    }
                                   }
                                   setState(() => isFollowLoading = false);
                                 },
@@ -328,7 +331,17 @@ class _StoreDetailsState extends State<StoreDetails> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => StoreProductsGrid(
+                                  storeId: _storeDetails?.id,
+                                ),
+                          ),
+                        );
+                      },
                       child: const Text(
                         "View all",
                         style: TextStyle(

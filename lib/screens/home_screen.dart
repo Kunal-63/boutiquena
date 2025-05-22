@@ -3,7 +3,9 @@ import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/models/store.dart';
 import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/screens/chat/chat_list.dart';
+import 'package:customer_app/screens/main_screen.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
 import 'package:customer_app/screens/shipping/shipping_address_list.dart';
 import 'package:customer_app/screens/store/store_details.dart';
@@ -11,6 +13,7 @@ import 'package:customer_app/screens/view_all/category_products_grid.dart';
 import 'package:customer_app/screens/view_all/suggested_products_grid.dart';
 import 'package:customer_app/screens/view_all/wishlist_products_grid.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
+import 'package:customer_app/utils/secure_storage.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
@@ -35,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isDrawerOpen = false;
 
   Future<void> _refreshHomePage() async {
-    // Trigger the fetching of data again when the page is refreshed
     Provider.of<HomeScreenProvider>(
       context,
       listen: false,
@@ -75,13 +77,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final currentLang = langProvider.language;
     final provider = context.watch<HomeScreenProvider>();
     return Scaffold(
       key: _scaffoldKey,
       body: SizedBox.expand(
         child: Stack(
           children: [
-            // Main content with AppBar and body
             Column(
               children: [
                 SizedBox(
@@ -382,85 +385,91 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top row with location and balance
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  color: AppTheme.primaryColor,
-                  size: 20 * SizeConfig.heightScale,
-                ),
+        // // Top row with location and balance
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //   children: [
+        //     Row(
+        //       children: [
+        //         // Icon(
+        //         //   Icons.location_on,
+        //         //   color: AppTheme.primaryColor,
+        //         //   size: 20 * SizeConfig.heightScale,
+        //         // ),
 
-                Text(
-                  "21, Rizana street, Israel",
-                  style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                    fontSize: 12 * SizeConfig.widthScale,
-                    fontWeight: FontWeight.w400,
+        //         // Text(
+        //         //   "21, Rizana street, Israel",
+        //         //   style: AppTextStyles.blackSubHeadingStyle().copyWith(
+        //         //     fontSize: 12 * SizeConfig.widthScale,
+        //         //     fontWeight: FontWeight.w400,
+        //         //   ),
+        //         // ),
+        //         // Icon(
+        //         //   Icons.keyboard_arrow_down,
+        //         //   color: AppTheme.primaryColor,
+        //         //   size: 16 * SizeConfig.heightScale,
+        //         // ),
+        //       ],
+        //     ),
+        //     Row(
+        //       children: [
+        //         Image.asset(
+        //           'assets/icons/home-coins.png',
+        //           width: 20,
+        //           height: 20,
+        //         ),
+        //         SizedBox(width: 4),
+        //         Text(
+        //           "100 ₪",
+        //           style: AppTextStyles.blackSubHeadingStyle().copyWith(
+        //             fontSize: 12 * SizeConfig.widthScale,
+        //             fontWeight: FontWeight.w400,
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ],
+        // ),
+        // SizedBox(height: 10 * SizeConfig.heightScale),
+
+        // // Search bar with camera icon
+        GestureDetector(
+          onTap: () {
+            MainScreen.selectedIndexNotifier.value = 1;
+          },
+          child: Container(
+            height: 45,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Color.fromRGBO(219, 233, 233, 1)),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/search-icon.svg',
+                  colorFilter: ColorFilter.mode(
+                    Color.fromRGBO(172, 172, 172, 1),
+                    BlendMode.srcIn,
                   ),
                 ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      hintText: "Search for brands and products",
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+
                 Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppTheme.primaryColor,
-                  size: 16 * SizeConfig.heightScale,
+                  Icons.camera_alt_outlined,
+                  color: Color.fromRGBO(50, 50, 50, 1),
                 ),
               ],
             ),
-            Row(
-              children: [
-                Image.asset(
-                  'assets/icons/home-coins.png',
-                  width: 20,
-                  height: 20,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  "100 ₪",
-                  style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                    fontSize: 12 * SizeConfig.widthScale,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        SizedBox(height: 10 * SizeConfig.heightScale),
-
-        // Search bar with camera icon
-        Container(
-          height: 45,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Color.fromRGBO(219, 233, 233, 1)),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              SvgPicture.asset(
-                'assets/icons/search-icon.svg',
-                colorFilter: ColorFilter.mode(
-                  Color.fromRGBO(172, 172, 172, 1),
-                  BlendMode.srcIn,
-                ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Search for brands and products",
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-
-              Icon(
-                Icons.camera_alt_outlined,
-                color: Color.fromRGBO(50, 50, 50, 1),
-              ),
-            ],
           ),
         ),
       ],
@@ -471,60 +480,80 @@ class _HomeScreenState extends State<HomeScreen> {
     List<TopCategory> categories,
     String? imagePath,
   ) {
-    return SizedBox(
-      height: 80,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.arrow_back, color: Color.fromRGBO(0, 0, 0, 0.5)),
-          SizedBox(width: 6 * SizeConfig.widthScale),
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final currentLang = languageProvider.language ?? 'en';
 
-          Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              separatorBuilder: (_, __) => SizedBox(width: 20),
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                return Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    CategoryProductsGrid(category: category),
+        return SizedBox(
+          height: 80,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.arrow_back, color: Color.fromRGBO(0, 0, 0, 0.5)),
+              SizedBox(width: 6 * SizeConfig.widthScale),
+
+              Expanded(
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length,
+                  separatorBuilder: (_, __) => SizedBox(width: 20),
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    String? localizedCategoryName;
+
+                    switch (currentLang) {
+                      case 'ar':
+                        localizedCategoryName = category.categoryNameArabic;
+                        break;
+                      case 'he':
+                        localizedCategoryName = category.categoryNameHebrew;
+                        break;
+                      default:
+                        localizedCategoryName = category.categoryName;
+                    }
+
+                    return Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => CategoryProductsGrid(
+                                      category: category,
+                                    ),
+                              ),
+                            );
+                          },
+                          child: CustomNetworkImage(
+                            imageUrl: '$imagePath/${category.categoryImage}',
+                            height: 60 * SizeConfig.heightScale,
+                            width: 60 * SizeConfig.widthScale,
+                            radius: 30 * SizeConfig.widthScale,
+                            fit: BoxFit.cover,
                           ),
-                        );
-                      },
-                      child: CustomNetworkImage(
-                        imageUrl: '$imagePath/${category.categoryImage}',
-                        height: 60 * SizeConfig.heightScale,
-                        width: 60 * SizeConfig.widthScale,
-                        radius: 30 * SizeConfig.widthScale,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      category.categoryName ?? '',
-                      style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                        fontSize: 10 * SizeConfig.widthScale,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          localizedCategoryName ?? '',
+                          style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                            fontSize: 10 * SizeConfig.widthScale,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              SizedBox(width: 6 * SizeConfig.widthScale),
+              Icon(Icons.arrow_forward, color: Color.fromRGBO(0, 0, 0, 0.5)),
+            ],
           ),
-          SizedBox(width: 6 * SizeConfig.widthScale),
-          Icon(Icons.arrow_forward, color: Color.fromRGBO(0, 0, 0, 0.5)),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -537,86 +566,104 @@ class _HomeScreenState extends State<HomeScreen> {
       return const SizedBox.shrink();
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        children: [
-          SizedBox(
-            height: 200,
-            width: double.infinity,
-            child: PageView.builder(
-              controller: pageController,
-              itemCount: banners.length,
-              itemBuilder: (context, index) {
-                final banner = banners[index];
-                final imageUrl = "${imagePath ?? ''}/${banner.image ?? ''}";
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final currentLang = languageProvider.language ?? 'en';
 
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CustomNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      height: 200 * SizeConfig.heightScale,
-                      width: double.infinity,
-                      radius: 20,
-                    ),
-                    Container(color: Colors.black.withOpacity(0.3)),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          Text(
-                            banner.title ?? '',
-                            style: AppTextStyles.whitew400Outfit().copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            banner.alt ?? '',
-                            style: AppTextStyles.whitew400Outfit().copyWith(
-                              fontSize: 10 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: _buildExploreButton(banner.link ?? ''),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              SizedBox(
+                height: 200,
+                width: double.infinity,
+                child: PageView.builder(
+                  controller: pageController,
+                  itemCount: banners.length,
+                  itemBuilder: (context, index) {
+                    final banner = banners[index];
+                    final imageUrl = "${imagePath ?? ''}/${banner.image ?? ''}";
 
-          Positioned(
-            bottom: 10,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: SmoothPageIndicator(
-                controller: pageController,
-                count: banners.length,
-                effect: ExpandingDotsEffect(
-                  dotHeight: 4,
-                  dotWidth: 4,
-                  spacing: 4,
-                  activeDotColor: AppTheme.primaryColor,
-                  dotColor: AppTheme.primaryColor.withOpacity(0.5),
+                    String? localizedTitle;
+                    switch (currentLang) {
+                      case 'ar':
+                        localizedTitle = banner.titleArabic;
+                        break;
+                      case 'he':
+                        localizedTitle = banner.titleHebrew;
+                        break;
+                      default:
+                        localizedTitle = banner.title;
+                    }
+
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CustomNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          height: 200 * SizeConfig.heightScale,
+                          width: double.infinity,
+                          radius: 20,
+                        ),
+                        Container(color: Colors.black.withOpacity(0.3)),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 10),
+                              Text(
+                                localizedTitle ?? '',
+                                style: AppTextStyles.whitew400Outfit().copyWith(
+                                  fontSize: 14 * SizeConfig.widthScale,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                banner.alt ?? '',
+                                style: AppTextStyles.whitew400Outfit().copyWith(
+                                  fontSize: 10 * SizeConfig.widthScale,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: _buildExploreButton(banner.link ?? ''),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
-            ),
+
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: SmoothPageIndicator(
+                    controller: pageController,
+                    count: banners.length,
+                    effect: ExpandingDotsEffect(
+                      dotHeight: 4,
+                      dotWidth: 4,
+                      spacing: 4,
+                      activeDotColor: AppTheme.primaryColor,
+                      dotColor: AppTheme.primaryColor.withOpacity(0.5),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -4,12 +4,14 @@ import 'package:customer_app/providers/category_products_provider.dart';
 import 'package:customer_app/providers/chat_message_provider.dart';
 import 'package:customer_app/providers/city_provider.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/providers/product_provider.dart';
 import 'package:customer_app/providers/search_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/providers/store_provider.dart';
 import 'package:customer_app/providers/suggested_product_provider.dart';
 import 'package:customer_app/providers/wishlist_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:customer_app/providers/login_provider.dart';
@@ -30,7 +32,7 @@ import 'utils/size_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await Firebase.initializeApp();
   runApp(
     MultiProvider(
       providers: [
@@ -51,6 +53,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => CityProvider()),
         ChangeNotifierProvider(create: (_) => StoreProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
       child: const MyApp(),
     ),

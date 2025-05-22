@@ -1,5 +1,6 @@
 import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
+import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/products/product_details.dart';
 import 'package:customer_app/screens/view_all/best_seller_products_grid.dart';
@@ -100,6 +101,11 @@ class BestSellersSection extends StatelessWidget {
   }
 }
 
+String stripHtmlTags(String htmlText) {
+  final regex = RegExp(r'<[^>]*>', multiLine: true, caseSensitive: false);
+  return htmlText.replaceAll(regex, '').replaceAll('&nbsp;', ' ').trim();
+}
+
 class BestSellerCard extends StatelessWidget {
   final ProductDetail data;
   final String? imageURL;
@@ -118,115 +124,145 @@ class BestSellerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = '$imageURL/${data.productImage}';
-    final title = data.productName;
-    final brand = data.description ?? '';
-    final price = data.totalPrice?.toString() ?? '10';
 
-    return Container(
-      width: 170 * SizeConfig.widthScale,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey.shade300, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              height: 200 * SizeConfig.heightScale,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder:
-                  (_, __, ___) => Container(
-                    height: 90,
-                    width: double.infinity,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image_not_supported),
-                  ),
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final currentLang = languageProvider.language ?? 'en';
+
+        // Determine the localized text for product name and description
+        final title =
+            currentLang == 'ar'
+                ? data.productNameArabic
+                : currentLang == 'he'
+                ? data.productNameHebrew
+                : data.productName ?? '';
+
+        final rawBrand =
+            currentLang == 'ar'
+                ? data.descriptionArabic
+                : currentLang == 'he'
+                ? data.descriptionHebrew
+                : data.description ?? '';
+
+        final brand = stripHtmlTags(rawBrand ?? '');
+
+        final price = data.totalPrice?.toString() ?? '10';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => ProductDetailsScreen(productID: data.id ?? 0),
+              ),
+            );
+          },
+          child: Container(
+            width: 170 * SizeConfig.widthScale,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey.shade300, width: 0.5),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Wrap title and brand in Expanded to prevent overflow
-              Expanded(
-                child: Column(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    height: 200 * SizeConfig.heightScale,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) => Container(
+                          height: 90,
+                          width: double.infinity,
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.image_not_supported),
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title ?? '',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
+                    // Wrap title and brand in Expanded to prevent overflow
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title ?? '',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            brand ?? '',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ],
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: 4),
                     Text(
-                      brand,
+                      "$price ₪",
                       style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "$price ₪",
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _iconButton(
+                      Icons.shopping_cart_outlined,
+                      () => _navigateToProductDetails(context),
+                    ),
+                    const SizedBox(width: 8),
+                    _iconButton(
+                      data.isInWishlist == true
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      () async {
+                        await Future.microtask(
+                          () => Provider.of<WishlistProvider>(
+                            context,
+                            listen: false,
+                          ).toggleWishlist((data.id.toString())),
+                        );
+                        await Future.microtask(
+                          () => Provider.of<HomeScreenProvider>(
+                            context,
+                            listen: false,
+                          ).toggleWishlistStatus((data.id ?? 0)),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              _iconButton(
-                Icons.shopping_cart_outlined,
-                () => _navigateToProductDetails(
-                  context,
-                ), // Wrap the call in a lambda function
-              ),
-              const SizedBox(width: 8),
-              _iconButton(
-                data.isInWishlist == true
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-                () async {
-                  await Future.microtask(
-                    () => Provider.of<WishlistProvider>(
-                      context,
-                      listen: false,
-                    ).toggleWishlist((data.id.toString())),
-                  );
-                  await Future.microtask(
-                    () =>
-                        Provider.of<HomeScreenProvider>(
-                          context,
-                          listen: false,
-                        ).fetchBestSellerProducts(),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -51,6 +51,8 @@ dependencies:
   google_sign_in: ^6.3.0
   sign_in_with_apple: ^7.0.1
   url_launcher: ^6.3.1
+  flutter_html: ^3.0.0
+  # paypal_native_checkout: ^1.0.4
 
 dev_dependencies:
   flutter_test:

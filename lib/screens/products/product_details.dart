@@ -3,6 +3,7 @@ import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/screens/main_screen.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/models/product_details.dart';
@@ -329,14 +330,55 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                   SizedBox(height: 5 * SizeConfig.heightScale),
-                  Text(
-                    'Vibrant yellow cotton T-shirt for a bold and casual look.',
-                    style: AppTextStyles.greySubHeadingStyle(
-                      color: const Color.fromRGBO(0, 0, 0, 0.5),
-                    ).copyWith(
-                      fontSize: 12 * SizeConfig.widthScale,
-                      fontWeight: FontWeight.w300,
-                    ),
+                  Html(
+                    data:
+                        _productDetail?.shortDescription ??
+                        "<p>No description available</p>",
+                    style: {
+                      // ---- Base text -----------------------------------------------------------------
+                      "body": Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.all(0),
+                        color: const Color.fromRGBO(0, 0, 0, 0.5),
+                        fontSize: FontSize(12 * SizeConfig.widthScale),
+                        fontWeight: FontWeight.w300,
+                        fontFamily:
+                            AppTextStyles.greySubHeadingStyle().fontFamily,
+                      ),
+
+                      // ---- Paragraphs ----------------------------------------------------------------
+                      "p": Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.all(0),
+                      ),
+
+                      // ---- Headings (h1‒h6) ----------------------------------------------------------
+                      for (final h in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                        h: Style(
+                          margin: Margins.only(bottom: 4),
+                          padding: HtmlPaddings.all(0),
+                          fontWeight: FontWeight.w600, // a bit bolder
+                        ),
+
+                      // ---- Unordered lists -----------------------------------------------------------
+                      "ul": Style(
+                        margin: Margins.only(left: 18, top: 4, bottom: 4),
+                        padding: HtmlPaddings.all(0),
+                      ),
+
+                      // ---- Ordered lists -------------------------------------------------------------
+                      "ol": Style(
+                        margin: Margins.only(left: 18, top: 4, bottom: 4),
+                        padding: HtmlPaddings.all(0),
+                      ),
+
+                      // ---- List items ---------------------------------------------------------------
+                      "li": Style(
+                        margin: Margins.only(bottom: 2),
+                        padding: HtmlPaddings.all(0),
+                        // bullet and number size follows list text automatically
+                      ),
+                    },
                   ),
                   SizedBox(height: 20 * SizeConfig.heightScale),
                   Text(
@@ -347,22 +389,55 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                   SizedBox(height: 5 * SizeConfig.heightScale),
-                  Text(
-                    "The PureEase Women's White T-shirt is a wardrobe essential crafted from premium soft cotton for unmatched comfort.\n"
-                    "\nKey Features:\n"
-                    "• 100% breathable cotton\n"
-                    "• Regular fit\n"
-                    "• Crew neck and short sleeves\n"
-                    "• Lightweight and soft on the skin\n"
-                    "• Easy to style and maintain\n"
-                    "• Machine washable\n\n"
-                    "Whether paired with jeans, skirts, or shorts, this versatile piece delivers effortless style for every occasion — from casual outings to relaxed weekends.",
-                    style: AppTextStyles.greySubHeadingStyle(
-                      color: const Color.fromRGBO(0, 0, 0, 0.5),
-                    ).copyWith(
-                      fontSize: 12 * SizeConfig.widthScale,
-                      fontWeight: FontWeight.w300,
-                    ),
+                  Html(
+                    data:
+                        _productDetail?.description ??
+                        "<p>No description available</p>",
+                    style: {
+                      // ---- Base text -----------------------------------------------------------------
+                      "body": Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.all(0),
+                        color: const Color.fromRGBO(0, 0, 0, 0.5),
+                        fontSize: FontSize(12 * SizeConfig.widthScale),
+                        fontWeight: FontWeight.w300,
+                        fontFamily:
+                            AppTextStyles.greySubHeadingStyle().fontFamily,
+                      ),
+
+                      // ---- Paragraphs ----------------------------------------------------------------
+                      "p": Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.all(0),
+                      ),
+
+                      // ---- Headings (h1‒h6) ----------------------------------------------------------
+                      for (final h in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                        h: Style(
+                          margin: Margins.only(bottom: 4),
+                          padding: HtmlPaddings.all(0),
+                          fontWeight: FontWeight.w600, // a bit bolder
+                        ),
+
+                      // ---- Unordered lists -----------------------------------------------------------
+                      "ul": Style(
+                        margin: Margins.only(left: 18, top: 4, bottom: 4),
+                        padding: HtmlPaddings.all(0),
+                      ),
+
+                      // ---- Ordered lists -------------------------------------------------------------
+                      "ol": Style(
+                        margin: Margins.only(left: 18, top: 4, bottom: 4),
+                        padding: HtmlPaddings.all(0),
+                      ),
+
+                      // ---- List items ---------------------------------------------------------------
+                      "li": Style(
+                        margin: Margins.only(bottom: 2),
+                        padding: HtmlPaddings.all(0),
+                        // bullet and number size follows list text automatically
+                      ),
+                    },
                   ),
                   SizedBox(height: 20 * SizeConfig.heightScale),
                   Text(

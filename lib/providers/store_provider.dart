@@ -58,6 +58,7 @@ class StoreProvider extends ChangeNotifier {
       final response = await ApiService.postWithAuth('get-products-by-store', {
         'offset': (page - 1) * limit,
         'limit': limit,
+        'store_id': id,
       });
 
       if (response != null) {

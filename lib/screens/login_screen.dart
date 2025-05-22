@@ -313,6 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     final name = googleUser.displayName ?? "";
 
                                     await handleSocialLogin(
+                                      context,
                                       email: email,
                                       provider: "google",
                                       providerId: providerId,
@@ -386,6 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           : "Unknown";
 
                                   await handleSocialLogin(
+                                    context,
                                     email: email,
                                     provider: "apple",
                                     providerId: providerId,
@@ -490,7 +492,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> handleSocialLogin({
+  Future<void> handleSocialLogin(
+    BuildContext context, {
     required String email,
     required String provider,
     required String providerId,
@@ -516,36 +519,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (response["status"] == true) {
       LogService.info("Social Login Successful");
-      showDialog(
-        context: context,
-        builder:
-            (context) => OtpPopup(
-              mobile: mobile ?? "", // may still be required
-              onSubmit: (String otp) async {
-                final otpResponse = await ApiService.post('verify-user-otp', {
-                  "email": email,
-                  "otp": otp,
-                });
-
-                if (otpResponse["status"] == true) {
-                  await AuthTokenUtil.saveToken(otpResponse['token']);
-                  if (mounted) {
-                    setState(() {
-                      _navigateToSubscription = true;
-                    });
-                    Navigator.of(context, rootNavigator: true).pop();
-                  }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Login Successfully!")),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("OTP verification failed")),
-                  );
-                }
-              },
-            ),
-      );
+      Navigator.pushReplacementNamed(context, '/main_screen');
     } else {
       ScaffoldMessenger.of(
         context,

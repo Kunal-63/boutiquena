@@ -20,6 +20,7 @@ class CartProvider extends ChangeNotifier {
   static List<int> selectedStoreIds = [];
   static int? selectedCouponId;
   static int? selectedShippingId;
+  static String? selectedPaymentMethod;
 
   List<CartGroup>? mergeableGroups;
   List<CartCoupon>? coupons;
@@ -165,6 +166,7 @@ class CartProvider extends ChangeNotifier {
     selectedShippingId = null;
     mergeableGroups = null;
     coupons = null;
+    selectedPaymentMethod = null;
     notifyListeners();
   }
 }

@@ -1,26 +1,45 @@
 {
   "project_info": {
-    "project_number": "555571648620",
-    "project_id": "boutiquena-vendor-v2",
-    "storage_bucket": "boutiquena-vendor-v2.firebasestorage.app"
+    "project_number": "652930596925",
+    "firebase_url": "https://customer-app-boutiquena-default-rtdb.firebaseio.com",
+    "project_id": "customer-app-boutiquena",
+    "storage_bucket": "customer-app-boutiquena.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:555571648620:android:abb115b2c5dab6e3f3e049",
+        "mobilesdk_app_id": "1:652930596925:android:a243def306150c15c3ea54",
         "android_client_info": {
-          "package_name": "com.example.boutiquena_vendor"
+          "package_name": "com.example.customer_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "652930596925-jimfpuaebc9j1fa774rjluc7t9h75vqb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.customer_app",
+            "certificate_hash": "38d865f77879fd2bd175ed349d500a3da9edeb54"
+          }
+        },
+        {
+          "client_id": "652930596925-amhugmdksau9t7ngrbrhufa68dior8i5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDx39AZUveYfNEr7YOy_KZdmm0kveAtgas"
+          "current_key": "AIzaSyDQ9dxgYyEXHrAOQYDNqMKJKpI6HzDNDLU"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "652930596925-amhugmdksau9t7ngrbrhufa68dior8i5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

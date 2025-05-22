@@ -3,6 +3,7 @@ import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/models/cart_group.dart';
 import 'package:customer_app/models/shipping_address.dart';
 import 'package:customer_app/providers/cart_provider.dart';
+import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
@@ -39,14 +40,28 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
     });
   }
 
-  void _onSubmit() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) =>
-              OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
-    );
+  void _onSubmit() async {
+    if (CartProvider.selectedPaymentMethod == "PayPal") {
+      final success = true; // await PayPalService.processPayment(context);
+      if (success) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (context) =>
+                  OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
+        );
+      }
+    } else {
+      // Handle other payment methods
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) =>
+                OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
+      );
+    }
   }
 
   @override
@@ -153,7 +168,7 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
                         },
                         logoAsset: '',
                       );
-                    }).toList(),
+                    }),
 
                   SizedBox(height: 5 * SizeConfig.widthScale),
                   Row(
@@ -348,7 +363,6 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
     super.initState();
     _cartProvider = Provider.of<CartProvider>(context, listen: false);
 
-    // Delay fetching cart until after first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _cartProvider.fetchCart();
     });
@@ -356,6 +370,8 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
         if (CartProvider.cartItems.isEmpty) {
@@ -410,8 +426,7 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                   itemCount: CartProvider.cartItems.length,
                   itemBuilder: (context, index) {
                     final cartItem = CartProvider.cartItems[index];
-                    final itemSubtotal =
-                        double.tryParse(cartItem.totalPrice) ?? 0;
+                    final itemSubtotal = cartItem.totalPrice;
 
                     return Column(
                       children: [
@@ -419,7 +434,8 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CustomNetworkImage(
-                              imageUrl: cartItem.productImageUrl,
+                              imageUrl:
+                                  '${cartItem.productImageUrl}/${cartItem.productImage}',
                               errorImage: 'assets/icons/no-image.png',
                               width: 60 * SizeConfig.widthScale,
                               height: 70 * SizeConfig.widthScale,
@@ -431,14 +447,39 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    cartItem.productName,
-                                    style: AppTextStyles.blackSubHeadingStyle(
-                                      color: Color.fromRGBO(0, 0, 0, 0.6),
-                                    ).copyWith(
-                                      fontSize: 10 * SizeConfig.widthScale,
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                                  Consumer<LanguageProvider>(
+                                    builder: (
+                                      context,
+                                      languageProvider,
+                                      child,
+                                    ) {
+                                      final currentLang =
+                                          languageProvider.language ?? 'en';
+
+                                      final localizedProductName =
+                                          currentLang == 'ar'
+                                              ? cartItem.productNameArabic
+                                              : currentLang == 'he'
+                                              ? cartItem.productNameHebrew
+                                              : cartItem.productName ?? '';
+
+                                      return Text(
+                                        localizedProductName ?? '',
+                                        style:
+                                            AppTextStyles.blackSubHeadingStyle(
+                                              color: const Color.fromRGBO(
+                                                0,
+                                                0,
+                                                0,
+                                                0.6,
+                                              ),
+                                            ).copyWith(
+                                              fontSize:
+                                                  10 * SizeConfig.widthScale,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                      );
+                                    },
                                   ),
                                   Text(
                                     'Dorothy Perkins',
@@ -481,11 +522,11 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                                         width: 8 * SizeConfig.widthScale,
                                       ),
                                       QuantitySelector(
-                                        initialQuantity: cartItem.quantity,
+                                        initialQuantity: cartItem.quantity ?? 0,
                                         onQuantityChanged: (newQuantity) async {
                                           return await cartProvider
                                               .updateCart(
-                                                cartId: cartItem.cartId,
+                                                cartId: cartItem.cartId ?? 0,
                                                 quantity: newQuantity,
                                               )
                                               .then((isSuccess) {
@@ -504,7 +545,7 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                             InkWell(
                               onTap: () {
                                 cartProvider.deleteCart(
-                                  cartId: cartItem.cartId,
+                                  cartId: cartItem.cartId ?? 0,
                                 );
                               },
                               child: Row(
@@ -531,8 +572,8 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
                         Divider(),
                         InfoRow(
                           label:
-                              "Subtotal (${cartItem.quantity} x ${cartItem.totalPrice} ₪)",
-                          value: "${cartItem.finalPrice.toStringAsFixed(2)} ₪",
+                              "${'Subtotal'} (${cartItem.quantity} x ${cartItem.totalPrice} ₪)",
+                          value: "${cartItem.finalPrice?.toStringAsFixed(2)} ₪",
                         ),
                         Divider(),
                       ],
@@ -542,15 +583,15 @@ class _ProductSummaryCardState extends State<ProductSummaryCard> {
 
                 /// Tax, delivery, total section
                 InfoRow(
-                  label: "Delivery Charges:",
+                  label: "${'Delivery Charges'}:",
                   value: "${cartProvider.deliveryCharges.toStringAsFixed(2)} ₪",
                 ),
                 InfoRow(
-                  label: "Taxes:",
+                  label: "${'Taxes'}:",
                   value: "${cartProvider.tax.toStringAsFixed(2)} ₪",
                 ),
                 InfoRow(
-                  label: "Subtotal:",
+                  label: "${'Subtotal'}:",
                   value: "${cartProvider.cartValue.toStringAsFixed(2)} ₪",
                 ),
                 SizedBox(height: 8 * SizeConfig.heightScale),
@@ -804,6 +845,7 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListView.builder(
+          padding: EdgeInsets.only(top: 10 * SizeConfig.heightScale),
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: shippingAddresses.length,
@@ -814,12 +856,7 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color:
-                      (selectedAddressId == address.id)
-                          ? Colors.redAccent
-                          : Colors.grey.shade300,
-                ),
+                border: Border.all(color: Colors.grey.shade300),
               ),
               child: RadioListTile<String>(
                 value: address.id?.toString() ?? '',
@@ -861,46 +898,46 @@ class _ShippingDetailsCardState extends State<ShippingDetailsCard> {
             );
           },
         ),
-        const Divider(),
-        Text(
-          "Choose Shipping Method",
-          style: AppTextStyles.blackSubHeadingStyle().copyWith(
-            fontWeight: FontWeight.w400,
-            fontSize: 16 * SizeConfig.widthScale,
-          ),
-        ),
-        _radioTile("Express Delivery"),
-        _radioTile("Regular Delivery"),
-        _radioTile("Store Pickup"),
+        // const Divider(),
+        // Text(
+        //   "Choose Shipping Method",
+        //   style: AppTextStyles.blackSubHeadingStyle().copyWith(
+        //     fontWeight: FontWeight.w400,
+        //     fontSize: 16 * SizeConfig.widthScale,
+        //   ),
+        // ),
+        // _radioTile("Express Delivery"),
+        // _radioTile("Regular Delivery"),
+        // _radioTile("Store Pickup"),
 
-        // Estimated Delivery Date
-        Container(
-          margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
-          padding: EdgeInsets.all(12 * SizeConfig.widthScale),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFFEEEEE)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: RichText(
-            text: TextSpan(
-              text: "Estimated Delivery Date: ",
-              style: AppTextStyles.greySubHeadingStyle().copyWith(
-                fontWeight: FontWeight.w500,
-                fontSize: 14 * SizeConfig.widthScale,
-              ),
-              children: [
-                TextSpan(
-                  text: "29 March, 2025",
-                  style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                    fontWeight: FontWeight.w300,
-                    fontSize: 14 * SizeConfig.widthScale,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        // // Estimated Delivery Date
+        // Container(
+        //   margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
+        //   padding: EdgeInsets.all(12 * SizeConfig.widthScale),
+        //   width: double.infinity,
+        //   decoration: BoxDecoration(
+        //     border: Border.all(color: const Color(0xFFFEEEEE)),
+        //     borderRadius: BorderRadius.circular(8),
+        //   ),
+        //   child: RichText(
+        //     text: TextSpan(
+        //       text: "Estimated Delivery Date: ",
+        //       style: AppTextStyles.greySubHeadingStyle().copyWith(
+        //         fontWeight: FontWeight.w500,
+        //         fontSize: 14 * SizeConfig.widthScale,
+        //       ),
+        //       children: [
+        //         TextSpan(
+        //           text: "29 March, 2025",
+        //           style: AppTextStyles.blackSubHeadingStyle().copyWith(
+        //             fontWeight: FontWeight.w300,
+        //             fontSize: 14 * SizeConfig.widthScale,
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
@@ -968,8 +1005,6 @@ class PaymentMethodCard extends StatefulWidget {
 }
 
 class _PaymentMethodCardState extends State<PaymentMethodCard> {
-  String selectedMethod = "Card";
-
   @override
   Widget build(BuildContext context) {
     return CardContainer(
@@ -980,28 +1015,43 @@ class _PaymentMethodCardState extends State<PaymentMethodCard> {
             "Visa/Mastercard/Debit Card",
             "Card",
             'assets/icons/card-icon.png',
+            () => setState(() => CartProvider.selectedPaymentMethod = "Card"),
           ),
-          _radioOption("PayPal", "PayPal", 'assets/icons/paypal-icon.png'),
+          _radioOption(
+            "PayPal",
+            "PayPal",
+            'assets/icons/paypal-icon.png',
+            () => setState(() => CartProvider.selectedPaymentMethod = "PayPal"),
+          ),
           _radioOption(
             "Apple Pay / Google Pay",
             "GooglePay",
             'assets/icons/google-icon.png',
+            () => setState(
+              () => CartProvider.selectedPaymentMethod = "GooglePay",
+            ),
           ),
           _radioOption(
             "Cash on Delivery (COD)",
             "COD",
             'assets/icons/coin-icon.png',
+            () => setState(() => CartProvider.selectedPaymentMethod = "COD"),
           ),
         ],
       ),
     );
   }
 
-  Widget _radioOption(String label, String value, String iconPath) {
-    final isSelected = selectedMethod == value;
+  Widget _radioOption(
+    String label,
+    String value,
+    String iconPath,
+    VoidCallback onTap,
+  ) {
+    final isSelected = CartProvider.selectedPaymentMethod == value;
 
     return GestureDetector(
-      onTap: () => setState(() => selectedMethod = value),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -1033,7 +1083,10 @@ class _PaymentMethodCardState extends State<PaymentMethodCard> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Color.fromRGBO(112, 112, 112, 1),
+                  color:
+                      isSelected
+                          ? Colors.redAccent
+                          : Color.fromRGBO(112, 112, 112, 1),
                   width: 2,
                 ),
               ),
@@ -1045,7 +1098,7 @@ class _PaymentMethodCardState extends State<PaymentMethodCard> {
                           height: 10,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Color.fromRGBO(112, 112, 112, 1),
+                            color: Colors.redAccent,
                           ),
                         ),
                       )
@@ -1075,106 +1128,106 @@ class _DiscountPromoCardState extends State<DiscountPromoCard> {
       title: "Discounts & Promo Code",
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: promoCodeController,
-                  autofocus: false,
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                  decoration: AppTheme.inputDecoration.copyWith(
-                    hintText: 'Enter Promo Code',
-                    counterText: "", // Hides the character counter
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomLeft: Radius.circular(8),
-                      ),
-                      borderSide: BorderSide(
-                        color: Color.fromRGBO(219, 233, 233, 1),
-                        width: 0.5,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomLeft: Radius.circular(8),
-                      ),
-                      borderSide: BorderSide(
-                        color: Color.fromRGBO(219, 233, 233, 1),
-                        width: 0.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomLeft: Radius.circular(8),
-                      ),
-                      borderSide: BorderSide(
-                        color: Color.fromRGBO(219, 233, 233, 1),
-                        width: 0.5,
-                      ),
-                    ),
-                    prefixIconConstraints: const BoxConstraints(
-                      minWidth: 0,
-                      minHeight: 0,
-                    ),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF151D27),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 20 * SizeConfig.widthScale,
-                      vertical: 12 * SizeConfig.heightScale,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      ),
-                    ),
-                  ),
-                  onPressed: () {},
-                  child: Text("Apply", style: AppTextStyles.whitew400Outfit()),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              CustomCheckbox(
-                label: '',
-                value: redeemCoins,
-                onChanged: (bool? isselected) {},
-                borderColor: const Color.fromRGBO(0, 0, 0, 0.5),
-                fillColor: const Color.fromRGBO(0, 0, 0, 0.05),
-                tickAsset: 'assets/icons/tick-icon.svg',
-              ),
-              Expanded(
-                child: Text(
-                  "Redeem Coins for Discounts",
-                  style: AppTextStyles.greySubHeadingStyle().copyWith(
-                    fontSize: 12 * SizeConfig.widthScale,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-              Text(
-                "100 ₪",
-                style: AppTextStyles.greySubHeadingStyle(
-                  color: Color.fromRGBO(0, 0, 0, 0.6),
-                ).copyWith(
-                  fontSize: 14 * SizeConfig.widthScale,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Expanded(
+          //       child: TextFormField(
+          //         controller: promoCodeController,
+          //         autofocus: false,
+          //         style: const TextStyle(fontSize: 16, color: Colors.black),
+          //         decoration: AppTheme.inputDecoration.copyWith(
+          //           hintText: 'Enter Promo Code',
+          //           counterText: "", // Hides the character counter
+          //           border: OutlineInputBorder(
+          //             borderRadius: BorderRadius.only(
+          //               topLeft: Radius.circular(8),
+          //               bottomLeft: Radius.circular(8),
+          //             ),
+          //             borderSide: BorderSide(
+          //               color: Color.fromRGBO(219, 233, 233, 1),
+          //               width: 0.5,
+          //             ),
+          //           ),
+          //           enabledBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.only(
+          //               topLeft: Radius.circular(8),
+          //               bottomLeft: Radius.circular(8),
+          //             ),
+          //             borderSide: BorderSide(
+          //               color: Color.fromRGBO(219, 233, 233, 1),
+          //               width: 0.5,
+          //             ),
+          //           ),
+          //           focusedBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.only(
+          //               topLeft: Radius.circular(8),
+          //               bottomLeft: Radius.circular(8),
+          //             ),
+          //             borderSide: BorderSide(
+          //               color: Color.fromRGBO(219, 233, 233, 1),
+          //               width: 0.5,
+          //             ),
+          //           ),
+          //           prefixIconConstraints: const BoxConstraints(
+          //             minWidth: 0,
+          //             minHeight: 0,
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+          //     Align(
+          //       alignment: Alignment.centerRight,
+          //       child: ElevatedButton(
+          //         style: ElevatedButton.styleFrom(
+          //           backgroundColor: const Color(0xFF151D27),
+          //           padding: EdgeInsets.symmetric(
+          //             horizontal: 20 * SizeConfig.widthScale,
+          //             vertical: 12 * SizeConfig.heightScale,
+          //           ),
+          //           shape: RoundedRectangleBorder(
+          //             borderRadius: BorderRadius.only(
+          //               topRight: Radius.circular(8),
+          //               bottomRight: Radius.circular(8),
+          //             ),
+          //           ),
+          //         ),
+          //         onPressed: () {},
+          //         child: Text("Apply", style: AppTextStyles.whitew400Outfit()),
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // SizedBox(height: 12),
+          // Row(
+          //   children: [
+          //     CustomCheckbox(
+          //       label: '',
+          //       value: redeemCoins,
+          //       onChanged: (bool? isselected) {},
+          //       borderColor: const Color.fromRGBO(0, 0, 0, 0.5),
+          //       fillColor: const Color.fromRGBO(0, 0, 0, 0.05),
+          //       tickAsset: 'assets/icons/tick-icon.svg',
+          //     ),
+          //     Expanded(
+          //       child: Text(
+          //         "Redeem Coins for Discounts",
+          //         style: AppTextStyles.greySubHeadingStyle().copyWith(
+          //           fontSize: 12 * SizeConfig.widthScale,
+          //           fontWeight: FontWeight.w400,
+          //         ),
+          //       ),
+          //     ),
+          //     Text(
+          //       "100 ₪",
+          //       style: AppTextStyles.greySubHeadingStyle(
+          //         color: Color.fromRGBO(0, 0, 0, 0.6),
+          //       ).copyWith(
+          //         fontSize: 14 * SizeConfig.widthScale,
+          //         fontWeight: FontWeight.w400,
+          //       ),
+          //     ),
+          //   ],
+          // ),
           Consumer<CartProvider>(
             builder: (context, cartProvider, _) {
               final coupons = cartProvider.coupons ?? [];
@@ -1184,7 +1237,7 @@ class _DiscountPromoCardState extends State<DiscountPromoCard> {
               }
 
               return Container(
-                margin: EdgeInsets.only(top: 16 * SizeConfig.heightScale),
+                margin: EdgeInsets.only(top: 5 * SizeConfig.heightScale),
                 height: 110 * SizeConfig.heightScale,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
