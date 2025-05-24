@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:customer_app/providers/best_seller_provider.dart';
 import 'package:customer_app/providers/cart_provider.dart';
 import 'package:customer_app/providers/category_products_provider.dart';
@@ -12,7 +14,10 @@ import 'package:customer_app/providers/store_provider.dart';
 import 'package:customer_app/providers/suggested_product_provider.dart';
 import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:customer_app/providers/login_provider.dart';
 import 'package:customer_app/providers/orders_provider.dart';
@@ -28,11 +33,19 @@ import 'package:customer_app/screens/profile/profile_screen.dart';
 import 'package:customer_app/screens/sign_up.dart';
 import 'package:customer_app/screens/splash_screen.dart';
 import 'package:customer_app/screens/login_screen.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'utils/size_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  if (Platform.isIOS) {
+    await FirebaseMessaging.instance.requestPermission();
+  }
+  InAppWebViewController.setWebContentsDebuggingEnabled(true);
+
   runApp(
     MultiProvider(
       providers: [

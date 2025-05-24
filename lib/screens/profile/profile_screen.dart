@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _subscriptionController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _workingHoursController = TextEditingController();
+  int? coinBalance = 0;
 
   int? subscripitonID;
 
@@ -47,6 +48,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       () =>
           Provider.of<WishlistProvider>(context, listen: false).fetchWishlist(),
     );
+    Future.microtask(
+      () =>
+          Provider.of<CustomerProfileProvider>(
+            context,
+            listen: false,
+          ).fetchCoinBalance(),
+    );
   }
 
   @override
@@ -61,8 +69,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _passwordController.text = "Loading...";
       _workingHoursController.text = "Loading...";
       userName = "Loading...";
-    } else if (profileProvider.vendorProfile != null) {
-      final profile = profileProvider.vendorProfile!;
+    } else if (profileProvider.customerProfile != null) {
+      final profile = profileProvider.customerProfile!;
       customerProfile = profile;
 
       _phoneController.text = profile.mobile ?? "";
@@ -72,6 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       userName = profile.name ?? "No Name";
       profileImageUrl = profile.imagePath ?? "";
+      coinBalance = profileProvider.coinBalance;
     }
     return Scaffold(
       backgroundColor: const Color.fromRGBO(250, 250, 250, 1),
@@ -186,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                         Text(
-                          "100 ₪",
+                          "$coinBalance ₪",
                           style: AppTextStyles.greySubHeadingStyle().copyWith(
                             fontSize: 14 * SizeConfig.widthScale,
                             fontWeight: FontWeight.w500,

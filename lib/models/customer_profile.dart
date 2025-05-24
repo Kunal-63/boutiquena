@@ -1,5 +1,5 @@
 class CustomerProfile {
-  final String? id;
+  final int? id;
   final String? name;
   final String? image;
   final String? address;
@@ -45,7 +45,7 @@ class CustomerProfile {
 
   factory CustomerProfile.fromJson(Map<String, dynamic> json) {
     return CustomerProfile(
-      id: json['id']?.toString(),
+      id: json['id'],
       name: json['name'],
       image: json['image'],
       address: json['address'],

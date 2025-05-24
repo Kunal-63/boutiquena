@@ -1,10 +1,11 @@
 import 'package:customer_app/models/banner.dart';
+import 'package:customer_app/models/chat_message.dart';
 import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/models/store.dart';
 import 'package:customer_app/models/top_category.dart';
 import 'package:customer_app/providers/home_screen_provider.dart';
 import 'package:customer_app/providers/language_provider.dart';
-import 'package:customer_app/screens/chat/chat_list.dart';
+import 'package:customer_app/screens/chat/chat_message.dart';
 import 'package:customer_app/screens/main_screen.dart';
 import 'package:customer_app/screens/products/best_sellers.dart';
 import 'package:customer_app/screens/shipping/shipping_address_list.dart';
@@ -35,6 +36,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController = PageController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  double _drawerRightPosition =
+      -250 * SizeConfig.widthScale; // initially hidden
   bool _isDrawerOpen = false;
 
   Future<void> _refreshHomePage() async {
@@ -106,6 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onMenuPressed: () {
                       setState(() {
                         _isDrawerOpen = !_isDrawerOpen;
+                        _drawerRightPosition =
+                            _isDrawerOpen ? 0 : -250 * SizeConfig.widthScale;
                       });
                     },
                   ),
@@ -181,195 +186,208 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Custom endDrawer that shows BELOW AppBar
             if (_isDrawerOpen)
-              Positioned(
+              AnimatedPositioned(
+                duration: Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
                 top: 90,
-                right: 0,
-                child: Container(
-                  width: 250 * SizeConfig.widthScale,
-                  height: MediaQuery.of(context).size.height - 70,
-                  color: Colors.white,
-                  child: Material(
+                right: _drawerRightPosition,
+                child: GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    width: 250 * SizeConfig.widthScale,
+                    height: MediaQuery.of(context).size.height - 70,
                     color: Colors.white,
-                    child: ListView(
-                      padding: EdgeInsets.all(15 * SizeConfig.widthScale),
-                      children: [
-                        ListTile(
-                          leading: Image.asset(
-                            'assets/icons/loyalty-point-icon.png',
-                            height: 20 * SizeConfig.widthScale,
-                            width: 20 * SizeConfig.widthScale,
-                          ),
-                          title: Text(
-                            "View Loyalty Points",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
+                    child: Material(
+                      color: Colors.white,
+                      child: ListView(
+                        padding: EdgeInsets.all(15 * SizeConfig.widthScale),
+                        children: [
+                          ListTile(
+                            leading: Image.asset(
+                              'assets/icons/loyalty-point-icon.png',
+                              height: 20 * SizeConfig.widthScale,
+                              width: 20 * SizeConfig.widthScale,
                             ),
-                          ),
-                          onTap: () {},
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: Icon(
-                            Icons.message_outlined,
-                            color: Color.fromRGBO(243, 120, 102, 1),
-                            size: 20 * SizeConfig.heightScale,
-                          ),
-                          title: Text(
-                            "Live Chat",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          onTap: () {
-                            // Navigate to chat screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const ConversationListScreen(),
+                            title: Text(
+                              "View Loyalty Points",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
                               ),
-                            );
-                          },
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: Icon(
-                            Icons.home_outlined,
-                            color: Color.fromRGBO(243, 120, 102, 1),
-                            size: 20 * SizeConfig.heightScale,
-                          ),
-                          title: Text(
-                            "My Address",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
                             ),
+                            onTap: () {},
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ShippingAddressListScreen(),
+                          Divider(),
+                          ListTile(
+                            leading: Icon(
+                              Icons.message_outlined,
+                              color: Color.fromRGBO(243, 120, 102, 1),
+                              size: 20 * SizeConfig.heightScale,
+                            ),
+                            title: Text(
+                              "Live Chat",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
                               ),
-                            );
-                          },
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: SvgPicture.asset(
-                            'assets/icons/search-icon.svg',
-                            height: 20 * SizeConfig.widthScale,
-                            width: 20 * SizeConfig.widthScale,
-                            colorFilter: ColorFilter.mode(
-                              Color.fromRGBO(243, 120, 102, 1),
-                              BlendMode.srcIn,
                             ),
+                            onTap: () async {
+                              // Navigate to chat screen
+                              final int userId =
+                                  await LoginStatusUtil.getUserId() ?? 1;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ChatScreen(
+                                        conversationId: 1,
+                                        senderId: userId,
+                                        senderType: "user",
+                                        receiverId: 1,
+                                        receiverType: "vendor",
+                                      ),
+                                ),
+                              );
+                            },
                           ),
-                          title: Text(
-                            "All Products",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
+                          Divider(),
+                          ListTile(
+                            leading: Icon(
+                              Icons.home_outlined,
+                              color: Color.fromRGBO(243, 120, 102, 1),
+                              size: 20 * SizeConfig.heightScale,
                             ),
-                          ),
-                          onTap: () {},
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: SvgPicture.asset(
-                            'assets/icons/store-listing-icon.svg',
-                            height: 20 * SizeConfig.widthScale,
-                            width: 20 * SizeConfig.widthScale,
-                            colorFilter: ColorFilter.mode(
-                              Color.fromRGBO(243, 120, 102, 1),
-                              BlendMode.srcIn,
+                            title: Text(
+                              "My Address",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ShippingAddressListScreen(),
+                                ),
+                              );
+                            },
                           ),
-                          title: Text(
-                            "All Store Listing",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
+                          Divider(),
+                          ListTile(
+                            leading: SvgPicture.asset(
+                              'assets/icons/search-icon.svg',
+                              height: 20 * SizeConfig.widthScale,
+                              width: 20 * SizeConfig.widthScale,
+                              colorFilter: ColorFilter.mode(
+                                Color.fromRGBO(243, 120, 102, 1),
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                          onTap: () {},
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: SvgPicture.asset(
-                            'assets/icons/wishlist-icon.svg',
-                            height: 20 * SizeConfig.widthScale,
-                            width: 20 * SizeConfig.widthScale,
-                            colorFilter: ColorFilter.mode(
-                              Color.fromRGBO(243, 120, 102, 1),
-                              BlendMode.srcIn,
+                            title: Text(
+                              "All Products",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
+                            onTap: () {},
                           ),
-                          title: Text(
-                            "Wishlist",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
+                          Divider(),
+                          ListTile(
+                            leading: SvgPicture.asset(
+                              'assets/icons/store-listing-icon.svg',
+                              height: 20 * SizeConfig.widthScale,
+                              width: 20 * SizeConfig.widthScale,
+                              colorFilter: ColorFilter.mode(
+                                Color.fromRGBO(243, 120, 102, 1),
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                          onTap: () {},
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: Image.asset(
-                            'assets/icons/contact-us.png',
-                            height: 20 * SizeConfig.widthScale,
-                            width: 20 * SizeConfig.widthScale,
-                          ),
-                          title: Text(
-                            "Contact Us",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
+                            title: Text(
+                              "All Store Listing",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
+                            onTap: () {},
                           ),
-                          onTap: () {},
-                        ),
-                        Divider(),
-                        ListTile(
-                          leading: SvgPicture.asset(
-                            'assets/icons/featured-store.svg',
-                            height: 20 * SizeConfig.widthScale,
-                            width: 20 * SizeConfig.widthScale,
-                            colorFilter: ColorFilter.mode(
-                              Color.fromRGBO(243, 120, 102, 1),
-                              BlendMode.srcIn,
+                          Divider(),
+                          ListTile(
+                            leading: SvgPicture.asset(
+                              'assets/icons/wishlist-icon.svg',
+                              height: 20 * SizeConfig.widthScale,
+                              width: 20 * SizeConfig.widthScale,
+                              colorFilter: ColorFilter.mode(
+                                Color.fromRGBO(243, 120, 102, 1),
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                          title: Text(
-                            "Featured Store",
-                            style: AppTextStyles.redw400Outfit(
-                              color: Colors.black,
-                            ).copyWith(
-                              fontSize: 14 * SizeConfig.widthScale,
-                              fontWeight: FontWeight.w500,
+                            title: Text(
+                              "Wishlist",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
+                            onTap: () {},
                           ),
-                          onTap: () {},
-                        ),
-                      ],
+                          Divider(),
+                          ListTile(
+                            leading: Image.asset(
+                              'assets/icons/contact-us.png',
+                              height: 20 * SizeConfig.widthScale,
+                              width: 20 * SizeConfig.widthScale,
+                            ),
+                            title: Text(
+                              "Contact Us",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            onTap: () {},
+                          ),
+                          Divider(),
+                          ListTile(
+                            leading: SvgPicture.asset(
+                              'assets/icons/featured-store.svg',
+                              height: 20 * SizeConfig.widthScale,
+                              width: 20 * SizeConfig.widthScale,
+                              colorFilter: ColorFilter.mode(
+                                Color.fromRGBO(243, 120, 102, 1),
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                            title: Text(
+                              "Featured Store",
+                              style: AppTextStyles.redw400Outfit(
+                                color: Colors.black,
+                              ).copyWith(
+                                fontSize: 14 * SizeConfig.widthScale,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -572,95 +590,108 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(20),
-          child: Stack(
-            children: [
-              SizedBox(
-                height: 200,
-                width: double.infinity,
-                child: PageView.builder(
-                  controller: pageController,
-                  itemCount: banners.length,
-                  itemBuilder: (context, index) {
-                    final banner = banners[index];
-                    final imageUrl = "${imagePath ?? ''}/${banner.image ?? ''}";
-
-                    String? localizedTitle;
-                    switch (currentLang) {
-                      case 'ar':
-                        localizedTitle = banner.titleArabic;
-                        break;
-                      case 'he':
-                        localizedTitle = banner.titleHebrew;
-                        break;
-                      default:
-                        localizedTitle = banner.title;
-                    }
-
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CustomNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          height: 200 * SizeConfig.heightScale,
-                          width: double.infinity,
-                          radius: 20,
-                        ),
-                        Container(color: Colors.black.withOpacity(0.3)),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 10),
-                              Text(
-                                localizedTitle ?? '',
-                                style: AppTextStyles.whitew400Outfit().copyWith(
-                                  fontSize: 14 * SizeConfig.widthScale,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                banner.alt ?? '',
-                                style: AppTextStyles.whitew400Outfit().copyWith(
-                                  fontSize: 10 * SizeConfig.widthScale,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: _buildExploreButton(banner.link ?? ''),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
-              Positioned(
-                bottom: 10,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: SmoothPageIndicator(
+          child: GestureDetector(
+            onTap: () {
+              if (_isDrawerOpen) {
+                setState(() {
+                  _isDrawerOpen = false;
+                });
+              }
+            },
+            behavior: HitTestBehavior.translucent,
+            child: Stack(
+              children: [
+                SizedBox(
+                  height: 200,
+                  width: double.infinity,
+                  child: PageView.builder(
                     controller: pageController,
-                    count: banners.length,
-                    effect: ExpandingDotsEffect(
-                      dotHeight: 4,
-                      dotWidth: 4,
-                      spacing: 4,
-                      activeDotColor: AppTheme.primaryColor,
-                      dotColor: AppTheme.primaryColor.withOpacity(0.5),
+                    itemCount: banners.length,
+                    itemBuilder: (context, index) {
+                      final banner = banners[index];
+                      final imageUrl =
+                          "${imagePath ?? ''}/${banner.image ?? ''}";
+
+                      String? localizedTitle;
+                      switch (currentLang) {
+                        case 'ar':
+                          localizedTitle = banner.titleArabic;
+                          break;
+                        case 'he':
+                          localizedTitle = banner.titleHebrew;
+                          break;
+                        default:
+                          localizedTitle = banner.title;
+                      }
+
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CustomNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            height: 200 * SizeConfig.heightScale,
+                            width: double.infinity,
+                            radius: 20,
+                          ),
+                          Container(color: Colors.black.withOpacity(0.3)),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 10),
+                                Text(
+                                  localizedTitle ?? '',
+                                  style: AppTextStyles.whitew400Outfit()
+                                      .copyWith(
+                                        fontSize: 14 * SizeConfig.widthScale,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  banner.alt ?? '',
+                                  style: AppTextStyles.whitew400Outfit()
+                                      .copyWith(
+                                        fontSize: 10 * SizeConfig.widthScale,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: _buildExploreButton(banner.link ?? ''),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                Positioned(
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: SmoothPageIndicator(
+                      controller: pageController,
+                      count: banners.length,
+                      effect: ExpandingDotsEffect(
+                        dotHeight: 4,
+                        dotWidth: 4,
+                        spacing: 4,
+                        activeDotColor: AppTheme.primaryColor,
+                        dotColor: AppTheme.primaryColor.withOpacity(0.5),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

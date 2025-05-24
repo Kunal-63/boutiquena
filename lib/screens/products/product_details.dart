@@ -24,11 +24,13 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int selectedSizeIndex = -1;
-  String selectedColor = 'Red'; // Initial selected color
   final PageController _pageController = PageController(viewportFraction: 1.0);
   ProductDetail? _productDetail;
   int? selectedAttributeId;
-  String selectedSize = 'M'; // Default size
+  Map<String, List<SkuRecord>> colorGroupedSkus = {};
+  String? selectedColor;
+  int? selectedSkuId;
+  String? selectedSize;
 
   List<ProductDetail> _similarProducts = [];
 
@@ -40,9 +42,40 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     await productProvider.fetchProductDetailById(id);
     await productProvider.fetchSimilarProducts(id);
 
+    final product = productProvider.selectedProductDetail;
+
+    final Map<String, List<SkuRecord>> groupedSkus = {};
+
+    if (product?.skuRecords != null) {
+      final allSkus = product!.skuRecords!.values.expand((list) => list);
+      for (var sku in allSkus) {
+        if (sku.attributeValueName != null) {
+          final colorKey =
+              (sku.colorName == null || sku.colorName == 'undefined')
+                  ? 'undefined'
+                  : sku.colorName!;
+          groupedSkus.putIfAbsent(colorKey, () => []).add(sku);
+        }
+      }
+    }
+
     setState(() {
-      _productDetail = productProvider.selectedProductDetail;
+      _productDetail = product;
       _similarProducts = productProvider.similarProducts;
+      colorGroupedSkus = groupedSkus;
+
+      // Select the first available color if not already selected
+      if (groupedSkus.isNotEmpty && selectedColor == null) {
+        selectedColor = groupedSkus.keys.first;
+
+        // Also select a default size for that color if available
+        final defaultSkus = groupedSkus[selectedColor];
+        if (defaultSkus != null && defaultSkus.isNotEmpty) {
+          selectedSize = defaultSkus.first.attributeValueName;
+          selectedSkuId = defaultSkus.first.id;
+          selectedAttributeId = defaultSkus.first.attributeId;
+        }
+      }
     });
   }
 
@@ -228,98 +261,126 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     thickness: 0.5,
                   ),
                   SizedBox(height: 10 * SizeConfig.heightScale),
-                  Row(
-                    children: [
-                      Text(
-                        "Sizes:",
-                        style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                          fontSize: 16 * SizeConfig.heightScale,
-                          fontWeight: FontWeight.w400,
+                  if (selectedColor != null &&
+                      colorGroupedSkus[selectedColor!] != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 16 * SizeConfig.heightScale),
+                        Text(
+                          "Sizes:",
+                          style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                            fontSize: 16 * SizeConfig.heightScale,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8 * SizeConfig.heightScale),
-                      Row(
-                        children:
-                            ["L", "M", "XL"].map((size) {
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedSize = size;
-                                  });
-                                },
-                                child: Container(
-                                  margin: EdgeInsets.only(
-                                    right: 4 * SizeConfig.widthScale,
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8 * SizeConfig.widthScale,
-                                    vertical: 6 * SizeConfig.heightScale,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        selectedSize == size
-                                            ? Colors.redAccent
-                                            : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color:
-                                          selectedSize == size
-                                              ? Colors.redAccent
-                                              : Colors.grey.shade400,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    size,
-                                    style: AppTextStyles.blackSubHeadingStyle()
-                                        .copyWith(
-                                          fontSize: 14 * SizeConfig.widthScale,
-                                          fontWeight: FontWeight.w400,
+                        SizedBox(height: 8 * SizeConfig.heightScale),
+                        Wrap(
+                          spacing: 10 * SizeConfig.widthScale,
+                          children:
+                              colorGroupedSkus[selectedColor!]!
+                                  .map((sku) => sku.attributeValueName!)
+                                  .toSet()
+                                  .map(
+                                    (size) => GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          selectedSize = size;
+                                          selectedSkuId =
+                                              colorGroupedSkus[selectedColor!]!
+                                                  .firstWhere(
+                                                    (sku) =>
+                                                        sku.attributeValueName ==
+                                                        size,
+                                                  )
+                                                  .id;
+                                          selectedAttributeId =
+                                              colorGroupedSkus[selectedColor!]!
+                                                  .firstWhere(
+                                                    (sku) =>
+                                                        sku.attributeValueName ==
+                                                        size,
+                                                  )
+                                                  .attributeId;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal:
+                                              10 * SizeConfig.widthScale,
+                                          vertical: 6 * SizeConfig.heightScale,
+                                        ),
+                                        decoration: BoxDecoration(
                                           color:
                                               selectedSize == size
-                                                  ? Colors.white
-                                                  : Color.fromRGBO(
-                                                    37,
-                                                    38,
-                                                    38,
-                                                    1,
+                                                  ? Colors.redAccent
+                                                  : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color:
+                                                selectedSize == size
+                                                    ? Colors.redAccent
+                                                    : Colors.grey.shade400,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          size,
+                                          style:
+                                              AppTextStyles.blackSubHeadingStyle()
+                                                  .copyWith(
+                                                    fontSize:
+                                                        14 *
+                                                        SizeConfig.widthScale,
+                                                    fontWeight: FontWeight.w400,
+                                                    color:
+                                                        selectedSize == size
+                                                            ? Colors.white
+                                                            : Colors.black,
                                                   ),
                                         ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                      SizedBox(width: 8 * SizeConfig.heightScale),
-                      Text(
-                        "In Stock – Only 5 Left!",
-                        style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                          fontSize: 12 * SizeConfig.heightScale,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.grey,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
                   SizedBox(height: 20 * SizeConfig.heightScale),
-                  Row(
-                    children: [
-                      Text(
-                        "Colours:",
-                        style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                          fontSize: 16 * SizeConfig.heightScale,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      SizedBox(width: 8 * SizeConfig.heightScale),
-                      Row(
-                        children: [
-                          colorOption("Black", Colors.black),
-                          SizedBox(width: 16 * SizeConfig.widthScale),
-                          colorOption("Brown", Color(0xFF6D3A3A)),
-                        ],
-                      ),
-                    ],
+                  Text(
+                    "Colours:",
+                    style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                      fontSize: 16 * SizeConfig.heightScale,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  SizedBox(height: 8 * SizeConfig.heightScale),
+                  Wrap(
+                    spacing: 10 * SizeConfig.widthScale,
+                    runSpacing: 8 * SizeConfig.heightScale,
+                    children:
+                        colorGroupedSkus.entries
+                            .where(
+                              (entry) =>
+                                  entry.value.first.colorHex != null &&
+                                  entry.value.first.colorHex != 'undefined',
+                            )
+                            .map((entry) {
+                              final colorName = entry.key;
+                              final sku =
+                                  entry.value.first; // Just for hex & id
+                              final hexCode = sku.colorHex!.replaceFirst(
+                                '#',
+                                '0xFF',
+                              );
+                              final color = Color(int.parse(hexCode));
+                              final skuId = sku.id ?? 0;
+
+                              return colorOption(colorName, color, skuId);
+                            })
+                            .toList(),
                   ),
                   SizedBox(height: 20 * SizeConfig.heightScale),
                   Text(
@@ -476,6 +537,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                   SizedBox(height: 20 * SizeConfig.heightScale),
+
                   _productDetail?.isInCart != true
                       ? SubmitButton(
                         text: 'Add to Cart',
@@ -485,7 +547,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             listen: false,
                           ).addToCart(
                             productId: _productDetail?.id ?? 0,
-                            attributeId: _productDetail?.skuRecords?[0].id ?? 0,
+                            attributeId: selectedAttributeId ?? 0,
                             quantity: 1,
                           );
                           await _loadProductDetail(widget.productID ?? 0);
@@ -563,21 +625,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  Widget colorOption(String colorName, Color color) {
+  Widget colorOption(String colorName, Color color, int skuId) {
     return GestureDetector(
       onTap: () {
         setState(() {
           selectedColor = colorName;
+          selectedSkuId = skuId;
         });
       },
       child: Container(
+        width: 120 * SizeConfig.widthScale, // fixed width for wrapping
         padding: EdgeInsets.symmetric(
           horizontal: 8 * SizeConfig.widthScale,
           vertical: 4 * SizeConfig.heightScale,
         ),
         decoration: BoxDecoration(
           color:
-              selectedColor == colorName
+              selectedSkuId == skuId
                   ? Colors.grey.shade300
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
@@ -587,15 +651,27 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             Container(
               height: 24 * SizeConfig.heightScale,
               width: 24 * SizeConfig.heightScale,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                border: Border.all(
+                  color:
+                      selectedSkuId != skuId
+                          ? const Color.fromRGBO(0, 0, 0, 0.2)
+                          : Colors.transparent,
+                ),
+              ),
             ),
             SizedBox(width: 8 * SizeConfig.widthScale),
-            Text(
-              colorName,
-              style: AppTextStyles.blackSubHeadingStyle().copyWith(
-                fontSize: 14 * SizeConfig.widthScale,
-                fontWeight: FontWeight.w400,
-                color: Color.fromRGBO(37, 38, 38, 1),
+            Expanded(
+              child: Text(
+                colorName,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.blackSubHeadingStyle().copyWith(
+                  fontSize: 14 * SizeConfig.widthScale,
+                  fontWeight: FontWeight.w400,
+                  color: const Color.fromRGBO(37, 38, 38, 1),
+                ),
               ),
             ),
           ],

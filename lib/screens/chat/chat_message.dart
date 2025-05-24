@@ -44,7 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
       Provider.of<ChatMessageProvider>(
         context,
         listen: false,
-      ).fetchMessages(widget.conversationId);
+      ).fetchMessages(widget.senderId);
     });
   }
 
@@ -70,11 +70,8 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     Provider.of<ChatMessageProvider>(context, listen: false).sendMessage(
-      conversationId: widget.conversationId,
       senderId: widget.senderId,
       senderType: widget.senderType,
-      receiverId: widget.receiverId,
-      receiverType: widget.receiverType,
       messageText: text,
       imageFile: _selectedImage != null ? File(_selectedImage!.path) : null,
     );
@@ -130,17 +127,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
     );
-
-    if (confirmed == true) {
-      final success = await Provider.of<ChatMessageProvider>(
-        context,
-        listen: false,
-      ).deleteConversation(widget.conversationId);
-
-      if (success && mounted) {
-        Navigator.pop(context);
-      }
-    }
   }
 
   @override
@@ -148,20 +134,15 @@ class _ChatScreenState extends State<ChatScreen> {
     final chatProvider = Provider.of<ChatMessageProvider>(context);
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70.0),
-        child: CommonAppBar(
-          title: "Live Chat",
-          menuPressed: () {},
-          menuItems: [
-            PopupMenuHelper.buildPopupMenuItem(
-              0,
-              'assets/icons/delete-icon.svg',
-              'Delete',
-              onTap: _deleteConversation,
-            ),
-          ],
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Text("Live Chat", style: TextStyle(color: Colors.black)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
       ),
       body: Column(
         children: [

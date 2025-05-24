@@ -24,6 +24,8 @@ class AuthTokenUtil {
 class LoginStatusUtil {
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   static const String _isLoggedInKey = 'is_logged_in';
+  static const String _userIdKey = 'user_id';
+  static const String _userTypeKey = 'user_type';
 
   /// Set login status (true for logged in, false for logged out)
   static Future<void> setLoginStatus(bool isLoggedIn) async {
@@ -42,5 +44,22 @@ class LoginStatusUtil {
   /// Clear login status (for logout)
   static Future<void> clearLoginStatus() async {
     await _secureStorage.delete(key: _isLoggedInKey);
+  }
+
+  /// Set user ID
+  static Future<void> setUserId(String userId) async {
+    await _secureStorage.write(key: _userIdKey, value: userId);
+  }
+
+  /// Get user ID
+  static Future<int?> getUserId() async {
+    return await _secureStorage
+        .read(key: _userIdKey)
+        .then((value) => value != null ? int.tryParse(value) : null);
+  }
+
+  /// Set user type
+  static Future<void> setUserType(String userType) async {
+    await _secureStorage.write(key: _userTypeKey, value: userType);
   }
 }

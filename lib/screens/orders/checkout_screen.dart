@@ -6,6 +6,7 @@ import 'package:customer_app/providers/cart_provider.dart';
 import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
+import 'package:customer_app/services/paypal_service.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/checkbox.dart';
@@ -41,27 +42,36 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
   }
 
   void _onSubmit() async {
-    if (CartProvider.selectedPaymentMethod == "PayPal") {
-      final success = true; // await PayPalService.processPayment(context);
-      if (success) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder:
-              (context) =>
-                  OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
-        );
-      }
-    } else {
-      // Handle other payment methods
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) =>
-                OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
-      );
-    }
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final amount = cartProvider.totalCartValue;
+    final paymentUrl = "http://69.62.72.21/dev/create-payment/$amount";
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PaymentWebView(url: paymentUrl)),
+    );
+    // if (CartProvider.selectedPaymentMethod == "PayPal") {
+    //   final success = true; // await PayPalService.processPayment(context);
+    //   if (success) {
+    //     showDialog(
+    //       context: context,
+    //       barrierDismissible: false,
+    //       builder:
+    //           (context) =>
+    //               OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
+    //     );
+    //   }
+    // } else {
+    //   // Handle other payment methods
+    //   showDialog(
+    //     context: context,
+    //     barrierDismissible: false,
+    //     builder:
+    //         (context) =>
+    //             OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
+    //   );
+    // }
+    // Provider.of<CartProvider>(context, listen: false).initiatePayment();
   }
 
   @override
@@ -665,7 +675,7 @@ class _QuantitySelectorState extends State<QuantitySelector> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to update quantity.'),
+          content: Text("Can't add more. Please try again."),
           duration: Duration(seconds: 2),
         ),
       );

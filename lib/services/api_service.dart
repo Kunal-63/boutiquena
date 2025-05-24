@@ -131,17 +131,17 @@ class ApiService {
   static Future<dynamic> postWithAuth(
     String endpoint,
     Map<String, dynamic> body, {
-    Map<String, File?>? files, // Accept a single file per key
+    Map<String, File?>? files,
   }) async {
     final url = Uri.parse("${Env.apiBaseUrl}$endpoint");
     LogService.info("POST Request: $url");
     LogService.info("Request Body: $body");
     String? token = await AuthTokenUtil.getToken();
+
     if (token == null || token.isEmpty) {
       LogService.error("Auth Token is missing or empty");
       return null;
     }
-
     try {
       var request = http.MultipartRequest('POST', url);
 

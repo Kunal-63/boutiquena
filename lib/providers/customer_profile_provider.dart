@@ -8,9 +8,11 @@ import 'package:customer_app/services/log_service.dart';
 class CustomerProfileProvider with ChangeNotifier {
   CustomerProfile? _customerProfile;
   bool _isLoading = false;
+  int _coinBalance = 0; // <- Added
 
-  CustomerProfile? get vendorProfile => _customerProfile;
+  CustomerProfile? get customerProfile => _customerProfile;
   bool get isLoading => _isLoading;
+  int get coinBalance => _coinBalance; // <- Added
 
   Future<void> fetchCustomerProfile() async {
     _isLoading = true;
@@ -35,6 +37,29 @@ class CustomerProfileProvider with ChangeNotifier {
     }
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> fetchCoinBalance() async {
+    // <- Added this method
+    try {
+      final response = await ApiService.getWithAuth('get-coin-balance');
+
+      if (response != null && response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == true) {
+          _coinBalance = data['data'] ?? 0;
+        } else {
+          LogService.error("Failed to fetch coin balance: ${data['message']}");
+        }
+      } else {
+        LogService.error(
+          "API Error: ${response?.statusCode} - ${response?.body}",
+        );
+      }
+    } catch (e, stackTrace) {
+      LogService.error("fetchCoinBalance() Error: $e\n$stackTrace");
+    }
     notifyListeners();
   }
 

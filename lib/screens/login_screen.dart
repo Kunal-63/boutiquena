@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
+import 'package:customer_app/providers/customer_profile_provider.dart';
 import 'package:customer_app/services/api_service.dart';
 import 'package:customer_app/services/log_service.dart';
 import 'package:customer_app/utils/secure_storage.dart';
@@ -12,10 +13,12 @@ import 'package:customer_app/widgets/buttons/submit_button.dart';
 import 'package:customer_app/widgets/inputs/input_widgets.dart';
 import 'package:customer_app/widgets/popups/custom_popup.dart';
 import 'package:customer_app/widgets/popups/otp_popup.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -130,6 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     if (response["status"] == true) {
       LogService.info("Login Successful!");
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
       showDialog(
         context: context,
         builder:
@@ -140,8 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   final otpResponse = await ApiService.post(
                     'verify-user-otp',
                     isMobile
-                        ? {"mobile": input, "otp": otp}
-                        : {"email": input, "otp": otp},
+                        ? {"mobile": input, "otp": otp, 'fcm_token': fcmToken}
+                        : {"email": input, "otp": otp, 'fcm_token': fcmToken},
                   );
 
                   if (otpResponse == null) {
@@ -150,6 +154,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   if (otpResponse['status'] == true) {
                     await AuthTokenUtil.saveToken(otpResponse['token']);
+                    Provider.of<CustomerProfileProvider>(
+                      context,
+                      listen: false,
+                    ).fetchCustomerProfile();
+                    final int userId =
+                        Provider.of<CustomerProfileProvider>(
+                          context,
+                          listen: false,
+                        ).customerProfile?.id ??
+                        0;
+                    LoginStatusUtil.setUserId(
+                      otpResponse['user_id'].toString(),
+                    );
+
                     if (mounted) {
                       setState(() {
                         _navigateToSubscription = true;

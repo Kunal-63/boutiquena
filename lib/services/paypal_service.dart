@@ -1,47 +1,62 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_braintree_payment/flutter_braintree_payment.dart';
-// import 'package:customer_app/providers/cart_provider.dart';
-// import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-// class PayPalService {
-//   static Future<bool> processPayment(BuildContext context) async {
-//     try {
-//       final cartProvider = Provider.of<CartProvider>(context, listen: false);
-//       final totalAmount = cartProvider.totalCartValue.toStringAsFixed(2);
+class PaymentWebView extends StatefulWidget {
+  final String url;
+  const PaymentWebView({Key? key, required this.url}) : super(key: key);
 
-//       // Initialize Braintree payment and client token
-//       final request = BraintreePayment();
+  @override
+  State<PaymentWebView> createState() => _PaymentWebViewState();
+}
 
-//       // Normally, this should be done on the server side, not here
-//       final clientToken =
-//           'AY3eLhOUfiAy9mShf2GrrazAw0WSMuykbH4XQQSEf8pb9yttPbFXPDj6I5LQ8-k3-iXfBCORGGA3DCBN'; // You'd need to find a way to generate this in Flutter directly
+class _PaymentWebViewState extends State<PaymentWebView> {
+  InAppWebViewController? _webViewController;
+  bool _isLoading = true;
 
-//       // Start PayPal payment flow
-//       final result = await request.paypalPayment(
-//         PayPalRequest(
-//           token: clientToken,
-//           amount: totalAmount,
-//           displayName: 'BOUTIQUE NA',
-//           androidAppLinkReturnUrl: 'customerapp://main_screen',
-//         ),
-//       );
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Complete Payment")),
+      body: Stack(
+        children: [
+          InAppWebView(
+            initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+            // ignore: deprecated_member_use
+            initialOptions: InAppWebViewGroupOptions(
+              crossPlatform: InAppWebViewOptions(
+                javaScriptEnabled: true,
 
-//       if (result != null) {
-//         debugPrint('PayPal Nonce: ${result.nonce}');
+                mediaPlaybackRequiresUserGesture: false,
 
-//         // For now, simulate success
-//         return true;
-//       } else {
-//         ScaffoldMessenger.of(
-//           context,
-//         ).showSnackBar(const SnackBar(content: Text('Payment canceled.')));
-//         return false;
-//       }
-//     } catch (e) {
-//       ScaffoldMessenger.of(
-//         context,
-//       ).showSnackBar(SnackBar(content: Text('Payment error: $e')));
-//       return false;
-//     }
-//   }
-// }
+                useShouldOverrideUrlLoading: true,
+                userAgent:
+                    "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+              ),
+            ),
+            onWebViewCreated: (controller) {
+              _webViewController = controller;
+            },
+            onLoadStart: (controller, url) {
+              setState(() {
+                _isLoading = true;
+              });
+              debugPrint("Loading started: $url");
+            },
+            onLoadStop: (controller, url) async {
+              setState(() {
+                _isLoading = false;
+              });
+              debugPrint("Loading stopped: $url");
+            },
+            onReceivedServerTrustAuthRequest: (controller, challenge) async {
+              return ServerTrustAuthResponse(
+                action: ServerTrustAuthResponseAction.PROCEED,
+              );
+            },
+          ),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
+        ],
+      ),
+    );
+  }
+}

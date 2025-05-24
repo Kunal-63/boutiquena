@@ -43,7 +43,7 @@ class ProductDetail {
   String? imagesMediumUrl;
   List<ProductImage>? images;
   final List<Category>? categories;
-  List<SkuRecord>? skuRecords;
+  Map<String, List<SkuRecord>>? skuRecords;
   List<ProductAttribute>? productAttributes;
   bool? isInCart;
   CartData? cartData;
@@ -157,10 +157,14 @@ class ProductDetail {
               .toList() ??
           [],
 
-      skuRecords:
-          (json['sku_records'] as List<dynamic>?)
-              ?.map((e) => SkuRecord.fromJson(e))
+      skuRecords: (json['sku'] as Map<String, dynamic>?)?.map(
+        (key, value) => MapEntry(
+          key,
+          (value as List<dynamic>)
+              .map((e) => SkuRecord.fromJson(e as Map<String, dynamic>))
               .toList(),
+        ),
+      ),
       productAttributes:
           (json['product_attributes'] as List<dynamic>?)
               ?.map((e) => ProductAttribute.fromJson(e))
@@ -212,24 +216,73 @@ class ProductImage {
 
 class SkuRecord {
   int? id;
+  int? productId;
+  int? productAttributeId;
+  int? colorId;
+  int? attributeTypeValueId;
+  String? createdAt;
+  String? updatedAt;
+  String? attributeValueName;
+  String? colorName;
+  String? colorHex;
   int? price;
-  int? stock;
   String? sku;
-  List<Attribute>? attributes;
+  int? stock;
+  int? attributeId;
 
-  SkuRecord({this.id, this.price, this.stock, this.sku, this.attributes});
+  SkuRecord({
+    this.id,
+    this.productId,
+    this.productAttributeId,
+    this.colorId,
+    this.attributeTypeValueId,
+    this.createdAt,
+    this.updatedAt,
+    this.attributeValueName,
+    this.colorName,
+    this.colorHex,
+    this.price,
+    this.sku,
+    this.stock,
+    this.attributeId,
+  });
 
   factory SkuRecord.fromJson(Map<String, dynamic> json) {
     return SkuRecord(
       id: json['id'],
+      productId: json['product_id'],
+      productAttributeId: json['product_attribute_id'],
+      colorId: json['color_id'],
+      attributeTypeValueId: json['attribute_type_value_id'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+      attributeValueName: json['attribute_value_name'],
+      colorName: json['color_name'],
+      colorHex: json['color_hex'],
       price: json['price'],
-      stock: json['stock'],
       sku: json['sku'],
-      attributes:
-          (json['attributes'] as List<dynamic>?)
-              ?.map((e) => Attribute.fromJson(e))
-              .toList(),
+      stock: json['stock'],
+      attributeId: json['attribute_id'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'product_id': productId,
+      'product_attribute_id': productAttributeId,
+      'color_id': colorId,
+      'attribute_type_value_id': attributeTypeValueId,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'attribute_value_name': attributeValueName,
+      'color_name': colorName,
+      'color_hex': colorHex,
+      'price': price,
+      'sku': sku,
+      'stock': stock,
+      'attribute_id': attributeId,
+    };
   }
 }
 

@@ -142,8 +142,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       passwordController.text = "Loading...";
 
       nameController.text = "Loading...";
-    } else if (profileProvider.vendorProfile != null) {
-      final profile = profileProvider.vendorProfile!;
+    } else if (profileProvider.customerProfile != null) {
+      final profile = profileProvider.customerProfile!;
 
       phoneController.text = profile.mobile ?? "";
 

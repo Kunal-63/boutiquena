@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:customer_app/models/cart_coupons.dart';
 import 'package:customer_app/models/cart_group.dart';
 import 'package:customer_app/models/cart_product.dart';
@@ -21,6 +21,7 @@ class CartProvider extends ChangeNotifier {
   static int? selectedCouponId;
   static int? selectedShippingId;
   static String? selectedPaymentMethod;
+  static int? selectedVoucherId;
 
   List<CartGroup>? mergeableGroups;
   List<CartCoupon>? coupons;
@@ -31,10 +32,13 @@ class CartProvider extends ChangeNotifier {
 
     try {
       final response = await ApiService.postWithAuth('listCart', {
-        'shipping_id': selectedShippingId,
-        'group_ids': selectedGroupIds.join(','),
-        'store_ids': selectedStoreIds.join(','),
-        'discount': selectedCouponId,
+        if (selectedShippingId != null) 'shipping_id': selectedShippingId,
+        if (selectedGroupIds.isNotEmpty)
+          'group_ids': selectedGroupIds.join(','),
+        if (selectedStoreIds.isNotEmpty)
+          'store_ids': selectedStoreIds.join(','),
+        if (selectedCouponId != null) 'discount': selectedCouponId,
+        if (selectedVoucherId != null) 'voucher_id': selectedVoucherId,
       });
 
       if (response != null && response['status'] == true) {
@@ -168,5 +172,30 @@ class CartProvider extends ChangeNotifier {
     coupons = null;
     selectedPaymentMethod = null;
     notifyListeners();
+  }
+
+  Future<void> initiatePayment() async {
+    final double amount = totalCartValue;
+
+    try {
+      final response = await ApiService.postWithAuth('initiate-payment', {
+        'amount': amount,
+      });
+
+      if (response != null && response['status'] == true) {
+        final String paymentLink = response['payment_link'];
+
+        final Uri uri = Uri.parse(paymentLink);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          LogService.error('Could not launch payment link');
+        }
+      } else {
+        LogService.error('Payment initiation failed: ${response?['message']}');
+      }
+    } catch (e, stackTrace) {
+      LogService.error('Payment initiation error: $e\n$stackTrace');
+    }
   }
 }
