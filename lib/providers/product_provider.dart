@@ -85,6 +85,7 @@ class ProductProvider with ChangeNotifier {
     Product product,
     List<File>? selectedIamges,
     File? selectedImage,
+    int? selectedAttributeId,
   ) async {
     try {
       final response = await ApiService.postWithAuth(
@@ -115,6 +116,7 @@ class ProductProvider with ChangeNotifier {
           "is_featured": product.isFeatured ?? "0",
           "is_bestseller": product.isBestseller ?? "0",
           "status": product.status ?? "1",
+          "attribute_type_id": selectedAttributeId ?? "0",
         },
         files: {"product_image": selectedImage},
         multipleFiles: {"product_images": selectedIamges ?? []},
@@ -170,6 +172,7 @@ class ProductProvider with ChangeNotifier {
           "is_featured": product.isFeatured ?? "No",
           "is_bestseller": product.isBestseller ?? "No",
           "status": product.status ?? "1",
+          "attribute_type_id": product.attributeTypeId ?? "0",
           if (keepImageIds != null && keepImageIds.isNotEmpty)
             "keep_image_ids": keepImageIds.map((id) => id.toString()).join(','),
         },
@@ -208,18 +211,15 @@ class ProductProvider with ChangeNotifier {
         {"id": productId},
       );
 
-      if (response != null && response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == true) {
+      if (response != null) {
+        if (response['status'] == true) {
           _products.removeWhere((product) => product.id == productId);
           notifyListeners();
         } else {
           throw Exception("Failed to delete product");
         }
       } else {
-        throw Exception(
-          "API Error: ${response?.statusCode} - ${response?.body}",
-        );
+        throw Exception("API Error: ${response}");
       }
     } catch (e) {
       LogService.error("deleteProduct() Error: $e");

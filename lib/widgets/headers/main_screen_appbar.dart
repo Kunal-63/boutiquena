@@ -1,5 +1,7 @@
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
+import 'package:vendor_app/providers/language_provider.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
@@ -56,10 +58,34 @@ class CustomAppBar extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: SvgPicture.asset('assets/icons/notification-icon.svg'),
-                  onPressed: onBellPressed,
+                PopupMenuButton<String>(
+                  color: const Color.fromRGBO(255, 255, 255, 1),
+                  elevation: 0,
+                  onSelected: (value) {
+                    context.read<LanguageProvider>().setLanguage(value);
+                  },
+                  offset: const Offset(0, 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  itemBuilder:
+                      (BuildContext context) => <PopupMenuEntry<String>>[
+                        const PopupMenuItem<String>(
+                          value: 'en',
+                          child: Text('English'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'ar',
+                          child: Text('Arabic'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'he',
+                          child: Text('Hebrew'),
+                        ),
+                      ],
+                  child: Icon(Icons.translate, size: 27, color: Colors.white),
                 ),
+
                 IconButton(
                   icon: SvgPicture.asset('assets/icons/settings-icon.svg'),
                   onPressed: onSettingsPressed,

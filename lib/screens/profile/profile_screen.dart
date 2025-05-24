@@ -2,6 +2,7 @@ import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
 import 'package:vendor_app/providers/vendor_profile_provider.dart';
 import 'package:vendor_app/screens/subscription_plan.dart';
+import 'package:vendor_app/services/translate.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/headers/common_appbar.dart';
@@ -74,14 +75,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
         child: CommonAppBar(
-          title: "Profile",
+          title: TranslationService.translate(context, 'profile'),
           menuPressed: () {},
           backPressed: () {},
           menuItems: [
             PopupMenuHelper.buildPopupMenuItem(
               0,
               'assets/icons/edit-popup-icon.svg',
-              'Edit',
+              TranslationService.translate(context, 'edit'),
             ),
           ],
         ),
@@ -156,21 +157,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   InputWidget(
                     hint: 'Trendy Fashions',
                     controller: _storeNameController,
-                    label: 'Store Name',
+                    label: TranslationService.translate(context, 'store_name'),
                     isDisabled: true,
                   ),
                   SizedBox(height: 10 * SizeConfig.heightScale),
                   InputWidget(
                     hint: '+91 79901 87279',
                     controller: _phoneController,
-                    label: 'Phone Number',
+                    label: TranslationService.translate(
+                      context,
+                      'phone_number',
+                    ),
                     isDisabled: true,
                   ),
                   SizedBox(height: 10 * SizeConfig.heightScale),
                   InputWidget(
                     hint: 'kunaladwani@gmail.com',
                     controller: _emailController,
-                    label: 'Email',
+                    label: TranslationService.translate(context, 'email'),
                     isDisabled: true,
                   ),
                   SizedBox(height: 10 * SizeConfig.heightScale),
@@ -180,7 +184,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       InputWidget(
                         hint: '',
                         controller: _subscriptionController,
-                        label: 'Change Subscription Plan',
+                        label: TranslationService.translate(
+                          context,
+                          'change_subscription_plan',
+                        ),
                         isDisabled: true,
                       ),
                       Positioned(
@@ -207,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: AppTheme.buttonColor,
                             ),
                             child: Text(
-                              'Upgrade',
+                              TranslationService.translate(context, 'upgrade'),
                               style: AppTextStyles.whiteButtonStyle().copyWith(
                                 color: Colors.white,
                                 fontSize: 8 * SizeConfig.widthScale,
@@ -223,7 +230,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   InputWidget(
                     hint: '9:00AM - 9:00PM',
                     controller: _workingHoursController,
-                    label: 'Working Hour',
+                    label: TranslationService.translate(
+                      context,
+                      'working_hours',
+                    ),
                     svgPath: 'assets/icons/clock-icon.svg',
                   ),
                   SizedBox(height: 10 * SizeConfig.heightScale),

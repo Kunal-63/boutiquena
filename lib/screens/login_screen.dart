@@ -5,6 +5,9 @@ import 'dart:convert';
 
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
+import 'package:vendor_app/screens/main_screen.dart';
+import 'package:vendor_app/screens/store_setup.dart';
+import 'package:vendor_app/screens/subscription_plan.dart';
 import 'package:vendor_app/services/api_service.dart';
 import 'package:vendor_app/services/log_service.dart';
 import 'package:vendor_app/utils/secure_storage.dart';
@@ -28,6 +31,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _navigateToSubscription = false;
+  bool _navigateToStore = false;
+  late BuildContext rootContext;
 
   @override
   void initState() {
@@ -97,17 +102,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     if (response["status"] == false) {
       dynamic message = response["message"];
-
-      // Check if message is a Map (i.e., object with keys like "email")
       if (message is Map) {
-        // Extract all error messages and join them into a single string
-        message = message.values
-            .expand((value) => value) // Flatten the list
-            .join("\n"); // Join with new lines
+        message = message.values.expand((value) => value).join("\n");
       }
 
-      message ??= "Something went wrong!"; // Fallback message if null
-
+      message ??= "Something went wrong!";
       showDialog(
         context: context,
         builder:
@@ -149,15 +148,52 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   if (otpResponse['status'] == true) {
                     await AuthTokenUtil.saveToken(otpResponse['token']);
-                    if (mounted) {
-                      setState(() {
-                        _navigateToSubscription = true;
-                      });
-                      Navigator.of(context, rootNavigator: true).pop();
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Login Successfully!")),
-                    );
+                    if (!mounted) return;
+
+                    Navigator.of(context, rootNavigator: true).pop();
+
+                    Future.delayed(Duration(milliseconds: 100), () {
+                      print(
+                        "Navigating to: ${otpResponse['is_store']} ${otpResponse['is_subscription']}",
+                      );
+
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
+                        const SnackBar(content: Text("Login Successfully!")),
+                      );
+
+                      if (otpResponse['is_store'] == true &&
+                          otpResponse['is_subscription'] == true) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MainScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      } else if (otpResponse['is_store'] == false &&
+                          otpResponse['is_subscription'] == true) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StoreSetupScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      } else if (otpResponse['is_subscription'] == false) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SubscriptionScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      } else {
+                        Navigator.pushReplacement(
+                          rootContext,
+                          MaterialPageRoute(builder: (_) => LoginScreen()),
+                        );
+                      }
+                    });
                   } else if (otpResponse.containsKey("error")) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(otpResponse['error'] ?? "Error")),
@@ -180,14 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_navigateToSubscription) {
-        setState(() {
-          _navigateToSubscription = false;
-        });
-        Navigator.pushNamed(context, '/subscription');
-      }
-    });
+    rootContext = context;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: AppTheme.backgroundColor,

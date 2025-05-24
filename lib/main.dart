@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vendor_app/providers/attribute_provider.dart';
+import 'package:vendor_app/providers/language_provider.dart';
 import 'package:vendor_app/providers/login_provider.dart';
 import 'package:vendor_app/providers/orders_provider.dart';
 import 'package:vendor_app/providers/product_provider.dart';
@@ -39,6 +41,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => RegionProvider()),
         ChangeNotifierProvider(create: (_) => VendorDeliveryProvider()),
         ChangeNotifierProvider(create: (_) => StoreCategoryProvider()),
+        ChangeNotifierProvider(create: (_) => AttributeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
       child: const MyApp(),
     ),

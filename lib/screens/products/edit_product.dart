@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
+import 'package:vendor_app/models/attribute_model.dart';
 import 'package:vendor_app/models/product.dart';
 import 'package:vendor_app/models/product_details.dart';
 import 'package:vendor_app/models/store_category.dart';
+import 'package:vendor_app/providers/attribute_provider.dart';
 import 'package:vendor_app/providers/product_provider.dart';
 import 'package:vendor_app/providers/store_category.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
@@ -65,6 +67,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   int? _selectedCategoryId;
+  int? selectedAttributeId;
 
   ProductDetail? _productDetail;
 
@@ -132,6 +135,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       isPinned = p.isPinned ?? "Yes";
       isFeatured = p.isFeatured ?? "Yes";
       remainingImageIds = p.images?.map((img) => img.id!).toList() ?? [];
+      selectedAttributeId = p.attributeTypeId;
     }
   }
 
@@ -165,6 +169,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       metaDescriptionHebrew: _metaDescriptionHebrewController.text,
       isPinned: isPinned,
       isFeatured: isFeatured,
+      attributeTypeId: selectedAttributeId,
     );
 
     bool isSuccess = await productProvider.updateProduct(
@@ -190,8 +195,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
   void initState() {
     super.initState();
 
-    super.initState();
-
     if (widget.productID != null) {
       _loadProductDetail(widget.productID!);
     }
@@ -201,11 +204,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
         context,
         listen: false,
       ).fetchStoreCategories();
+      Provider.of<AttributeProvider>(
+        context,
+        listen: false,
+      ).fetchAttributeTypes();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final attributeProvider = Provider.of<AttributeProvider>(context);
+    final List<AttributeType> attributeTypes = attributeProvider.attributeTypes;
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
@@ -466,7 +475,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   ),
                 ],
               ),
-
               SizedBox(height: 20 * SizeConfig.heightScale),
               InputWidget(
                 label: 'Product Name',
@@ -632,6 +640,32 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 controller: _metaKeywordsHebrewController,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
+              CustomDropdown(
+                items: attributeTypes.map((attr) => attr.name).toList(),
+                onChanged: (value) {
+                  // Find the selected attribute by name
+                  final selected = attributeTypes.firstWhere(
+                    (attr) => attr.name == value,
+                  );
+                  selectedAttributeId = selected.id;
+
+                  // You can store selectedAttributeId in a variable or call a method
+                  print("Selected ID: $selectedAttributeId");
+                },
+                label: 'Select Attribute Type',
+                selectedItem:
+                    attributeTypes
+                        .firstWhere(
+                          (attr) => attr.id == selectedAttributeId,
+                          orElse:
+                              () =>
+                                  attributeTypes.isNotEmpty
+                                      ? attributeTypes.first
+                                      : AttributeType(id: 0, name: ''),
+                        )
+                        .name,
+                isRequired: true,
+              ),
               Text(
                 "Is this product pinned?",
                 style: AppTextStyles.blackHeadingStyle().copyWith(

@@ -26,9 +26,13 @@ class HomeScreen extends StatelessWidget {
       drawer: SizedBox(
         width: 280 * SizeConfig.widthScale,
         child: Drawer(
+          backgroundColor: Colors.white,
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           child: ListView(
-            padding: EdgeInsets.all(15 * SizeConfig.widthScale),
+            padding: EdgeInsets.symmetric(
+              horizontal: 15 * SizeConfig.widthScale,
+              vertical: 25 * SizeConfig.heightScale,
+            ),
             children: [
               ListTile(
                 leading: Icon(
@@ -46,9 +50,8 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Close the drawer
-                  MainScreen.selectedIndexNotifier.value =
-                      3; // Navigate to Profile tab
+                  Navigator.pop(context);
+                  MainScreen.selectedIndexNotifier.value = 3;
                 },
               ),
               Divider(),

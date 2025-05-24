@@ -6,6 +6,7 @@ import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
 import 'package:vendor_app/providers/vendor_profile_provider.dart';
 import 'package:vendor_app/screens/subscription_plan.dart';
+import 'package:vendor_app/services/translate.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/utils/validator.dart';
@@ -180,13 +181,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
         child: CommonAppBar(
-          title: "Profile",
+          title: TranslationService.translate(context, 'profile'),
           menuPressed: () {},
           menuItems: [
             PopupMenuHelper.buildPopupMenuItem(
               0,
               'assets/icons/edit-popup-icon.svg',
-              'Edit',
+              TranslationService.translate(context, 'edit'),
             ),
           ],
         ),
@@ -261,38 +262,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               InputWidget(
                 hint: 'Kunal Adwani',
                 controller: nameController,
-                label: 'Name',
+                label: TranslationService.translate(context, 'name'),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Trendy Fashions',
                 controller: addressController,
-                label: 'Address',
+                label: TranslationService.translate(context, 'store_name'),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: '+91 79901 87279',
                 controller: phoneController,
-                label: 'Phone Number',
+                label: TranslationService.translate(context, 'phone_number'),
                 isDisabled: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'kunaladwani@gmail.com',
                 controller: cityController,
-                label: 'City',
+                label: TranslationService.translate(context, 'email'),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Maharashtra',
                 controller: stateController,
-                label: 'State',
+                label: TranslationService.translate(context, 'state'),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'India',
                 controller: countryController,
-                label: 'Country',
+                label: TranslationService.translate(context, 'country'),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               Stack(
@@ -301,7 +302,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   InputWidget(
                     hint: 'Advance Plan',
                     controller: subscriptionController,
-                    label: 'Change Subscription Plan',
+                    label: TranslationService.translate(
+                      context,
+                      'change_subscription_plan',
+                    ),
                   ),
                   Positioned(
                     right: 10 * SizeConfig.widthScale,
@@ -326,7 +330,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: AppTheme.buttonColor,
                         ),
                         child: Text(
-                          'Upgrade',
+                          TranslationService.translate(context, 'upgrade'),
                           style: AppTextStyles.whiteButtonStyle().copyWith(
                             color: Colors.white,
                             fontSize: 8 * SizeConfig.widthScale,
@@ -342,25 +346,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               InputWidget(
                 hint: '400001',
                 controller: pincodeController,
-                label: 'Pincode',
+                label: TranslationService.translate(context, 'pincode'),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Password',
                 controller: passwordController,
-                label: 'Password',
+                label: TranslationService.translate(context, 'password'),
                 isPassword: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
               InputWidget(
                 hint: 'Password',
                 controller: confirmPasswordController,
-                label: 'Confirm Password',
+                label: TranslationService.translate(
+                  context,
+                  'confirm_password',
+                ),
                 isPassword: true,
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
 
-              SubmitButton(text: 'Update Profile', onPressed: submit),
+              SubmitButton(
+                text: TranslationService.translate(context, 'update_profile'),
+                onPressed: submit,
+              ),
             ],
           ),
         ),

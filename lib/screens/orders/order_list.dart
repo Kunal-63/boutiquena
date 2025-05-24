@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/models/orders.dart';
 import 'package:vendor_app/providers/orders_provider.dart';
+import 'package:vendor_app/services/translate.dart';
 import 'package:vendor_app/utils/custom_network_image.dart';
 import 'package:vendor_app/utils/size_config.dart';
 import 'package:vendor_app/widgets/buttons/submit_button.dart';
@@ -95,7 +96,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
         child: CommonAppBar(
-          title: "Orders",
+          title: TranslationService.translate(context, 'orders'),
           backPressed: () {},
           menuPressed: () {
             print("Menu Pressed");
@@ -104,12 +105,12 @@ class _OrderListScreenState extends State<OrderListScreen> {
             PopupMenuHelper.buildPopupMenuItem(
               0,
               'assets/icons/edit-popup-icon.svg',
-              'Edit',
+              TranslationService.translate(context, 'edit'),
             ),
             PopupMenuHelper.buildPopupMenuItem(
               1,
               'assets/icons/delete-icon.svg',
-              'Delete',
+              TranslationService.translate(context, 'delete'),
             ),
           ],
         ),
@@ -148,7 +149,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                             SvgPicture.asset('assets/icons/filter-icon.svg'),
                             const SizedBox(width: 8),
                             Text(
-                              'Filter',
+                              TranslationService.translate(context, 'filter'),
                               style: AppTextStyles.blackSubHeadingStyle()
                                   .copyWith(
                                     fontSize: 14 * SizeConfig.widthScale,

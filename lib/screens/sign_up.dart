@@ -12,6 +12,7 @@ import 'package:vendor_app/widgets/buttons/submit_button.dart';
 import 'package:vendor_app/widgets/headers/signup_appbar.dart';
 import 'package:vendor_app/widgets/inputs/dropdown.dart';
 import 'package:vendor_app/widgets/inputs/input_widgets.dart';
+import 'package:vendor_app/widgets/inputs/phone_number.dart';
 import 'package:vendor_app/widgets/popups/custom_popup.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -518,20 +519,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         //   isRequired: true,
                         // ),
                         SizedBox(height: 20 * SizeConfig.heightScale),
-                        InputWidget(
-                          label: 'Additional Phone Number',
-                          hint: 'Enter your pincode..',
-                          isRequired: true,
-                          controller: additionalPhoneController,
-                          prefix: '+972',
-                          maxLength: 10,
-                        ),
-                        // PhoneNumberInput(
-                        //   phoneController: additionalPhoneController,
-                        //   onSaved: (String value) {},
+                        // InputWidget(
                         //   label: 'Additional Phone Number',
-                        //   hintText: 'Enter additional phone number...',
+                        //   hint: 'Enter your pincode..',
+                        //   isRequired: true,
+                        //   controller: additionalPhoneController,
+                        //   prefix: '+972',
+                        //   maxLength: 10,
                         // ),
+                        PhoneNumberInput(
+                          phoneController: additionalPhoneController,
+                          onSaved: (String value) {},
+                          label: 'Additional Phone Number',
+                          hintText: 'Enter additional phone number...',
+                        ),
                         SizedBox(height: 20 * SizeConfig.heightScale),
                         InputWidget(
                           label: 'Email',

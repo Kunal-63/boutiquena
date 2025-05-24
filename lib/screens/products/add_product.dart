@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
+import 'package:vendor_app/models/attribute_model.dart';
 import 'package:vendor_app/models/product.dart';
+import 'package:vendor_app/providers/attribute_provider.dart';
 import 'package:vendor_app/providers/product_provider.dart';
 import 'package:vendor_app/providers/store_category.dart';
 import 'package:vendor_app/utils/size_config.dart';
@@ -59,6 +61,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   int? _selectedCategoryId;
+  int? selectedAttributeId;
 
   String isPinned = "Yes";
   String isFeatured = "Yes";
@@ -116,6 +119,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       newProduct,
       _images,
       _image,
+      selectedAttributeId,
     );
     if (isSuccess) {
       ScaffoldMessenger.of(
@@ -137,11 +141,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
         context,
         listen: false,
       ).fetchStoreCategories();
+      Provider.of<AttributeProvider>(
+        context,
+        listen: false,
+      ).fetchAttributeTypes();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final attributeProvider = Provider.of<AttributeProvider>(context);
+    final List<AttributeType> attributeTypes = attributeProvider.attributeTypes;
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70.0),
@@ -162,8 +172,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Column(
                 children: [
                   Column(
                     children: [
@@ -218,6 +227,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 20 * SizeConfig.heightScale),
                   Column(
                     children: [
                       Text(
@@ -227,51 +237,71 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: _pickImages,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Transform.rotate(
-                              angle: -6.84 * 3.141592653589793 / 180,
+                      SizedBox(height: 10 * SizeConfig.heightScale),
+
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 8.0,
+                              mainAxisSpacing: 8.0,
+                              childAspectRatio: 1,
+                            ),
+                        itemCount: _images.length + 1, // Extra for add button
+                        itemBuilder: (context, index) {
+                          if (index == _images.length) {
+                            return GestureDetector(
+                              onTap: _pickImages,
                               child: Container(
-                                width: 119 * SizeConfig.widthScale,
-                                height: 98 * SizeConfig.heightScale,
                                 decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(128, 128, 128, 1),
                                   borderRadius: BorderRadius.circular(8),
+                                  color: Colors.grey[300],
+                                ),
+                                child: const Icon(
+                                  Icons.add_rounded,
+                                  color: Color.fromRGBO(112, 112, 112, 1),
+                                  size: 30,
                                 ),
                               ),
-                            ),
-                            Container(
-                              width: 119 * SizeConfig.widthScale,
-                              height: 98 * SizeConfig.heightScale,
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(218, 218, 218, 1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child:
-                                  _images.isEmpty
-                                      ? const Icon(
-                                        Icons.add_rounded,
-                                        color: Color.fromRGBO(112, 112, 112, 1),
-                                        size: 20,
-                                      )
-                                      : ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: PageView.builder(
-                                          itemCount: _images.length,
-                                          itemBuilder:
-                                              (context, index) => Image.file(
-                                                _images[index],
-                                                fit: BoxFit.cover,
-                                              ),
-                                        ),
+                            );
+                          } else {
+                            return Stack(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: DecorationImage(
+                                      image: FileImage(_images[index]),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _images.removeAt(index);
+                                      });
+                                    },
+                                    child: const CircleAvatar(
+                                      radius: 12,
+                                      backgroundColor: Colors.black54,
+                                      child: Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
                                       ),
-                            ),
-                          ],
-                        ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -432,21 +462,53 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 controller: _metaKeywordsHebrewController,
               ),
               SizedBox(height: 20 * SizeConfig.heightScale),
-              Text(
-                "Is this product pinned?",
-                style: AppTextStyles.blackHeadingStyle().copyWith(
-                  fontSize: 16 * SizeConfig.widthScale,
-                  fontWeight: FontWeight.w400,
+              CustomDropdown(
+                items: attributeTypes.map((attr) => attr.name).toList(),
+                onChanged: (value) {
+                  // Find the selected attribute by name
+                  final selected = attributeTypes.firstWhere(
+                    (attr) => attr.name == value,
+                  );
+                  selectedAttributeId = selected.id;
+
+                  // You can store selectedAttributeId in a variable or call a method
+                  print("Selected ID: $selectedAttributeId");
+                },
+                label: 'Select Attribute Type',
+                isRequired: true,
+              ),
+              SizedBox(height: 20 * SizeConfig.heightScale),
+              Container(
+                width: double.infinity,
+                child: Text(
+                  "Is this product pinned?",
+                  style: AppTextStyles.blackHeadingStyle().copyWith(
+                    fontSize: 16 * SizeConfig.widthScale,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  textAlign: TextAlign.start,
                 ),
               ),
               SizedBox(height: 10 * SizeConfig.heightScale),
-              _buildRadioButton('Yes', 'yes', isPinned, (value) {
-                setState(() {
-                  isPinned = value;
-                });
-              }),
-              SizedBox(height: 10 * SizeConfig.heightScale),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildRadioButton('Yes', 'yes', isPinned, (value) {
+                    setState(() {
+                      isPinned = value;
+                    });
+                  }),
+                  SizedBox(width: 20 * SizeConfig.widthScale),
+                  _buildRadioButton('No', 'no', isPinned, (value) {
+                    setState(() {
+                      isPinned = value;
+                    });
+                  }),
+                ],
+              ),
 
+              SizedBox(height: 10 * SizeConfig.heightScale),
               Row(
                 children: [
                   Expanded(

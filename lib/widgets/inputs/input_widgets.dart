@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:vendor_app/config/text_styles.dart';
 import 'package:vendor_app/config/theme.dart';
+import 'package:vendor_app/providers/language_provider.dart';
 import 'package:vendor_app/utils/size_config.dart';
 
 class InputWidget extends StatefulWidget {
@@ -45,22 +47,28 @@ class _InputWidgetState extends State<InputWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final isRtl = langProvider.isArabic || langProvider.isHebrew;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null)
-          Row(
-            children: [
-              Text(widget.label!, style: AppTextStyles.inputLabelStyle()),
-              if (widget.isRequired)
-                Text(
-                  ' *',
-                  style: AppTextStyles.inputLabelStyle().copyWith(
-                    color: Colors.red,
+          Directionality(
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+            child: Row(
+              children: [
+                Text(widget.label!, style: AppTextStyles.inputLabelStyle()),
+                if (widget.isRequired)
+                  Text(
+                    ' *',
+                    style: AppTextStyles.inputLabelStyle().copyWith(
+                      color: Colors.red,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
+
         SizedBox(height: 5 * SizeConfig.heightScale),
         TextFormField(
           controller: widget.controller,

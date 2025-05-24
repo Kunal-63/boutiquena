@@ -42,6 +42,7 @@ class ProductDetail {
   final String? imagesSmallUrl;
   final String? imagesMediumUrl;
   final ProductCategory? category;
+  final int? attributeTypeId;
 
   ProductDetail({
     this.id,
@@ -87,12 +88,14 @@ class ProductDetail {
     this.imagesSmallUrl,
     this.imagesMediumUrl,
     this.category,
+    this.attributeTypeId,
   });
 
   factory ProductDetail.fromJson(Map<String, dynamic> json) {
     return ProductDetail(
       id: json['id'],
-      categoryId: json['category_id'],
+      categoryId: int.tryParse(json['category_id'].toString()),
+
       vendorId: json['vendor_id'],
       adminId: json['admin_id'],
       storeId: json['store_id'],
@@ -140,6 +143,7 @@ class ProductDetail {
           json['category'] != null
               ? ProductCategory.fromJson(json['category'])
               : null,
+      attributeTypeId: json['attribute_type_id'],
     );
   }
 }
