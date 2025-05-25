@@ -1,5 +1,4 @@
 import 'package:customer_app/providers/store_provider.dart';
-import 'package:customer_app/providers/wishlist_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/cards/product_card.dart';
 import 'package:customer_app/widgets/headers/common_appbar.dart';

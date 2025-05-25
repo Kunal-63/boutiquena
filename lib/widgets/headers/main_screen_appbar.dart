@@ -1,6 +1,5 @@
 import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/providers/language_provider.dart';
-import 'package:customer_app/utils/secure_storage.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

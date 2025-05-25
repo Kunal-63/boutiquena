@@ -3,7 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class PaymentWebView extends StatefulWidget {
   final String url;
-  const PaymentWebView({Key? key, required this.url}) : super(key: key);
+  const PaymentWebView({super.key, required this.url});
 
   @override
   State<PaymentWebView> createState() => _PaymentWebViewState();

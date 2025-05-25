@@ -55,6 +55,7 @@ dependencies:
   firebase_messaging: ^15.2.6
   webview_flutter: ^4.13.0
   flutter_inappwebview: ^6.1.5
+  flutter_paypal_payment: ^1.0.8
   # paypal_native_checkout: ^1.0.4
 
 dev_dependencies:

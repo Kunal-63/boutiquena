@@ -1,5 +1,4 @@
 import 'package:customer_app/models/banner.dart';
-import 'package:customer_app/models/chat_message.dart';
 import 'package:customer_app/models/product_details.dart';
 import 'package:customer_app/models/store.dart';
 import 'package:customer_app/models/top_category.dart';

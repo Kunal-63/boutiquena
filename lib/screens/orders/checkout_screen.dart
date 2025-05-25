@@ -1,10 +1,10 @@
 import 'package:customer_app/config/text_styles.dart';
-import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/models/cart_group.dart';
 import 'package:customer_app/models/shipping_address.dart';
 import 'package:customer_app/providers/cart_provider.dart';
 import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
+import 'package:customer_app/screens/orders/order_list.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
 import 'package:customer_app/services/paypal_service.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
@@ -13,10 +13,10 @@ import 'package:customer_app/widgets/buttons/checkbox.dart';
 import 'package:customer_app/widgets/buttons/submit_button.dart';
 import 'package:customer_app/widgets/inputs/dropdown.dart';
 import 'package:customer_app/widgets/inputs/input_widgets.dart';
-import 'package:customer_app/widgets/popups/order_success_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_paypal_payment/flutter_paypal_payment.dart';
 
 class CheckOutScreen extends StatefulWidget {
   const CheckOutScreen({super.key});
@@ -43,35 +43,92 @@ class _CheckOutScreenState extends State<CheckOutScreen> {
 
   void _onSubmit() async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    final amount = cartProvider.totalCartValue;
-    final paymentUrl = "http://69.62.72.21/dev/create-payment/$amount";
+    final cartItems = CartProvider.cartItems;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PaymentWebView(url: paymentUrl)),
+    // Convert cartItems to PayPal items format
+    final paypalItems =
+        cartItems.map((item) {
+          return {
+            "name": item.productName ?? "Unknown Product",
+            "quantity": item.quantity ?? 1,
+            "price": (item.finalPrice ?? 0).toStringAsFixed(2),
+            "currency": "ILS",
+          };
+        }).toList();
+
+    // Calculate subtotal manually or use cartProvider.subTotal if you added that
+    final subtotal = cartItems.fold<double>(
+      0,
+      (sum, item) => sum + ((item.finalPrice ?? 0) * (item.quantity ?? 1)),
     );
-    // if (CartProvider.selectedPaymentMethod == "PayPal") {
-    //   final success = true; // await PayPalService.processPayment(context);
-    //   if (success) {
-    //     showDialog(
-    //       context: context,
-    //       barrierDismissible: false,
-    //       builder:
-    //           (context) =>
-    //               OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
-    //     );
-    //   }
-    // } else {
-    //   // Handle other payment methods
-    //   showDialog(
-    //     context: context,
-    //     barrierDismissible: false,
-    //     builder:
-    //         (context) =>
-    //             OrderPlacedPopup(onClose: () => Navigator.of(context).pop()),
-    //   );
-    // }
-    // Provider.of<CartProvider>(context, listen: false).initiatePayment();
+
+    final tax = cartProvider.tax;
+    final shipping = cartProvider.deliveryCharges;
+    final total = cartProvider.totalCartValue;
+
+    print("TOTAL - $total SUBTOTAL $subtotal TAX - $tax SHIPPING $shipping");
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (BuildContext context) => PaypalCheckoutView(
+              sandboxMode: true,
+              clientId:
+                  "AY3eLhOUfiAy9mShf2GrrazAw0WSMuykbH4XQQSEf8pb9yttPbFXPDj6I5LQ8-k3-iXfBCORGGA3DCBN",
+              secretKey:
+                  "EF0h04PKy1zA57iS-ibj9hS4_kQd7erMO4fjD0aJRVMaGYSOIGyTCeW4wqnj7HRlcWM2t_mo31k8ir23",
+              transactions: [
+                {
+                  "amount": {
+                    "total": total.toStringAsFixed(2),
+                    "currency": "ILS",
+                    "details": {
+                      "subtotal": subtotal.toStringAsFixed(2),
+                      "shipping": shipping.toStringAsFixed(2),
+                      "tax": tax.toStringAsFixed(2),
+                    },
+                  },
+                  "description": "Your order from our store.",
+                  "item_list": {"items": paypalItems},
+                },
+              ],
+              note: "Contact us for any questions on your order.",
+              onSuccess: (Map params) async {
+                print("onSuccess: $params");
+
+                final paymentId = params['paymentId'] ?? params['id'] ?? '';
+                if (paymentId.isNotEmpty) {
+                  final success = await cartProvider.checkout(
+                    paymentId: paymentId,
+                    additionalComments: 'Nothing New',
+                  );
+
+                  if (success) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => OrderListScreen()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Checkout failed. Please try again.'),
+                      ),
+                    );
+                  }
+                } else {
+                  print("Payment ID missing from PayPal response.");
+                }
+              },
+              onError: (error) {
+                print("onError: $error");
+                Navigator.pop(context);
+              },
+              onCancel: () {
+                print('cancelled:');
+              },
+            ),
+      ),
+    );
   }
 
   @override

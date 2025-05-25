@@ -230,7 +230,7 @@ class HomeScreenProvider extends ChangeNotifier {
   }
 
   void toggleWishlistStatus(int productId) {
-    void _toggleInList(List<ProductDetail> list) {
+    void toggleInList(List<ProductDetail> list) {
       for (var product in list) {
         if (product.id == productId) {
           product.isInWishlist = !(product.isInWishlist ?? false);
@@ -239,9 +239,9 @@ class HomeScreenProvider extends ChangeNotifier {
       }
     }
 
-    _toggleInList(bestSellerProducts);
-    _toggleInList(suggestedProducts);
-    _toggleInList(discountedProducts);
+    toggleInList(bestSellerProducts);
+    toggleInList(suggestedProducts);
+    toggleInList(discountedProducts);
 
     notifyListeners();
   }

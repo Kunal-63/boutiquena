@@ -174,28 +174,39 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> initiatePayment() async {
-    final double amount = totalCartValue;
-
+  Future<bool> checkout({
+    required String paymentId,
+    required String additionalComments,
+  }) async {
     try {
-      final response = await ApiService.postWithAuth('initiate-payment', {
-        'amount': amount,
-      });
+      final body = {
+        if (selectedShippingId != null) 'shipping_id': selectedShippingId,
+        if (selectedGroupIds.isNotEmpty)
+          'group_ids': selectedGroupIds.join(','),
+        if (selectedStoreIds.isNotEmpty)
+          'store_ids': selectedStoreIds.join(','),
+        if (selectedCouponId != null) 'discount_id': selectedCouponId,
+        if (selectedPaymentMethod != null)
+          'payment_method': selectedPaymentMethod,
+        'payment_id': paymentId,
+        'payment_gateway': 'PayPal', // Replace with dynamic if needed later
+        'additional_comments': additionalComments,
+        if (selectedVoucherId != null) 'voucher_id': selectedVoucherId,
+        // if (coins != null) 'coins': coins, // Uncomment if coins implemented
+      };
+
+      final response = await ApiService.postWithAuth('checkout', body);
 
       if (response != null && response['status'] == true) {
-        final String paymentLink = response['payment_link'];
-
-        final Uri uri = Uri.parse(paymentLink);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          LogService.error('Could not launch payment link');
-        }
+        LogService.info('Checkout successful');
+        return true;
       } else {
-        LogService.error('Payment initiation failed: ${response?['message']}');
+        LogService.error('Checkout failed: ${response?['message']}');
       }
     } catch (e, stackTrace) {
-      LogService.error('Payment initiation error: $e\n$stackTrace');
+      LogService.error('Checkout error: $e\n$stackTrace');
+    } finally {
+      return false;
     }
   }
 }

@@ -9,8 +9,6 @@ import 'package:customer_app/config/text_styles.dart';
 import 'package:customer_app/config/theme.dart';
 import 'package:customer_app/providers/chat_message_provider.dart';
 import 'package:customer_app/utils/size_config.dart';
-import 'package:customer_app/widgets/headers/common_appbar.dart';
-import 'package:customer_app/widgets/popup_menu_item.dart';
 
 class ChatScreen extends StatefulWidget {
   final int conversationId;
