@@ -6,7 +6,7 @@ import 'package:customer_app/providers/language_provider.dart';
 import 'package:customer_app/providers/shipping_address_provider.dart';
 import 'package:customer_app/screens/orders/order_list.dart';
 import 'package:customer_app/screens/shipping/shipping_details.dart';
-import 'package:customer_app/services/paypal_service.dart';
+import 'package:customer_app/services/translate_service.dart';
 import 'package:customer_app/utils/custom_network_image.dart';
 import 'package:customer_app/utils/size_config.dart';
 import 'package:customer_app/widgets/buttons/checkbox.dart';
